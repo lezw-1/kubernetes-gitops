@@ -1,0 +1,5 @@
+# Namespace Argo CD and its own Application/root-app manifests live in.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd

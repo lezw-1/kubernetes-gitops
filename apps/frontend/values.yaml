@@ -1,0 +1,27 @@
+# Default values — overridden per environment via clusters/<env>/frontend.yaml
+
+# Global: Shared across templates
+global:
+  environment: dev # e.g. dev, staging, prod
+
+# Gateway: HTTPRoute hostname configuration
+gateway:
+  hosts:
+    domain: "" # Full domain; empty disables hostname-based routing
+
+# Image: Container image settings (CI updates tag on each push)
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: Always
+
+# Service: ClusterIP configuration
+service:
+  port: 80 # nginx listen port
+
+# HPA: Horizontal pod autoscaler
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilization: 70

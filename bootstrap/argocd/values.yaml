@@ -1,0 +1,25 @@
+# Argo CD Helm values — shared baseline for all envs.
+# Used for the initial `helm install` and then by install.yaml's
+# self-management Application on every subsequent sync.
+# Per-env differences (autoscaling, resources, redis-ha) are
+# passed as --set flags at initial install time — see README.
+
+configs:
+  params:
+    server.insecure: true
+
+server:
+  service:
+    type: ClusterIP
+  autoscaling:
+    enabled: false
+
+controller:
+  replicas: 1
+
+repoServer:
+  autoscaling:
+    enabled: false
+
+redis-ha:
+  enabled: false

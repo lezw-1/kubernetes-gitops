@@ -1,0 +1,23 @@
+# Frontend service overrides for staging, layered onto apps/frontend/values.yaml
+# via the $values ref in projects/applications/frontend.yaml
+
+global:
+  environment: staging
+
+gateway:
+  hosts:
+    domain: ""
+
+image:
+  repository: <CF_ORG_ID>.<CF_CR_REGION>.registry.cloudfleet.dev/frontend # CI updates tag below
+  tag: staging # CI overwrites with commit SHA on each push
+  pullPolicy: Always
+
+service:
+  port: 80 # nginx port
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilization: 70

@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: argocd
+spec:
+  description: Default project for this repo's Applications
+  sourceRepos: # Only this repo may be used as a source
+    - https://github.com/lezw-1/kubernetes-deployment
+  destinations: # Only ai-system-* namespaces on the local cluster
+    - namespace: "ai-system-*"
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist: # Only allow creating Namespaces cluster-wide
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist: # Any resource kind allowed within those namespaces
+    - group: "*"
+      kind: "*"

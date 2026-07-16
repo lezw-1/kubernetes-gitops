@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: frontend
+  namespace: argocd
+spec:
+  goTemplate: true # Enables {{ .field }} + if/else so prod can opt out of automated sync
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - list: # One Application generated per element below
+        elements:
+          - env: dev
+            targetRevision: dev
+            namespace: ai-system-dev
+            automated: true
+          - env: staging
+            targetRevision: dev
+            namespace: ai-system-staging
+            automated: true
+          - env: prod
+            targetRevision: prod
+            namespace: ai-system-prod
+            automated: false # Manual only, promotions triggered explicitly
+
+  template:
+    metadata:
+      name: "frontend-{{.env}}"
+    spec:
+      project: default
+
+      sources:
+        - repoURL: https://github.com/lezw-1/kubernetes-deployment
+          targetRevision: "{{.targetRevision}}"
+          path: apps/frontend # Helm chart source
+          helm:
+            valueFiles:
+              - $values/clusters/{{.env}}/frontend.yaml # Env-specific overrides
+        - repoURL: https://github.com/lezw-1/kubernetes-deployment
+          targetRevision: "{{.targetRevision}}"
+          ref: values # Second source aliased so the path above can reference $values
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{.namespace}}"
+
+      syncPolicy:
+        {{- if .automated }}
+        automated:
+          prune: true # Remove resources no longer defined in Git
+          selfHeal: true # Revert manual drift back to match Git
+        {{- end }}
+        syncOptions:
+          - CreateNamespace=true # Auto-create the destination namespace

@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app
+  namespace: argocd
+spec:
+  project: default # Bound to AppProject "default" and its guardrails
+
+  source:
+    repoURL: https://github.com/lezw-1/kubernetes-deployment
+    targetRevision: dev # App-of-apps tracks the dev branch
+    path: projects/applications
+    directory:
+      recurse: false # Only top-level files, not subdirectories
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd # Child Applications/ApplicationSets live here
+
+  syncPolicy:
+    automated:
+      prune: true # Remove resources no longer defined in Git
+      selfHeal: true # Revert manual drift back to match Git
+    syncOptions:
+      - CreateNamespace=true # Auto-create the destination namespace
