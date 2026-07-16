@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/lezw-1/kubernetes-deployment
     targetRevision: dev # App-of-apps tracks the dev branch
-    path: projects/applications
+    path: argocd
     directory:
       recurse: false # Only top-level files, not subdirectories
 

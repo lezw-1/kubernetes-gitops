@@ -15,14 +15,14 @@ jobs:
         with:
           version: v3.15.3
 
-      - name: helm lint apps/frontend
-        run: helm lint apps/frontend
+      - name: helm lint apps/frontend/chart
+        run: helm lint apps/frontend/chart
 
       - name: helm template against each environment's values
         run: |
           for env in dev staging prod; do
             echo "--- clusters/$env/frontend.yaml ---"
-            helm template frontend apps/frontend -f clusters/"$env"/frontend.yaml
+            helm template frontend apps/frontend/chart -f clusters/"$env"/frontend.yaml
           done
 
   kubeconform:
@@ -43,7 +43,7 @@ jobs:
       - name: Render and validate frontend chart
         run: |
           for env in dev staging prod; do
-            helm template frontend apps/frontend -f clusters/"$env"/frontend.yaml \
+            helm template frontend apps/frontend/chart -f clusters/"$env"/frontend.yaml \
               | kubeconform -strict -summary \
                 -schema-location default \
                 -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
@@ -55,8 +55,8 @@ jobs:
           kubeconform -strict -summary \
             -schema-location default \
             -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
-            projects/app-project.yaml projects/applications/*.yaml \
-            bootstrap/argocd/namespace.yaml bootstrap/argocd/install.yaml bootstrap/argocd/root-app.yaml
+            projects/applications/*.yaml \
+            bootstrap/argocd/app-project.yaml bootstrap/argocd/namespace.yaml bootstrap/argocd/install.yaml bootstrap/argocd/root-app.yaml
 
   yaml-lint:
     name: yamllint
