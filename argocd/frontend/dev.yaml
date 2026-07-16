@@ -27,3 +27,6 @@ spec:
       selfHeal: true # Revert manual drift back to match Git
     syncOptions:
       - CreateNamespace=true # Auto-create the destination namespace
+    managedNamespaceMetadata:
+      labels:
+        team: gateway-1 # Required for HTTPRoutes to attach to the shared gateway

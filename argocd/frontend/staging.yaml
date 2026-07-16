@@ -24,3 +24,6 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true # Auto-create the destination namespace
+    managedNamespaceMetadata:
+      labels:
+        team: gateway-1 # Required for HTTPRoutes to attach to the shared gateway
