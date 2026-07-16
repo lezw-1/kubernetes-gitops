@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: gateway-local
+  name: gateway-staging
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "0" # Needs namespace/certs-manager/gateway-controller/gateway-class first
@@ -14,7 +14,7 @@ spec:
       path: platform/networking/gateway # Helm chart source
       helm:
         valueFiles:
-          - $values/clusters/local/gateway.yaml # Env-specific overrides (Rancher Desktop)
+          - $values/clusters/staging/gateway.yaml # Env-specific overrides
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
       targetRevision: dev
       ref: values # Second source aliased so the path above can reference $values

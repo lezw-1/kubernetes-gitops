@@ -1,8 +1,8 @@
-# Gateway overrides for prod, layered onto apps/gateway/values.yaml
-# via the $values ref in argocd/networking/gateway/prod.yaml
+# Gateway overrides for staging, layered onto apps/gateway/values.yaml
+# via the $values ref in argocd/networking/gateway/staging.yaml
 
 global:
-  environment: prod
+  environment: staging
 
 gateway:
   tls:
