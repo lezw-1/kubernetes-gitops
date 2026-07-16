@@ -1,0 +1,29 @@
+{{- if .Values.gateway.nodePort.enabled }}
+# Envoy service override for NodePort access
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: gateway-proxy-{{ .Values.global.environment }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: NodePort
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              ports:
+                - name: http
+                  port: 80
+                  targetPort: 10080
+                  nodePort: {{ .Values.gateway.nodePort.http }}
+                {{- if .Values.gateway.tls.enabled }}
+                - name: https
+                  port: 443
+                  targetPort: 10443
+                  nodePort: {{ .Values.gateway.nodePort.https }}
+                {{- end }}
+{{- end }}

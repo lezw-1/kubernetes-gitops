@@ -1,0 +1,26 @@
+# Singleton — creates the shared "networking" namespace once per cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: networking-namespace
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3" # Must exist before certs-manager/gateway-controller/gateway-class/gateway
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/lezw-1/kubernetes-gitops
+    targetRevision: dev
+    path: platform/networking/namespace
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: networking
+
+  syncPolicy:
+    automated:
+      prune: true # Remove resources no longer defined in Git
+      selfHeal: true # Revert manual drift back to match Git
+    syncOptions:
+      - CreateNamespace=true # Auto-create the destination namespace

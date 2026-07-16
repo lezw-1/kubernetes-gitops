@@ -1,0 +1,26 @@
+# Singleton — cert-manager, one instance per cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: networking-certs-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2" # Needs the networking namespace first
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/lezw-1/kubernetes-gitops
+    targetRevision: dev
+    path: platform/networking/certs-manager
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: networking
+
+  syncPolicy:
+    automated:
+      prune: true # Remove resources no longer defined in Git
+      selfHeal: true # Revert manual drift back to match Git
+    syncOptions:
+      - CreateNamespace=true # Auto-create the destination namespace

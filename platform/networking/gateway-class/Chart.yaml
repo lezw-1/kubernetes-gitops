@@ -1,0 +1,4 @@
+apiVersion: v2
+name: gateway-controller
+version: 0.1.0
+description: Envoy GatewayClass

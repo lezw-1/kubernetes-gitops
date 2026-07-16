@@ -7,13 +7,26 @@ service's Helm chart directly — no Helmfile in front of it.
 
 ```
 kubernetes-gitops/
-├── apps/                   # One Helm chart per service
+├── apps/                   # One Helm chart per application service
 │   └── frontend/           # Chart.yaml, values.yaml, templates/
+├── platform/               # One Helm chart per platform/infra service
+│   └── networking/
+│       ├── namespace/          # Singleton — creates the "networking" namespace
+│       ├── certs-manager/      # Singleton
+│       ├── gateway-controller/ # Singleton
+│       ├── gateway-class/      # Singleton
+│       └── gateway/            # Deployed once per environment (dev/local/prod)
 ├── argocd/                 # Argo CD control plane — one folder per service
-│   └── frontend/           # One Application per environment
-│       ├── dev.yaml
-│       ├── staging.yaml
-│       └── prod.yaml
+│   ├── frontend/           # One Application per environment
+│   │   ├── dev.yaml
+│   │   ├── staging.yaml
+│   │   └── prod.yaml
+│   └── networking/
+│       ├── namespace/       # Singleton
+│       ├── certs-manager/   # Singleton
+│       ├── gateway-controller/ # Singleton
+│       ├── gateway-class/   # Singleton
+│       └── gateway/         # One Application per environment (dev/local/prod)
 ├── bootstrap/               # One-time cluster bootstrap (Argo CD itself)
 │   ├── argocd/
 │   │   ├── namespace.yaml   # Namespace "argocd"
@@ -22,18 +35,31 @@ kubernetes-gitops/
 │   └── root-app.yaml        # Root app-of-apps Application, points at argocd/
 └── clusters/                # Per-environment service overrides
     ├── dev/frontend.yaml
+    ├── dev/gateway.yaml
     ├── staging/frontend.yaml
-    └── prod/frontend.yaml
+    ├── prod/frontend.yaml
+    ├── prod/gateway.yaml
+    └── local/gateway.yaml
 ```
 
 Each file in `argocd/frontend/` layers `apps/frontend/values.yaml` with
 `clusters/<env>/frontend.yaml` via Argo CD's multi-source `ref: values`
 (`frontend-dev`, `frontend-staging`, `frontend-prod`). Only `dev.yaml` has
-`syncPolicy.automated` — staging and prod sync manually.
+`syncPolicy.automated` — staging and prod sync manually. `argocd/networking/gateway/*`
+follows the same pattern against `platform/networking/gateway/values.yaml`.
 
 Both `bootstrap/argocd/install.yaml` and `bootstrap/root-app.yaml` use
 `project: default` — Argo CD's built-in AppProject, no separate manifest
 needed.
+
+`platform/networking/` was migrated in from the standalone
+[kubernetes-networking](https://github.com/lezw-1/kubernetes-networking) repo
+so the whole platform is one self-contained repo — one root-app, one
+bootstrap. `namespace`/`certs-manager`/`gateway-controller`/`gateway-class`
+are cluster-wide singletons (one `install.yaml` each, `sync-wave` ordered so
+the namespace lands first); `gateway` is deployed once per environment into
+the shared `networking` namespace, with resource names suffixed per env
+(e.g. `cluster-gateway-dev`) to avoid collisions.
 
 ## Usage
 
