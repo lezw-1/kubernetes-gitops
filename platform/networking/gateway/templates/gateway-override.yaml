@@ -1,4 +1,7 @@
 {{- if .Values.gateway.nodePort.enabled }}
+# Envoy Gateway's Helm chart doesn't expose NodePort/port config directly,
+# so this EnvoyProxy patches the generated Service to add NodePort access
+# with the correct ports for local/dev use.
 # Envoy service override for NodePort access
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
@@ -15,6 +18,10 @@ spec:
           type: StrategicMerge
           value:
             spec:
+              # external:nodePort -> Service:port -> pod:targetPort.
+              # targetPort is 10080/10443 (not 80/443) because Envoy runs
+              # as non-root and can't bind privileged ports, so Envoy
+              # Gateway offsets them by +10000.
               ports:
                 - name: http
                   port: 80
