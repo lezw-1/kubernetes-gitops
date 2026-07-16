@@ -16,11 +16,11 @@ spec:
           - env: staging
             targetRevision: dev
             namespace: ai-system-staging
-            automated: true
+            automated: false 
           - env: prod
             targetRevision: prod
             namespace: ai-system-prod
-            automated: false # Manual only, promotions triggered explicitly
+            automated: false
 
   template:
     metadata:
