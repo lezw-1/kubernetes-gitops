@@ -9,6 +9,7 @@ spec:
     - "{{ .Values.global.environment }}.{{ .Values.gateway.hosts.domain }}"
   {{- end }}
   parentRefs:
+    # Must match the Gateway name in platform/networking/gateway, or the route silently never attaches
     - name: cluster-gateway-{{ .Values.global.environment }}
       namespace: networking
       {{- if .Values.gateway.hosts.domain }}
