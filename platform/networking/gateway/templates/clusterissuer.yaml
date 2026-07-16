@@ -1,0 +1,31 @@
+{{- if .Values.gateway.tls.enabled }}
+{{- if .Values.gateway.tls.selfSigned }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-{{ .Values.global.environment }}
+spec:
+  selfSigned: {}
+{{- else }}
+{{- if not .Values.gateway.hosts.email }}
+  {{- fail "gateway.hosts.email is required for non-self-signed TLS" }}
+{{- end }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-{{ .Values.global.environment }}
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: {{ .Values.gateway.hosts.email }}
+    privateKeySecretRef:
+      name: letsencrypt-{{ .Values.global.environment }}
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - name: cluster-gateway-{{ .Values.global.environment }}
+                namespace: {{ .Release.Namespace }}
+                kind: Gateway
+{{- end }}
+{{- end }}

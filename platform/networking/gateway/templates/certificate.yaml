@@ -1,0 +1,18 @@
+{{- if .Values.gateway.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gateway-tls-{{ .Values.global.environment }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: gateway-tls-{{ .Values.global.environment }}
+  issuerRef:
+    name: {{ if .Values.gateway.tls.selfSigned }}selfsigned{{ else }}letsencrypt{{ end }}-{{ .Values.global.environment }}
+    kind: ClusterIssuer
+  dnsNames:
+    {{- if .Values.gateway.tls.selfSigned }}
+    - localhost
+    {{- else }}
+    - {{ .Values.global.environment }}.{{ .Values.gateway.hosts.domain }}
+    {{- end }}
+{{- end }}

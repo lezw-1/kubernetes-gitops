@@ -1,0 +1,17 @@
+# Gateway overrides for prod, layered onto apps/gateway/values.yaml
+# via the $values ref in argocd/networking/gateway/prod.yaml
+
+global:
+  environment: prod
+
+gateway:
+  tls:
+    enabled: true
+    selfSigned: false
+  hosts:
+    domain: ""
+    email: ""
+  nodePort:
+    enabled: false
+  timeout:
+    requestTimeout: 1800s

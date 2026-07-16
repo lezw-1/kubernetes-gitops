@@ -1,0 +1,17 @@
+global:
+  environment: ""
+
+gateway:
+  className: eg
+  tls:
+    enabled: true
+    selfSigned: true
+  hosts:
+    domain: ""
+    email: ""
+  nodePort:
+    enabled: false
+    http: 32080
+    https: 32443
+  timeout:
+    requestTimeout: 1800s
