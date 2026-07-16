@@ -1,6 +1,10 @@
+# Singleton GatewayClass "eg" — referenced by name from gateway.className in the gateway chart's values.
 apiVersion: gateway.networking.k8s.io/v1
 kind: GatewayClass
 metadata:
+  # GatewayClass resource name, referenced by Gateways via gatewayClassName.
   name: eg
+
 spec:
+  # Controller that implements this GatewayClass — Envoy Gateway.
   controllerName: gateway.envoyproxy.io/gatewayclass-controller

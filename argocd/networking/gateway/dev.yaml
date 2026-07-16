@@ -1,29 +1,57 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  # Application resource name, shown in the Argo CD UI.
   name: gateway-dev
+
+  # Namespace the Application resource itself lives in.
   namespace: argocd
+
   annotations:
-    argocd.argoproj.io/sync-wave: "0" # Needs namespace/certs-manager/gateway-controller/gateway-class first
+    # Needs namespace/certs-manager/gateway-controller/gateway-class first.
+    argocd.argoproj.io/sync-wave: "0"
+
 spec:
+  # Bound to AppProject "default" and its guardrails.
   project: default
 
+  # Multi-source config: the gateway Helm chart plus a values-only Git source.
   sources:
+    # Gateway Helm chart source.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+      # Branch tracked for the chart source.
       targetRevision: dev
-      path: helm/platform/networking/gateway # Helm chart source
+
+      # Path to the gateway Helm chart.
+      path: helm/platform/networking/gateway
+
       helm:
         valueFiles:
-          - $values/envs/dev/gateway.yaml # Env-specific overrides
+          # Env-specific overrides, supplied by the $values Git source referenced below.
+          - $values/envs/dev/gateway.yaml
+
+    # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+      # Branch tracked for values files.
       targetRevision: dev
-      ref: values # Second source aliased so the path above can reference $values
+
+      # Aliased so the chart source above can reference $values.
+      ref: values
 
   destination:
+    # Target cluster API server — in-cluster.
     server: https://kubernetes.default.svc
-    namespace: networking # Shared with the other networking singletons — resources are suffixed per env
 
+    # Shared with the other networking singletons — resources are suffixed per env.
+    namespace: networking
+
+  # Fully automated GitOps sync — no manual apply needed.
   syncPolicy:
     automated:
-      prune: true # Remove resources no longer defined in Git
-      selfHeal: true # Revert manual drift back to match Git
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true

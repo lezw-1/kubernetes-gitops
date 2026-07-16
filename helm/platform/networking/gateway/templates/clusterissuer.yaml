@@ -1,29 +1,44 @@
 {{- if .Values.gateway.tls.enabled }}
 {{- if .Values.gateway.tls.selfSigned }}
+# Self-signed path — used for local/dev clusters without a public domain.
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
+  # ClusterIssuer resource name, referenced by the Certificate's issuerRef.
   name: selfsigned-{{ .Values.global.environment }}
+
 spec:
+  # No external validation — trust is local only.
   selfSigned: {}
 {{- else }}
+# Let's Encrypt requires a contact email — fail fast instead of applying an invalid ACME issuer.
 {{- if not .Values.gateway.hosts.email }}
   {{- fail "gateway.hosts.email is required for non-self-signed TLS" }}
 {{- end }}
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
+  # ClusterIssuer resource name, referenced by the Certificate's issuerRef.
   name: letsencrypt-{{ .Values.global.environment }}
+
 spec:
   acme:
+    # Let's Encrypt's production ACME endpoint.
     server: https://acme-v02.api.letsencrypt.org/directory
+
+    # Contact email for expiry/policy notices, sourced from values.gateway.hosts.email.
     email: {{ .Values.gateway.hosts.email }}
+
     privateKeySecretRef:
+      # Secret cert-manager stores the ACME account key in.
       name: letsencrypt-{{ .Values.global.environment }}
+
     solvers:
+      # HTTP-01 challenge routed through the Gateway API instead of Ingress.
       - http01:
           gatewayHTTPRoute:
             parentRefs:
+              # Gateway the ACME solver's temporary HTTPRoute attaches to.
               - name: cluster-gateway-{{ .Values.global.environment }}
                 namespace: {{ .Release.Namespace }}
                 kind: Gateway

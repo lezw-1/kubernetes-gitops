@@ -1,17 +1,31 @@
 # Gateway overrides for staging, layered onto apps/gateway/values.yaml
-# via the $values ref in argocd/networking/gateway/staging.yaml
+# via the $values ref in argocd/networking/gateway/staging.yaml.
 
+# Global: shared across templates.
 global:
+  # Deployment environment name, used in resource suffixes.
   environment: staging
 
+# Gateway: shared cluster Gateway configuration.
 gateway:
   tls:
+    # Enables the HTTPS listener and Certificate/ClusterIssuer resources.
     enabled: true
+
+    # Uses Let's Encrypt instead of a self-signed cert.
     selfSigned: false
+
   hosts:
+    # Default: empty disables hostname-based routing.
     domain: ""
+
+    # Contact email for the Let's Encrypt ACME account.
     email: ""
+
   nodePort:
+    # Disabled — staging is fronted by a real LoadBalancer, not NodePort.
     enabled: false
+
   timeout:
+    # Request timeout applied via BackendTrafficPolicy.
     requestTimeout: 1800s

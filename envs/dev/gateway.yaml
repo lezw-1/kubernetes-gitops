@@ -1,19 +1,37 @@
 # Gateway overrides for dev, layered onto apps/gateway/values.yaml
-# via the $values ref in argocd/networking/gateway/dev.yaml
+# via the $values ref in argocd/networking/gateway/dev.yaml.
 
+# Global: shared across templates.
 global:
+  # Deployment environment name, used in resource suffixes.
   environment: dev
 
+# Gateway: shared cluster Gateway configuration.
 gateway:
   tls:
+    # Default: false — dev uses NodePort instead of a TLS-terminating listener.
     enabled: false
+
+    # No self-signed cert issued since TLS is disabled.
     selfSigned: false
+
   hosts:
+    # Default: empty disables hostname-based routing.
     domain: ""
+
+    # Not used — TLS is disabled, so no ACME account is created.
     email: ""
+
   nodePort:
+    # Enabled for local/dev clusters without a LoadBalancer.
     enabled: true
+
+    # NodePort for HTTP.
     http: 32080
+
+    # NodePort for HTTPS — unused while tls.enabled is false.
     https: 32443
+
   timeout:
+    # Request timeout applied via BackendTrafficPolicy.
     requestTimeout: 1800s

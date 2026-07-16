@@ -1,3 +1,8 @@
+# Helm chart API version.
 apiVersion: v2
+
+# Chart name.
 name: gateway
+
+# Chart version — bump intentionally whenever templates or values change.
 version: 0.1.0
