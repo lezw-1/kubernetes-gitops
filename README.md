@@ -1,4 +1,4 @@
-# Kubernetes Deployment
+# Kubernetes GitOps
 
 GitOps repo: Argo CD watches this repo (app-of-apps) and syncs each
 service's Helm chart directly — no Helmfile in front of it.
@@ -6,7 +6,7 @@ service's Helm chart directly — no Helmfile in front of it.
 ## Contents
 
 ```
-kubernetes-deployment/
+kubernetes-gitops/
 ├── apps/                   # One Helm chart per service
 │   └── frontend/           # Chart.yaml, values.yaml, templates/
 ├── argocd/                 # Argo CD control plane — ApplicationSet per service

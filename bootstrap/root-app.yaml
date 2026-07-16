@@ -7,7 +7,7 @@ spec:
   project: default # Bound to AppProject "default" and its guardrails
 
   source:
-    repoURL: https://github.com/lezw-1/kubernetes-deployment
+    repoURL: https://github.com/lezw-1/kubernetes-gitops
     targetRevision: dev # App-of-apps tracks the dev branch
     path: argocd
     directory:

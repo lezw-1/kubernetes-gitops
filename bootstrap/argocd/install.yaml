@@ -14,7 +14,7 @@ spec:
       helm:
         valueFiles:
           - $values/bootstrap/argocd/values.yaml
-    - repoURL: https://github.com/lezw-1/kubernetes-deployment
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
       targetRevision: dev
       ref: values # Aliased so the chart source above can reference $values
 

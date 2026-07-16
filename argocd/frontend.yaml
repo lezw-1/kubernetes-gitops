@@ -29,13 +29,13 @@ spec:
       project: default
 
       sources:
-        - repoURL: https://github.com/lezw-1/kubernetes-deployment
+        - repoURL: https://github.com/lezw-1/kubernetes-gitops
           targetRevision: "{{.targetRevision}}"
           path: apps/frontend # Helm chart source
           helm:
             valueFiles:
               - $values/clusters/{{.env}}/frontend.yaml # Env-specific overrides
-        - repoURL: https://github.com/lezw-1/kubernetes-deployment
+        - repoURL: https://github.com/lezw-1/kubernetes-gitops
           targetRevision: "{{.targetRevision}}"
           ref: values # Second source aliased so the path above can reference $values
 
