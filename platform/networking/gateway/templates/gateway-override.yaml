@@ -18,12 +18,12 @@ spec:
               ports:
                 - name: http
                   port: 80
-                  targetPort: 10080
+                  targetPort: 80
                   nodePort: {{ .Values.gateway.nodePort.http }}
                 {{- if .Values.gateway.tls.enabled }}
                 - name: https
                   port: 443
-                  targetPort: 10443
+                  targetPort: 80
                   nodePort: {{ .Values.gateway.nodePort.https }}
                 {{- end }}
 {{- end }}
