@@ -9,9 +9,9 @@ gateway:
     domain: ""
 
 image:
-  repository: <CF_ORG_ID>.<CF_CR_REGION>.registry.cloudfleet.dev/frontend # CI updates tag below
-  tag: dev # CI overwrites with commit SHA on each push
-  pullPolicy: Always
+  repository: frontend # Built locally via `nerdctl build -t frontend:local ...`
+  tag: local
+  pullPolicy: Never # Use the local nerdctl image, never pull from a registry
 
 service:
   port: 80 # nginx port
