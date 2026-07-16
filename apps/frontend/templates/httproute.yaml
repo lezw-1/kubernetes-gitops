@@ -9,7 +9,7 @@ spec:
     - "{{ .Values.global.environment }}.{{ .Values.gateway.hosts.domain }}"
   {{- end }}
   parentRefs:
-    - name: cluster-gateway
+    - name: cluster-gateway-{{ .Values.global.environment }}
       namespace: networking
       {{- if .Values.gateway.hosts.domain }}
       sectionName: https
