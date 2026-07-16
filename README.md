@@ -1,85 +1,57 @@
 # Kubernetes GitOps
 
-GitOps repo: Argo CD watches this repo (app-of-apps) and syncs each
-service's Helm chart directly — no Helmfile in front of it.
+GitOps repo: Argo CD watches this repo (app-of-apps) and syncs each service's Helm chart directly — no Helmfile in front of it.
 
-## Contents
+## Architecture
 
-- `argocd/` — Argo CD Application manifests for each deployment.
-- `bootstrap/` — one-time cluster bootstrap (e.g. installing Argo CD).
-- `envs/` — per-environment config overrides.
-- `helm/` — Helm chart sources: `apps/` (application services) and
-  `platform/` (platform/cluster resources, e.g. networking).
+`bootstrap/root.yaml` is the root app-of-apps Application (tracks `prod`) — it recursively syncs every Application manifest under `argocd/`. Each child Application points at a Helm chart in `helm/` and layers a per-environment values file from `envs/` via Argo CD's multi-source `ref: values` pattern.
 
-```
-kubernetes-gitops/
-├── argocd/                 # Argo CD control plane — one folder per service
-│   ├── frontend/           # One Application per environment
-│   │   ├── dev.yaml         # Tracks the dev branch
-│   │   ├── staging.yaml     # Tracks the staging branch
-│   │   └── prod.yaml        # Tracks the prod branch
-│   └── networking/
-│       ├── namespace/       # Singleton — tracks prod
-│       ├── certs-manager/   # Singleton — tracks prod
-│       ├── gateway-controller/ # Singleton — tracks prod
-│       ├── gateway-class/   # Singleton — tracks prod
-│       └── gateway/         # One Application per environment (dev/staging/prod)
-├── bootstrap/               # One-time cluster bootstrap (Argo CD itself)
-│   ├── argocd/
-│   │   ├── values.yaml      # Argo CD Helm values (shared baseline)
-│   │   └── install.yaml     # Argo CD Application — self-manages its own Helm install
-│   └── root.yaml            # Root app-of-apps Application, points at argocd/ — tracks prod
-├── envs/                    # Per-environment service overrides
-│   ├── dev/frontend.yaml
-│   ├── dev/gateway.yaml
-│   ├── staging/frontend.yaml
-│   ├── staging/gateway.yaml
-│   ├── prod/frontend.yaml
-│   └── prod/gateway.yaml
-└── helm/
-    ├── apps/                # One Helm chart per application service
-    │   └── frontend/        # Chart.yaml, values.yaml, templates/
-    └── platform/            # One Helm chart per platform/infra service
-        └── networking/
-            ├── namespace/          # Singleton — creates the "networking" namespace
-            ├── certs-manager/      # Singleton
-            ├── gateway-controller/ # Singleton
-            ├── gateway-class/      # Singleton
-            └── gateway/            # Deployed once per environment (dev/staging/prod)
-```
+There is a single cluster — every Application's destination is the same in-cluster API server, and environments are separated by namespace rather than by cluster. `dev`/`staging`/`prod` Applications track their matching Git branch, while the cluster-wide singleton platform components track `prod` only, so shared infra only changes on reviewed merges. Platform singletons (`namespace`, `certs-manager`, `gateway-controller`, `gateway-class`) are ordered with Argo CD `sync-wave` annotations so the shared `networking` namespace lands first.
 
-Each file in `argocd/frontend/` layers `helm/apps/frontend/values.yaml` with
-`envs/<env>/frontend.yaml` via Argo CD's multi-source `ref: values`
-(`frontend-dev`, `frontend-staging`, `frontend-prod`). Only `dev.yaml` has
-`syncPolicy.automated` — staging and prod sync manually. `argocd/networking/gateway/*`
-follows the same pattern against `helm/platform/networking/gateway/values.yaml`.
+## Components
 
-Both `bootstrap/argocd/install.yaml` and `bootstrap/root.yaml` use
-`project: default` — Argo CD's built-in AppProject, no separate manifest
-needed.
+- **Bootstrap (`bootstrap/`)** — `bootstrap.sh` one-time script: installs Argo CD via Helm, then hands self-management and the app-of-apps over to Argo CD.
+- **App-of-apps (`argocd/`)** — Argo CD Application manifests; one per service/environment plus the platform singletons.
+- **Frontend (`helm/apps/frontend`)** — React dashboard Helm chart: Deployment, Service, HPA, HTTPRoute.
+- **Networking platform (`helm/platform/networking`)** — shared namespace, cert-manager, Envoy Gateway controller/class, and the per-environment Gateway (TLS Certificate/ClusterIssuer, health-check HTTPRoute).
+- **Environment overrides (`envs/`)** — per-environment values layered onto each chart via Argo CD's multi-source `$values` ref.
 
-There is a single cluster, so it runs as the production environment:
-`bootstrap/root.yaml` and the cluster-wide singleton platform components
-(`namespace`, `certs-manager`, `gateway-controller`, `gateway-class`) track
-the `prod` branch rather than `dev`, so only reviewed changes reach shared,
-cluster-critical infra. Per-environment Applications (`argocd/frontend/*`,
-`argocd/networking/gateway/*`) track their matching branch instead.
+## Prerequisites
 
-`helm/platform/networking/` was migrated in from the standalone
-[kubernetes-networking](https://github.com/lezw-1/kubernetes-networking) repo
-so the whole platform is one self-contained repo — one app-of-apps, one
-bootstrap. `namespace`/`certs-manager`/`gateway-controller`/`gateway-class`
-are cluster-wide singletons (one `install.yaml` each, `sync-wave` ordered so
-the namespace lands first); `gateway` is deployed once per environment into
-the shared `networking` namespace, with resource names suffixed per env
-(e.g. `cluster-gateway-dev`) to avoid collisions.
+- **kubectl** — pointed at the target cluster; used by `bootstrap.sh` to apply the self-management and app-of-apps manifests.
+- **Helm** — used by `bootstrap.sh` to install Argo CD.
 
-## Usage
+## Deployment
 
-```
+### Local
+
+One-time cluster bootstrap — installs Argo CD, then hands self-management and the app-of-apps over to it:
+
+```sh
 ./bootstrap/bootstrap.sh
 ```
 
-One-time cluster bootstrap: creates the `argocd` namespace, installs Argo CD
-via Helm, then hands self-management and the app-of-apps over to Argo CD.
-Requires `kubectl` and `helm` pointed at the target cluster.
+### Dev
+
+Env variables can be found in: `envs/dev/frontend.yaml`, `envs/dev/gateway.yaml`.
+
+Deployment is orchestrated by Argo CD syncing the `dev` branch — the only environment with `syncPolicy.automated` (prune + self-heal). The frontend image is built locally via `nerdctl build -t frontend:local ...` and never pulled from a registry.
+
+### Staging
+
+Env variables can be found in: `envs/staging/frontend.yaml`, `envs/staging/gateway.yaml`.
+
+Deployment is orchestrated by Argo CD syncing the `staging` branch — sync is manual (no `syncPolicy.automated`). `.github/workflows/deploy-frontend.yaml` bumps the frontend image tag on `workflow_dispatch`, triggered once the app source repo's CI pushes a new image.
+
+### Prod
+
+Env variables can be found in: `envs/prod/frontend.yaml`, `envs/prod/gateway.yaml`.
+
+Deployment is orchestrated by Argo CD syncing the `prod` branch — sync is manual (no `syncPolicy.automated`). Promotion happens only through a human-reviewed PR from `dev` to `prod`.
+
+## Links
+
+- [Argo CD](https://argo-cd.readthedocs.io/) — GitOps continuous delivery, drives every sync in this repo
+- [Envoy Gateway](https://gateway.envoyproxy.io/) — Gateway API implementation backing `gateway-controller`/`gateway-class`/`gateway`
+- [cert-manager](https://cert-manager.io/) — issues and renews the TLS certs used by the gateway
+- [kubernetes-networking](https://github.com/lezw-1/kubernetes-networking) — standalone repo `helm/platform/networking/` was migrated in from
