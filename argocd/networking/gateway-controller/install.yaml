@@ -24,3 +24,4 @@ spec:
       selfHeal: true # Revert manual drift back to match Git
     syncOptions:
       - CreateNamespace=true # Auto-create the destination namespace
+      - ServerSideApply=true # CRDs here exceed the 262144-byte last-applied-configuration limit
