@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: frontend-dev
+  namespace: argocd
+spec:
+  project: default
+
+  sources:
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+      targetRevision: dev
+      path: apps/frontend # Helm chart source
+      helm:
+        valueFiles:
+          - $values/clusters/dev/frontend.yaml # Env-specific overrides
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+      targetRevision: dev
+      ref: values # Second source aliased so the path above can reference $values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ai-system-dev
+
+  syncPolicy:
+    automated:
+      prune: true # Remove resources no longer defined in Git
+      selfHeal: true # Revert manual drift back to match Git
+    syncOptions:
+      - CreateNamespace=true # Auto-create the destination namespace

@@ -11,11 +11,11 @@ spec:
     targetRevision: dev # App-of-apps tracks the dev branch
     path: argocd
     directory:
-      recurse: false # Only top-level files, not subdirectories
+      recurse: true # Picks up per-service subfolders, e.g. argocd/frontend/
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd # Child Applications/ApplicationSets live here
+    namespace: argocd # Child Applications live here
 
   syncPolicy:
     automated:

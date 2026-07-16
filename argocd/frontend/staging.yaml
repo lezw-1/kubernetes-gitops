@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: frontend-staging
+  namespace: argocd
+spec:
+  project: default
+
+  sources:
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+      targetRevision: dev
+      path: apps/frontend # Helm chart source
+      helm:
+        valueFiles:
+          - $values/clusters/staging/frontend.yaml # Env-specific overrides
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+      targetRevision: dev
+      ref: values # Second source aliased so the path above can reference $values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ai-system-staging
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true # Auto-create the destination namespace
