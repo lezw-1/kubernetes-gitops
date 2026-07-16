@@ -35,10 +35,9 @@ kubernetes-gitops/
 │       └── gateway/         # One Application per environment (dev/local/prod)
 ├── bootstrap/               # One-time cluster bootstrap (Argo CD itself)
 │   ├── argocd/
-│   │   ├── namespace.yaml   # Namespace "argocd"
 │   │   ├── values.yaml      # Argo CD Helm values (shared baseline)
 │   │   └── install.yaml     # Argo CD Application — self-manages its own Helm install
-│   └── root-app.yaml        # Root app-of-apps Application, points at argocd/
+│   └── root.yaml            # Root app-of-apps Application, points at argocd/
 └── clusters/                # Per-environment service overrides
     ├── dev/frontend.yaml
     ├── dev/gateway.yaml
@@ -54,13 +53,13 @@ Each file in `argocd/frontend/` layers `apps/frontend/values.yaml` with
 `syncPolicy.automated` — staging and prod sync manually. `argocd/networking/gateway/*`
 follows the same pattern against `platform/networking/gateway/values.yaml`.
 
-Both `bootstrap/argocd/install.yaml` and `bootstrap/root-app.yaml` use
+Both `bootstrap/argocd/install.yaml` and `bootstrap/root.yaml` use
 `project: default` — Argo CD's built-in AppProject, no separate manifest
 needed.
 
 `platform/networking/` was migrated in from the standalone
 [kubernetes-networking](https://github.com/lezw-1/kubernetes-networking) repo
-so the whole platform is one self-contained repo — one root-app, one
+so the whole platform is one self-contained repo — one app-of-apps, one
 bootstrap. `namespace`/`certs-manager`/`gateway-controller`/`gateway-class`
 are cluster-wide singletons (one `install.yaml` each, `sync-wave` ordered so
 the namespace lands first); `gateway` is deployed once per environment into

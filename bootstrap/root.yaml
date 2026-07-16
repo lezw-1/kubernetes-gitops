@@ -1,0 +1,47 @@
+# App-of-apps root Application — pulls in all child Applications from Git.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Application resource name, shown in the Argo CD UI.
+  name: root
+
+  # Namespace the Application resource itself lives in.
+  namespace: argocd
+
+spec:
+  # Bound to AppProject "default" and its guardrails.
+  project: default
+
+  source:
+    # Git repository containing the child Application manifests.
+    repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+    # App-of-apps tracks the dev branch.
+    targetRevision: dev
+
+    # Path within the repo containing child Application manifests.
+    path: argocd
+
+    directory:
+      # Picks up per-service subfolders, e.g. argocd/frontend/.
+      recurse: true
+
+  destination:
+    # Target cluster API server — in-cluster.
+    server: https://kubernetes.default.svc
+
+    # Child Applications live here.
+    namespace: argocd
+
+  # Fully automated GitOps sync — no manual apply needed for child apps.
+  syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
+    syncOptions:
+      # Auto-create the destination namespace.
+      - CreateNamespace=true

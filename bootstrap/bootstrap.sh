@@ -1,27 +1,40 @@
 #!/usr/bin/env bash
+# ==================================================
 # One-command Argo CD bootstrap — see README for the manual step-by-step.
+# ==================================================
+
+# Exit on error, on unset variables, and on failures inside pipelines
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" # Absolute path to bootstrap/
-ARGOCD_VERSION="10.1.3" # Must match install.yaml's targetRevision
+# Absolute path to bootstrap/
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 1. Create the argocd namespace
-kubectl apply -f "$SCRIPT_DIR/argocd/namespace.yaml"
+# Chart version pin lives in install.yaml — read it here instead of duplicating it
+ARGOCD_VERSION="$(grep -m1 'targetRevision:' "$SCRIPT_DIR/argocd/install.yaml" | awk '{print $2}')"
 
-# 2. Add/refresh the Argo Helm repo
+# Fires on any command that fails under set -e; all steps are safe to re-run from the top once the reported step is fixed
+CURRENT_STEP=""
+trap 'echo "Bootstrap failed during: $CURRENT_STEP" >&2' ERR
+
+CURRENT_STEP="add/refresh the Argo Helm repo"
+echo "Step: $CURRENT_STEP"
 helm repo add argo https://argoproj.github.io/argo-helm
 helm repo update argo
 
-# 3. Initial install — the only step Argo CD can't do for itself
+CURRENT_STEP="install Argo CD via Helm"
+echo "Step: $CURRENT_STEP"
 helm upgrade --install argocd argo/argo-cd \
   --version "$ARGOCD_VERSION" \
   --namespace argocd \
+  --create-namespace \
   -f "$SCRIPT_DIR/argocd/values.yaml"
 
-# 4. Hand self-management over to Argo CD
+CURRENT_STEP="hand self-management over to Argo CD"
+echo "Step: $CURRENT_STEP"
 kubectl apply -f "$SCRIPT_DIR/argocd/install.yaml" -n argocd
 
-# 5. Apply the app-of-apps — pulls in argocd/*.yaml from git
-kubectl apply -f "$SCRIPT_DIR/root-app.yaml" -n argocd
+CURRENT_STEP="apply the app-of-apps"
+echo "Step: $CURRENT_STEP"
+kubectl apply -f "$SCRIPT_DIR/root.yaml" -n argocd
 
 echo "Bootstrap complete — Argo CD is now managing itself and the app-of-apps."
