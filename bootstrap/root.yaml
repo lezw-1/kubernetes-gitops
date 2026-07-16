@@ -16,8 +16,8 @@ spec:
     # Git repository containing the child Application manifests.
     repoURL: https://github.com/lezw-1/kubernetes-gitops
 
-    # App-of-apps tracks the dev branch.
-    targetRevision: dev
+    # App-of-apps tracks the prod branch.
+    targetRevision: prod
 
     # Path within the repo containing child Application manifests.
     path: argocd

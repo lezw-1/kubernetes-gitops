@@ -11,8 +11,8 @@ spec:
 
   source:
     repoURL: https://github.com/lezw-1/kubernetes-gitops
-    targetRevision: dev
-    path: platform/networking/certs-manager
+    targetRevision: prod
+    path: helm/platform/networking/certs-manager
 
   destination:
     server: https://kubernetes.default.svc

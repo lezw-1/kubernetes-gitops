@@ -32,7 +32,7 @@ spec:
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for values files.
-      targetRevision: dev
+      targetRevision: prod
 
       # Aliased so the chart source above can reference $values.
       ref: values

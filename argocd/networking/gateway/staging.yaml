@@ -10,13 +10,13 @@ spec:
 
   sources:
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
-      targetRevision: dev
-      path: platform/networking/gateway # Helm chart source
+      targetRevision: staging
+      path: helm/platform/networking/gateway # Helm chart source
       helm:
         valueFiles:
-          - $values/clusters/staging/gateway.yaml # Env-specific overrides
+          - $values/envs/staging/gateway.yaml # Env-specific overrides
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
-      targetRevision: dev
+      targetRevision: staging
       ref: values # Second source aliased so the path above can reference $values
 
   destination:

@@ -9,10 +9,10 @@ spec:
   sources:
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
       targetRevision: prod
-      path: apps/frontend # Helm chart source
+      path: helm/apps/frontend # Helm chart source
       helm:
         valueFiles:
-          - $values/clusters/prod/frontend.yaml # Env-specific overrides
+          - $values/envs/prod/frontend.yaml # Env-specific overrides
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
       targetRevision: prod
       ref: values # Second source aliased so the path above can reference $values

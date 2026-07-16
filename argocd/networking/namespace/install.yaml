@@ -11,8 +11,8 @@ spec:
 
   source:
     repoURL: https://github.com/lezw-1/kubernetes-gitops
-    targetRevision: dev
-    path: platform/networking/namespace
+    targetRevision: prod
+    path: helm/platform/networking/namespace
 
   destination:
     server: https://kubernetes.default.svc
