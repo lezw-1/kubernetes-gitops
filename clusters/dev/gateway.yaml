@@ -6,7 +6,7 @@ global:
 
 gateway:
   tls:
-    enabled: true
+    enabled: false
     selfSigned: false
   hosts:
     domain: "test.de"
