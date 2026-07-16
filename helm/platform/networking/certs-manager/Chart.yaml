@@ -1,9 +1,25 @@
+# Helm chart API version.
 apiVersion: v2
+
+# Chart name.
 name: certs-manager
+
+# One-line description shown by `helm search`/`helm show chart`.
 description: Certificate manager for gateway
+
+# Chart type: application (deploys workloads) vs library (shared helpers only).
 type: application
+
+# Chart version — bump intentionally whenever templates or values change.
 version: 0.1.0
+
+# Upstream cert-manager subchart, vendored into charts/.
 dependencies:
+  # Upstream chart name.
   - name: cert-manager
+
+    # Upgrade intentionally by changing this value.
     version: 1.16.2
+
+    # Chart repository hosting cert-manager.
     repository: https://charts.jetstack.io

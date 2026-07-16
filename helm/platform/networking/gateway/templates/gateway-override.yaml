@@ -1,19 +1,25 @@
 {{- if .Values.gateway.nodePort.enabled }}
+# Rendered only for local/dev clusters with NodePort access enabled.
 # Envoy Gateway's Helm chart doesn't expose NodePort/port config directly,
 # so this EnvoyProxy patches the generated Service to add NodePort access
 # with the correct ports for local/dev use.
-# Envoy service override for NodePort access
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
+  # EnvoyProxy resource name, referenced by the Gateway's infrastructure.parametersRef.
   name: gateway-proxy-{{ .Values.global.environment }}
+
+  # Namespace set by the Argo CD Application's destination.
   namespace: {{ .Release.Namespace }}
+
 spec:
   provider:
     type: Kubernetes
     kubernetes:
       envoyService:
+        # Switches the generated Service from ClusterIP to NodePort.
         type: NodePort
+
         patch:
           type: StrategicMerge
           value:
@@ -23,14 +29,21 @@ spec:
               # as non-root and can't bind privileged ports, so Envoy
               # Gateway offsets them by +10000.
               ports:
+                # HTTP NodePort mapping.
                 - name: http
                   port: 80
                   targetPort: 10080
+
+                  # Host port, sourced from values.gateway.nodePort.http.
                   nodePort: {{ .Values.gateway.nodePort.http }}
                 {{- if .Values.gateway.tls.enabled }}
+
+                # HTTPS NodePort mapping, only when TLS is enabled.
                 - name: https
                   port: 443
                   targetPort: 10443
+
+                  # Host port, sourced from values.gateway.nodePort.https.
                   nodePort: {{ .Values.gateway.nodePort.https }}
                 {{- end }}
 {{- end }}

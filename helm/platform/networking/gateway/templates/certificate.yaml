@@ -1,18 +1,30 @@
 {{- if .Values.gateway.tls.enabled }}
+# Rendered only when TLS is enabled — see values.yaml gateway.tls.enabled.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
+  # Certificate resource name, suffixed by env.
   name: gateway-tls-{{ .Values.global.environment }}
+
+  # Namespace set by the Argo CD Application's destination.
   namespace: {{ .Release.Namespace }}
+
 spec:
+  # Secret cert-manager writes the issued cert/key into; referenced by the Gateway's HTTPS listener.
   secretName: gateway-tls-{{ .Values.global.environment }}
+
   issuerRef:
+    # Picks the self-signed or Let's Encrypt ClusterIssuer, based on gateway.tls.selfSigned.
     name: {{ if .Values.gateway.tls.selfSigned }}selfsigned{{ else }}letsencrypt{{ end }}-{{ .Values.global.environment }}
+
     kind: ClusterIssuer
+
   dnsNames:
     {{- if .Values.gateway.tls.selfSigned }}
+    # Self-signed certs use a fixed localhost SAN.
     - localhost
     {{- else }}
+    # Let's Encrypt certs use the real hostname.
     - {{ .Values.global.environment }}.{{ .Values.gateway.hosts.domain }}
     {{- end }}
 {{- end }}

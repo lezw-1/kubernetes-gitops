@@ -3,16 +3,23 @@ kind: Gateway
 metadata:
   # Suffixed by env — dev/prod/local share one "networking" namespace
   name: cluster-gateway-{{ .Values.global.environment }}
+
+  # Namespace set by the Argo CD Application's destination.
   namespace: {{ .Release.Namespace }}
+
 spec:
+  # References the GatewayClass "eg", sourced from values.gateway.className.
   gatewayClassName: {{ .Values.gateway.className }}
   {{- if .Values.gateway.nodePort.enabled }}
   infrastructure:
     parametersRef:
       group: gateway.envoyproxy.io
       kind: EnvoyProxy
+
+      # Must match the EnvoyProxy name in gateway-override.yaml.
       name: gateway-proxy-{{ .Values.global.environment }}
   {{- end }}
+
   listeners:
     # HTTP listener — redirects to HTTPS
     - name: http
@@ -20,12 +27,14 @@ spec:
       port: 80
       allowedRoutes:
         namespaces:
+          # Restrict which namespaces' HTTPRoutes may attach, via label selector.
           from: Selector
           selector:
             matchExpressions:
               - key: team
                 operator: In
                 values:
+                  # Only namespaces labeled team: gateway-1 may attach routes.
                   - gateway-1
   {{- if .Values.gateway.tls.enabled }}
     # HTTPS listener — terminates TLS, routes to app namespace
@@ -35,6 +44,7 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
+          # Certificate produced by certificate.yaml.
           - name: gateway-tls-{{ .Values.global.environment }}
       allowedRoutes:
         namespaces:
@@ -47,13 +57,20 @@ spec:
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: BackendTrafficPolicy
 metadata:
+  # BackendTrafficPolicy resource name, suffixed by env.
   name: gateway-timeout-{{ .Values.global.environment }}
+
+  # Namespace set by the Argo CD Application's destination.
   namespace: {{ .Release.Namespace }}
+
 spec:
   targetRefs:
+    # Applies the timeout policy to the Gateway defined above.
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: cluster-gateway-{{ .Values.global.environment }}
+
   timeout:
     http:
+      # Request timeout, sourced from values.gateway.timeout.requestTimeout.
       requestTimeout: {{ .Values.gateway.timeout.requestTimeout }}

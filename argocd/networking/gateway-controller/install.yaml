@@ -2,26 +2,49 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  # Application resource name, shown in the Argo CD UI.
   name: networking-gateway-controller
+
+  # Namespace the Application resource itself lives in.
   namespace: argocd
+
   annotations:
-    argocd.argoproj.io/sync-wave: "-2" # Needs the networking namespace first
+    # Needs the networking namespace first.
+    argocd.argoproj.io/sync-wave: "-2"
+
 spec:
+  # Bound to AppProject "default" and its guardrails.
   project: default
 
   source:
+    # Git repository containing the Helm chart.
     repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+    # Branch tracked for the chart source.
     targetRevision: prod
+
+    # Path to the Envoy Gateway controller Helm chart.
     path: helm/platform/networking/gateway-controller
 
   destination:
+    # Target cluster API server — in-cluster.
     server: https://kubernetes.default.svc
+
+    # Namespace the gateway controller is deployed into.
     namespace: networking
 
+  # Fully automated GitOps sync — no manual apply needed.
   syncPolicy:
     automated:
-      prune: true # Remove resources no longer defined in Git
-      selfHeal: true # Revert manual drift back to match Git
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
     syncOptions:
-      - CreateNamespace=true # Auto-create the destination namespace
-      - ServerSideApply=true # CRDs here exceed the 262144-byte last-applied-configuration limit
+      # Auto-create the destination namespace.
+      - CreateNamespace=true
+
+      # CRDs here exceed the 262144-byte last-applied-configuration limit.
+      - ServerSideApply=true

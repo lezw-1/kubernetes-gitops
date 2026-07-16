@@ -1,6 +1,9 @@
 apiVersion: v1
 kind: Namespace
 metadata:
+  # Shared namespace for all networking-platform singletons and per-env gateway/frontend resources.
   name: networking
+
   labels:
+    # Required for HTTPRoutes/namespaces to be selected by the Gateway's allowedRoutes selector.
     team: gateway-1

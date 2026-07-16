@@ -1,4 +1,11 @@
+# Helm chart API version.
 apiVersion: v2
+
+# Chart name.
 name: gateway-controller
+
+# Chart version — bump intentionally whenever templates or values change.
 version: 0.1.0
+
+# One-line description shown by `helm search`/`helm show chart`.
 description: Envoy GatewayClass

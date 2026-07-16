@@ -1,5 +1,9 @@
+# Upstream cert-manager subchart configuration overrides.
 cert-manager:
   crds:
+    # Installs cert-manager CRDs as part of the chart release.
     enabled: true
+
   config:
+    # Enables Gateway API support (required for HTTPRoute-based ACME challenges).
     enableGatewayAPI: true

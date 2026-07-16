@@ -1,23 +1,44 @@
 # Frontend service overrides for dev, layered onto apps/frontend/values.yaml
-# via the $values ref in projects/applications/frontend.yaml
+# via the $values ref in argocd/frontend/dev.yaml.
 
+# Global: shared across templates.
 global:
+  # Deployment environment name, used in hostnames and resource suffixes.
   environment: dev
 
+# Gateway: HTTPRoute hostname configuration.
 gateway:
   hosts:
+    # Default: empty disables hostname-based routing (route matches any host).
     domain: ""
 
+# Image: container image settings.
 image:
-  repository: frontend # Built locally via `nerdctl build -t frontend:local ...`
+  # Built locally via `nerdctl build -t frontend:local ...`.
+  repository: frontend
+
+  # Local image tag.
   tag: local
-  pullPolicy: Never # Use the local nerdctl image, never pull from a registry
 
+  # Allowed values: Always, IfNotPresent, Never
+  # Use the local nerdctl image, never pull from a registry.
+  pullPolicy: Never
+
+# Service: ClusterIP configuration.
 service:
-  port: 80 # nginx port
+  # nginx listen port.
+  port: 80
 
+# HPA: horizontal pod autoscaler.
 hpa:
+  # Enabled in dev to exercise autoscaling behavior.
   enabled: true
+
+  # Minimum pod count.
   minReplicas: 1
+
+  # Maximum pod count.
   maxReplicas: 5
+
+  # Target average CPU utilization percentage for scaling.
   targetCPUUtilization: 70

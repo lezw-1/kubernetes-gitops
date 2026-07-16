@@ -1,17 +1,37 @@
+# Global: shared across templates.
 global:
+  # Default: empty — must be overridden per environment (dev/staging/prod).
   environment: ""
 
+# Gateway: shared cluster Gateway configuration.
 gateway:
+  # GatewayClass this Gateway is bound to.
   className: eg
+
   tls:
+    # Enables the HTTPS listener and Certificate/ClusterIssuer resources.
     enabled: true
+
+    # Default: true — uses a self-signed ClusterIssuer instead of Let's Encrypt.
     selfSigned: true
+
   hosts:
+    # Default: empty disables hostname-based routing.
     domain: ""
+
+    # Contact email for the Let's Encrypt ACME account. Required when tls.selfSigned is false.
     email: ""
+
   nodePort:
+    # Default: disabled — set true for local/dev clusters without a LoadBalancer.
     enabled: false
+
+    # NodePort for HTTP, used only when nodePort.enabled is true.
     http: 32080
+
+    # NodePort for HTTPS, used only when nodePort.enabled is true.
     https: 32443
+
   timeout:
+    # Request timeout applied via BackendTrafficPolicy.
     requestTimeout: 1800s
