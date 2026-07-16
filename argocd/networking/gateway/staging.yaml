@@ -24,5 +24,4 @@ spec:
     namespace: networking # Shared with the other networking singletons — resources are suffixed per env
 
   syncPolicy:
-    syncOptions:
-      - CreateNamespace=true # Auto-create the destination namespace
+

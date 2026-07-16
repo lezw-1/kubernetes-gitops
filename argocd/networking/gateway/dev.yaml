@@ -27,5 +27,3 @@ spec:
     automated:
       prune: true # Remove resources no longer defined in Git
       selfHeal: true # Revert manual drift back to match Git
-    syncOptions:
-      - CreateNamespace=true # Auto-create the destination namespace
