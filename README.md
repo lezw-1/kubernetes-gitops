@@ -5,6 +5,12 @@ service's Helm chart directly — no Helmfile in front of it.
 
 ## Contents
 
+- `apps/` — Helm charts for application services.
+- `argocd/` — Argo CD Application manifests for each deployment.
+- `bootstrap/` — one-time cluster bootstrap (e.g. installing Argo CD).
+- `clusters/` — per-environment config overrides.
+- `platform/` — Helm charts for platform/cluster resources (e.g. networking).
+
 ```
 kubernetes-gitops/
 ├── apps/                   # One Helm chart per application service

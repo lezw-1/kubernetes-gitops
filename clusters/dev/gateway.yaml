@@ -9,8 +9,8 @@ gateway:
     enabled: false
     selfSigned: false
   hosts:
-    domain: "test.de"
-    email: "test@test.de"
+    domain: ""
+    email: ""
   nodePort:
     enabled: true
     http: 32080
