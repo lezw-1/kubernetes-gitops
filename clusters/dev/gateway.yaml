@@ -12,6 +12,8 @@ gateway:
     domain: "test.de"
     email: "test@test.de"
   nodePort:
-    enabled: false
+    enabled: true
+    http: 32080
+    https: 32443
   timeout:
     requestTimeout: 1800s
