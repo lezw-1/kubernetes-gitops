@@ -4,14 +4,14 @@ GitOps repo: Argo CD watches this repo (app-of-apps) and syncs each service's He
 
 ## Architecture
 
-`bootstrap/root.yaml` is the root app-of-apps Application (tracks `prod`) — it recursively syncs every Application manifest under `argocd/`. Each child Application points at a Helm chart in `helm/` and layers a per-environment values file from `envs/` via Argo CD's multi-source `ref: values` pattern.
+There are two clusters, each running its own independent Argo CD install: one for `dev`, one for `staging`+`prod`. The dev cluster is bootstrapped locally via `bootstrap/bootstrap.sh`; the staging/prod cluster is bootstrapped by the CI pipeline (`.github/workflows/bootstrap.yaml`) instead. `bootstrap/root.yaml` is the root app-of-apps Application — it recursively syncs Application manifests under `argocd/`, filtered via `directory.include` to just one cluster's subset. Which env it targets (`targetRevision` + `directory.include`) is a placeholder in the committed file, substituted by `bootstrap.sh`'s `TARGET_ENV` variable (default `dev`; the CI pipeline sets `TARGET_ENV=prod`) before it's applied — `bootstrap/argocd/install.yaml`'s values-source branch is templated the same way. Each child Application points at a Helm chart in `helm/` and layers a per-environment values file from `envs/` via Argo CD's multi-source `ref: values` pattern.
 
-There is a single cluster — every Application's destination is the same in-cluster API server, and environments are separated by namespace rather than by cluster. `dev`/`staging`/`prod` Applications track their matching Git branch, while the cluster-wide singleton platform components track `prod` only, so shared infra only changes on reviewed merges. Platform singletons (`namespace`, `certs-manager`, `gateway-controller`, `gateway-class`) are ordered with Argo CD `sync-wave` annotations so the shared `networking` namespace lands first.
+Every Application's destination is the same in-cluster API server, since each cluster only ever manages itself — there's no cross-cluster reachability. `dev`/`staging`/`prod` Applications track their matching Git branch, while the cluster-wide singleton platform components track `prod` only, so shared infra only changes on reviewed merges. Platform singletons (`namespace`, `certs-manager`, `gateway-controller`, `gateway-class`) run independently on both clusters and are ordered with Argo CD `sync-wave` annotations so the shared `networking` namespace lands first.
 
 ## Components
 
-- **Bootstrap (`bootstrap/`)** — `bootstrap.sh` one-time script: installs Argo CD via Helm, then hands self-management and the app-of-apps over to Argo CD.
-- **App-of-apps (`argocd/`)** — Argo CD Application manifests; one per service/environment plus the platform singletons.
+- **Bootstrap (`bootstrap/`)** — `bootstrap.sh` one-time script for the dev cluster: installs Argo CD via Helm, then hands self-management and `root.yaml` over to Argo CD. Staging/prod use the CI pipeline instead.
+- **App-of-apps (`argocd/`)** — Argo CD Application manifests; one per service/environment plus the platform singletons. `root.yaml` picks up `dev.yaml`/`install.yaml` files by default; the staging/prod cluster's pipeline picks up `staging.yaml`/`prod.yaml`.
 - **Frontend (`helm/apps/frontend`)** — React dashboard Helm chart: Deployment, Service, HPA, HTTPRoute.
 - **Networking platform (`helm/platform/networking`)** — shared namespace, cert-manager, Envoy Gateway controller/class, and the per-environment Gateway (TLS Certificate/ClusterIssuer, health-check HTTPRoute).
 - **Environment overrides (`envs/`)** — per-environment values layered onto each chart via Argo CD's multi-source `$values` ref.
@@ -25,11 +25,13 @@ There is a single cluster — every Application's destination is the same in-clu
 
 ### Local
 
-One-time cluster bootstrap — installs Argo CD, then hands self-management and the app-of-apps over to it:
+One-time bootstrap for the dev cluster — installs Argo CD, then hands self-management and `root.yaml` (`TARGET_ENV` defaults to `dev`) over to it:
 
 ```sh
 ./bootstrap/bootstrap.sh
 ```
+
+The staging/prod cluster is bootstrapped by `.github/workflows/bootstrap.yaml` instead, not this script.
 
 ### Dev
 

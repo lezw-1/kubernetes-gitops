@@ -1,0 +1,14 @@
+# Helm chart API version.
+apiVersion: v2
+
+# Chart name.
+name: iam
+
+# One-line description shown by `helm search`/`helm show chart`.
+description: Keycloak-based authentication and token issuance — Kubernetes manifests deployed by Argo CD
+
+# Chart type: application (deploys workloads) vs library (shared helpers only).
+type: application
+
+# Chart version — bump intentionally whenever templates or values change.
+version: 0.1.0

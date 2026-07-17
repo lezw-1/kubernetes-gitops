@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Deployment resource name.
+  name: iam
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  # Single replica — no HA for this app; see hpa.yaml for scale-out.
+  replicas: 1
+
+  selector:
+    matchLabels:
+      # Must match template.metadata.labels below.
+      app: iam
+
+  template:
+    metadata:
+      labels:
+        # Pod label, matched by the selector above and the Service.
+        app: iam
+
+    spec:
+      containers:
+        # Keycloak container.
+        - name: iam
+
+          # Image repository:tag, sourced from values.image.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          # Image pull policy, sourced from values.image.pullPolicy.
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          # Runs Keycloak in dev mode (in-memory H2, no external DB) — no HA/persistence yet.
+          args: ["start-dev"]
+
+          resources:
+            requests:
+              # Minimum CPU reserved for scheduling.
+              cpu: 200m
+
+              # Minimum memory reserved for scheduling.
+              memory: 512Mi
+
+          ports:
+            # Keycloak HTTP port.
+            - containerPort: 8080
+
+          env:
+            # Bootstrap admin username, sourced from values.admin.username.
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              value: {{ .Values.admin.username | quote }}
+
+            # Bootstrap admin password, sourced from values.admin.password.
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              value: {{ .Values.admin.password | quote }}
+
+            # Access token lifespan in seconds, sourced from values.tokenExpire.
+            - name: KC_SPI_TOKEN_ACCESS_LIFESPAN
+              value: {{ .Values.tokenExpire | quote }}
+
+            # URL prefix Keycloak is served under, sourced from values.subpath.
+            - name: KC_HTTP_RELATIVE_PATH
+              value: {{ .Values.subpath | quote }}
+
+            # Log level, sourced from values.debug.
+            - name: KC_LOG_LEVEL
+              value: {{ .Values.debug | default "INFO" | quote }}

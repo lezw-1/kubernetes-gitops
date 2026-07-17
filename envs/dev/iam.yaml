@@ -1,0 +1,70 @@
+# IAM service overrides for dev, layered onto apps/iam/values.yaml
+# via the $values ref in argocd/iam/dev.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name, used in hostnames and resource suffixes.
+  environment: dev
+
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+  hosts:
+    # Default: empty disables hostname-based routing (route matches any host).
+    domain: ""
+
+# Image: container image settings.
+image:
+  # Upgrade intentionally by changing this value — third-party image, not built by this repo's CI.
+  repository: quay.io/keycloak/keycloak
+
+  # Upgrade intentionally by changing this value.
+  tag: "26.5.5"
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: IfNotPresent
+
+# Admin: bootstrap credentials for the Keycloak admin console.
+admin:
+  # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
+  username: ""
+
+  # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
+  password: ""
+
+# Subpath: URL prefix Keycloak is served under, behind the shared gateway.
+subpath: "/iam"
+
+# Service: ClusterIP configuration.
+service:
+  # Keycloak HTTP listen port.
+  port: 8080
+
+# TokenExpire: access token lifespan in seconds.
+tokenExpire: 3600
+
+# Debug: Keycloak log level.
+debug: "INFO"
+
+# Provision: seeds realms, clients, and users on install/upgrade.
+provision:
+  # Enabled in dev to exercise the seeding job.
+  enabled: true
+
+  user1:
+    # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
+    username: ""
+
+    # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
+    password: ""
+
+  user2:
+    # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
+    username: ""
+
+    # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
+    password: ""
+
+# HPA: horizontal pod autoscaler.
+hpa:
+  # Default: disabled — Keycloak dev mode (in-memory H2) is single-instance only.
+  enabled: false

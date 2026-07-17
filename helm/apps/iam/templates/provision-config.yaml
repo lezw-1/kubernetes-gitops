@@ -1,0 +1,37 @@
+{{- if .Values.provision.enabled }}
+# Realm definitions loaded by the provisioning Job, one JSON file per realm.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # ConfigMap resource name, mounted by the provisioning Job.
+  name: iam-realms-config
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+data:
+{{ (.Files.Glob "config/realms/*.json").AsConfig | indent 2 }}
+---
+# Client definitions loaded by the provisioning Job, one JSON file per client.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # ConfigMap resource name, mounted by the provisioning Job.
+  name: iam-clients-config
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+data:
+{{ (.Files.Glob "config/clients/*.json").AsConfig | indent 2 }}
+---
+# User definitions loaded by the provisioning Job, one JSON file per user.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # ConfigMap resource name, mounted by the provisioning Job.
+  name: iam-users-config
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+data:
+{{ (.Files.Glob "config/users/*.json").AsConfig | indent 2 }}
+{{- end }}
