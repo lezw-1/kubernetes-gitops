@@ -1,0 +1,6 @@
+{
+  "realm": "ai-system",
+  "enabled": true,
+  "verifyEmail": false,
+  "requiredActionsToDisable": ["VERIFY_PROFILE"]
+}

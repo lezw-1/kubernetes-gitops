@@ -1,0 +1,11 @@
+{
+  "email": "user1@ai-system.local",
+  "firstName": "User",
+  "lastName": "One",
+  "enabled": true,
+  "emailVerified": true,
+  "roles": [
+    { "client": "chronsorting", "role": "viewer" },
+    { "client": "frontend", "role": "viewer" }
+  ]
+}

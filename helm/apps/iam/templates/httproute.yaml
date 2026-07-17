@@ -1,0 +1,40 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  # HTTPRoute resource name.
+  name: iam
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  {{- if .Values.gateway.hosts.domain }}
+  # Only set when a domain is configured — otherwise the route matches any host.
+  hostnames:
+    - "{{ .Values.global.environment }}.{{ .Values.gateway.hosts.domain }}"
+  {{- end }}
+
+  parentRefs:
+    # Must match the Gateway name in platform/networking/gateway, or the route silently never attaches
+    - name: cluster-gateway-{{ .Values.global.environment }}
+
+      # Gateway lives in the shared networking namespace.
+      namespace: networking
+      {{- if .Values.gateway.hosts.domain }}
+      # Attach to the HTTPS listener only when a domain is configured.
+      sectionName: https
+      {{- end }}
+
+  rules:
+    - matches:
+        # Match only the IAM subpath — other paths route elsewhere.
+        - path:
+            type: PathPrefix
+            value: {{ .Values.subpath }}
+
+      backendRefs:
+        # Route to the iam Service.
+        - name: iam
+
+          # Backend port, sourced from values.service.port.
+          port: {{ .Values.service.port }}

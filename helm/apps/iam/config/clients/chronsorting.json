@@ -1,0 +1,7 @@
+{
+  "clientId": "chronsorting",
+  "enabled": true,
+  "publicClient": false,
+  "directAccessGrantsEnabled": false,
+  "roles": ["viewer"]
+}

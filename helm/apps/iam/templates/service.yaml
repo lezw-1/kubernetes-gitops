@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  # Service resource name.
+  name: iam
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  selector:
+    # Routes traffic to pods with this label — must match the Deployment's pod labels.
+    app: iam
+
+  ports:
+    # Service port, sourced from values.service.port.
+    - port: {{ .Values.service.port }}
+
+      # Container port traffic is forwarded to.
+      targetPort: 8080
