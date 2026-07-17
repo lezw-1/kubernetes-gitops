@@ -1,5 +1,5 @@
 # Frontend service overrides for prod, layered onto apps/frontend/values.yaml
-# via the $values ref in the prod branch's argocd/remote/frontend-prod.yaml.
+# via the $values ref in the prod branch's argocd/clusters/remote/frontend-prod.yaml.
 
 # Global: shared across templates.
 global:

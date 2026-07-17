@@ -1,5 +1,4 @@
-# Singleton — shared cluster Gateway, one instance for both staging and
-# prod (TLS Certificate/ClusterIssuer, health-check HTTPRoute).
+# Per-cluster Gateway — TLS Certificate/ClusterIssuer, health-check HTTPRoute.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -23,21 +22,21 @@ spec:
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for the chart source.
-      targetRevision: prod
+      targetRevision: dev
 
       # Path to the gateway Helm chart.
       path: helm/platform/networking/gateway
 
       helm:
         valueFiles:
-          # Remote-cluster overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/remote/values/networking.yaml
+          # Local-cluster overrides, supplied by the $values Git source referenced below.
+          - $values/argocd/clusters/local/values/networking.yaml
 
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for values files.
-      targetRevision: prod
+      targetRevision: dev
 
       # Aliased so the chart source above can reference $values.
       ref: values

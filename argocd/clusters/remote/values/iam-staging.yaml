@@ -1,10 +1,10 @@
-# IAM service overrides for the local cluster, layered onto
-# apps/iam/values.yaml via the $values ref in argocd/local/iam.yaml.
+# IAM service overrides for staging, layered onto apps/iam/values.yaml
+# via the $values ref in the staging branch's argocd/clusters/remote/iam-staging.yaml.
 
 # Global: shared across templates.
 global:
   # Deployment environment name, used in hostnames and resource suffixes.
-  environment: dev
+  environment: staging
 
 # Gateway: HTTPRoute hostname configuration.
 gateway:
@@ -39,11 +39,19 @@ debug: "INFO"
 
 # Provision: seeds realms, clients, and users on install/upgrade.
 provision:
-  # Enabled in dev to exercise the seeding job.
-  # user1/user2 credentials are read from credentialsSecret (see values.yaml).
-  enabled: true
+  # Disabled — staging realm/client/user data is managed like prod, not re-seeded on every sync.
+  enabled: false
 
 # HPA: horizontal pod autoscaler.
 hpa:
-  # Default: disabled — Keycloak dev mode (in-memory H2) is single-instance only.
-  enabled: false
+  # Enabled in staging for load-based scaling.
+  enabled: true
+
+  # Minimum pod count.
+  minReplicas: 1
+
+  # Maximum pod count.
+  maxReplicas: 5
+
+  # Target average CPU utilization percentage for scaling.
+  targetCPUUtilization: 70

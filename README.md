@@ -4,15 +4,20 @@ GitOps repo: Argo CD watches this repo (app-of-apps) and syncs each service's He
 
 ## Architecture
 
-There are two clusters, each running its own independent Argo CD install: `local` (dev) and `remote` (staging+prod). Both are bootstrapped from the same shared manifests in `argocd/bootstrap/` (`root.yaml`, `install.yaml`) — `targetRevision` and the Application path/values-file directory are `__ENV__`/`__DIR__` placeholders in the committed files, substituted before each is applied. `argocd/local/bootstrap.sh` substitutes `__ENV__=dev`/`__DIR__=local` and applies them by hand for the local cluster; the CI pipeline (`.github/workflows/argocd.yaml`) substitutes `__ENV__=prod`/`__DIR__=remote` and applies them instead for the remote cluster. `argocd/bootstrap/root.yaml` is the root app-of-apps Application — it recursively syncs every Application manifest directly under `argocd/local/` or `argocd/remote/`, depending on which substitution was applied. Each child Application points at a Helm chart and layers a per-cluster values file from `argocd/local/values/` or `argocd/remote/values/` via Argo CD's multi-source `ref: values` pattern — nested so it stays outside the flat `*.yaml` scan each root Application does over its own directory. Both clusters' own Argo CD Helm install is layered onto from `argocd/local/values/argocd.yaml`/`argocd/remote/values/argocd.yaml` the same way.
+Two independent clusters, each with its own Argo CD install:
 
-Every Application's destination is the same in-cluster API server, since each cluster only ever manages itself — there's no cross-cluster reachability. On the remote cluster, `frontend`/`iam` get one Application per environment (`-staging`/`-prod` suffix) tracking their matching Git branch, so promotion stays independent; the platform singletons (`namespace`, `certs-manager`, `gateway-controller`, `gateway-class`, `gateway`) track `prod` only and run as one shared instance, so shared infra only changes on reviewed merges. They're ordered with Argo CD `sync-wave` annotations so the shared `networking` namespace lands first. The local cluster's singletons track `dev` the same way, since local only ever has one environment.
+- **`local` (dev)** and **`remote` (staging+prod)** — bootstrapped from shared manifests in `argocd/bootstrap/` (`root.yaml`, `install.yaml`), with `__ENV__`/`__DIR__` placeholders substituted per cluster: `argocd/clusters/local/bootstrap.sh` for local, `.github/workflows/argocd.yaml` for remote.
+- **Root app-of-apps** — `argocd/bootstrap/root.yaml` recursively syncs every Application under `argocd/clusters/local/` or `argocd/clusters/remote/`.
+- **Values layering** — each child Application layers a per-cluster values file from `argocd/clusters/local/values/` or `argocd/clusters/remote/values/` via Argo CD's multi-source `ref: values` pattern (nested, so it's excluded from the root Application's flat `*.yaml` scan). Argo CD's own Helm install is layered the same way, from `values/argocd.yaml`.
+- **Single destination** — every Application targets its own in-cluster API server; clusters never reach across.
+- **Promotion** — on remote, `frontend`/`iam` get one Application per environment (`-staging`/`-prod`), each tracking its own Git branch, so promotion is independent.
+- **Shared infra** — platform singletons (`namespace`, `certs-manager`, `gateway-controller`, `gateway-class`, `gateway`) track `prod` only and run as one instance; local tracks `dev` only. `sync-wave` annotations land `networking`'s namespace first.
 
 ## Components
 
-- **App-of-apps, local (`argocd/local/`)** — one file per Application for the dev cluster, `bootstrap.sh` to drive the one-time local Argo CD install, and `values/` (including `argocd.yaml`, the local Argo CD install's own Helm values) for this cluster's Helm values overrides.
-- **App-of-apps, remote (`argocd/remote/`)** — one file per Application for the staging+prod cluster, plus `values/` (including `argocd.yaml`, read directly by the CI pipeline) for this cluster's Helm values overrides.
-- **Bootstrap (`argocd/bootstrap/`)** — `root.yaml`, `install.yaml`: the one-time install manifests shared by both clusters, applied with `__ENV__`/`__DIR__` substituted by `argocd/local/bootstrap.sh` (local) or `.github/workflows/argocd.yaml` (remote).
+- **App-of-apps, local (`argocd/clusters/local/`)** — one file per Application for the dev cluster, `bootstrap.sh` to drive the one-time local Argo CD install, and `values/` for this cluster's Helm values overrides.
+- **App-of-apps, remote (`argocd/clusters/remote/`)** — one file per Application for the staging+prod cluster, plus `values/` for this cluster's Helm values overrides.
+- **Bootstrap (`argocd/bootstrap/`)** — `root.yaml`, `install.yaml`: the one-time install manifests shared by both clusters, applied with `__ENV__`/`__DIR__` substituted by `argocd/clusters/local/bootstrap.sh` (local) or `.github/workflows/argocd.yaml` (remote).
 - **Frontend (`helm/apps/frontend`)** — React dashboard Helm chart: Deployment, Service, HPA, HTTPRoute.
 - **IAM (`helm/apps/iam`)** — Keycloak-based authentication and token issuance: Deployment, Service, HPA, HTTPRoute, realm/client/user provisioning Job.
 - **Networking platform (`helm/platform/networking`)** — shared namespace, cert-manager, Envoy Gateway controller/class, and the cluster Gateway (TLS Certificate/ClusterIssuer, health-check HTTPRoute).
@@ -29,14 +34,14 @@ Every Application's destination is the same in-cluster API server, since each cl
 One-time bootstrap for the dev cluster — installs Argo CD, then hands self-management and the app-of-apps (`argocd/bootstrap/root.yaml`) over to it:
 
 ```sh
-./argocd/local/bootstrap.sh
+./argocd/clusters/local/bootstrap.sh
 ```
 
 The remote (staging+prod) cluster is bootstrapped by `.github/workflows/argocd.yaml` instead, not this script.
 
 ### Dev
 
-Cluster values live in `argocd/local/values/frontend.yaml`, `argocd/local/values/iam.yaml`, `argocd/local/values/networking.yaml`.
+Env variables can be found in: `argocd/clusters/local/values/frontend.yaml`, `argocd/clusters/local/values/iam.yaml`, `argocd/clusters/local/values/networking.yaml`.
 
 Deployment is orchestrated by Argo CD syncing the `dev` branch — every Application on the local cluster has `syncPolicy.automated` (prune + self-heal). The frontend image is built locally via `nerdctl build -t frontend:local ...` and never pulled from a registry.
 
@@ -54,15 +59,15 @@ kubectl create secret generic iam-credentials -n ai-system-dev \
 
 ### Staging
 
-Cluster values live in `argocd/remote/values/frontend-staging.yaml`, `argocd/remote/values/iam-staging.yaml`.
+Env variables can be found in: `argocd/clusters/remote/values/frontend-staging.yaml`, `argocd/clusters/remote/values/iam-staging.yaml`.
 
-Deployment is orchestrated by Argo CD syncing the `staging` branch — sync is manual (no `syncPolicy.automated`). The frontend image tag in `argocd/remote/values/frontend-staging.yaml` is bumped by hand today (no CI wires this up yet) once the app source repo publishes a new image.
+Deployment is orchestrated by Argo CD syncing the `staging` branch — sync is manual (no `syncPolicy.automated`). The frontend image tag in `argocd/clusters/remote/values/frontend-staging.yaml` is bumped by hand today (no CI wires this up yet) once the app source repo publishes a new image.
 
 Same `iam-credentials` Secret requirement as Dev, created in the `ai-system-staging` namespace (`user1`/`user2` keys aren't needed — `provision.enabled` is `false`).
 
 ### Prod
 
-Cluster values live in `argocd/remote/values/frontend-prod.yaml`, `argocd/remote/values/iam-prod.yaml`.
+Env variables can be found in: `argocd/clusters/remote/values/frontend-prod.yaml`, `argocd/clusters/remote/values/iam-prod.yaml`.
 
 Deployment is orchestrated by Argo CD syncing the `prod` branch — sync is manual (no `syncPolicy.automated`). Promotion happens only through a human-reviewed PR from `dev` to `prod`.
 

@@ -1,9 +1,9 @@
-# IAM service — Keycloak-based authentication and token issuance.
+# Frontend service — React dashboard.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Application resource name, shown in the Argo CD UI.
-  name: iam
+  name: frontend
 
   # Namespace the Application resource itself lives in.
   namespace: argocd
@@ -12,21 +12,21 @@ spec:
   # Bound to AppProject "default" and its guardrails.
   project: default
 
-  # Multi-source config: the iam Helm chart plus a values-only Git source.
+  # Multi-source config: the frontend Helm chart plus a values-only Git source.
   sources:
-    # IAM Helm chart source.
+    # Frontend Helm chart source.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for the chart source.
       targetRevision: dev
 
-      # Path to the iam Helm chart.
-      path: helm/apps/iam
+      # Path to the frontend Helm chart.
+      path: helm/apps/frontend
 
       helm:
         valueFiles:
           # Local-cluster overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/local/values/iam.yaml
+          - $values/argocd/clusters/local/values/frontend.yaml
 
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
@@ -41,7 +41,7 @@ spec:
     # Target cluster API server — in-cluster.
     server: https://kubernetes.default.svc
 
-    # Namespace the iam app is deployed into.
+    # Namespace the frontend app is deployed into.
     namespace: ai-system-dev
 
   # Fully automated GitOps sync — no manual apply needed.

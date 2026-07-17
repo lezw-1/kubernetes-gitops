@@ -1,10 +1,10 @@
-# IAM service overrides for staging, layered onto apps/iam/values.yaml
-# via the $values ref in the staging branch's argocd/remote/iam-staging.yaml.
+# IAM service overrides for prod, layered onto apps/iam/values.yaml
+# via the $values ref in the prod branch's argocd/clusters/remote/iam-prod.yaml.
 
 # Global: shared across templates.
 global:
   # Deployment environment name, used in hostnames and resource suffixes.
-  environment: staging
+  environment: prod
 
 # Gateway: HTTPRoute hostname configuration.
 gateway:
@@ -39,12 +39,12 @@ debug: "INFO"
 
 # Provision: seeds realms, clients, and users on install/upgrade.
 provision:
-  # Disabled — staging realm/client/user data is managed like prod, not re-seeded on every sync.
+  # Disabled — prod realm/client/user data is managed manually, not re-seeded on every sync.
   enabled: false
 
 # HPA: horizontal pod autoscaler.
 hpa:
-  # Enabled in staging for load-based scaling.
+  # Enabled in prod for load-based scaling.
   enabled: true
 
   # Minimum pod count.

@@ -1,10 +1,10 @@
-# IAM service overrides for prod, layered onto apps/iam/values.yaml
-# via the $values ref in the prod branch's argocd/remote/iam-prod.yaml.
+# IAM service overrides for the local cluster, layered onto
+# apps/iam/values.yaml via the $values ref in argocd/clusters/local/iam.yaml.
 
 # Global: shared across templates.
 global:
   # Deployment environment name, used in hostnames and resource suffixes.
-  environment: prod
+  environment: dev
 
 # Gateway: HTTPRoute hostname configuration.
 gateway:
@@ -39,19 +39,11 @@ debug: "INFO"
 
 # Provision: seeds realms, clients, and users on install/upgrade.
 provision:
-  # Disabled — prod realm/client/user data is managed manually, not re-seeded on every sync.
-  enabled: false
+  # Enabled in dev to exercise the seeding job.
+  # user1/user2 credentials are read from credentialsSecret (see values.yaml).
+  enabled: true
 
 # HPA: horizontal pod autoscaler.
 hpa:
-  # Enabled in prod for load-based scaling.
-  enabled: true
-
-  # Minimum pod count.
-  minReplicas: 1
-
-  # Maximum pod count.
-  maxReplicas: 5
-
-  # Target average CPU utilization percentage for scaling.
-  targetCPUUtilization: 70
+  # Default: disabled — Keycloak dev mode (in-memory H2) is single-instance only.
+  enabled: false

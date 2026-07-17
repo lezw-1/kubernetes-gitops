@@ -1,9 +1,9 @@
-# Frontend service — React dashboard, staging environment.
+# IAM service — Keycloak-based authentication and token issuance, prod environment.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Application resource name, shown in the Argo CD UI.
-  name: frontend-staging
+  name: iam-prod
 
   # Namespace the Application resource itself lives in.
   namespace: argocd
@@ -12,27 +12,27 @@ spec:
   # Bound to AppProject "default" and its guardrails.
   project: default
 
-  # Multi-source config: the frontend Helm chart plus a values-only Git source.
+  # Multi-source config: the iam Helm chart plus a values-only Git source.
   sources:
-    # Frontend Helm chart source.
+    # IAM Helm chart source.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for the chart source.
-      targetRevision: staging
+      targetRevision: prod
 
-      # Path to the frontend Helm chart.
-      path: helm/apps/frontend
+      # Path to the iam Helm chart.
+      path: helm/apps/iam
 
       helm:
         valueFiles:
           # Env-specific overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/remote/values/frontend-staging.yaml
+          - $values/argocd/clusters/remote/values/iam-prod.yaml
 
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for values files.
-      targetRevision: staging
+      targetRevision: prod
 
       # Aliased so the chart source above can reference $values.
       ref: values
@@ -41,10 +41,10 @@ spec:
     # Target cluster API server — in-cluster.
     server: https://kubernetes.default.svc
 
-    # Namespace the frontend app is deployed into.
-    namespace: ai-system-staging
+    # Namespace the iam app is deployed into.
+    namespace: ai-system-prod
 
-  # Manual sync only — no automated block, so promotion to staging requires an explicit sync in Argo CD.
+  # Manual sync only — no automated block, so promotion to prod requires an explicit sync in Argo CD.
   syncPolicy:
     syncOptions:
       # Auto-create the destination namespace.

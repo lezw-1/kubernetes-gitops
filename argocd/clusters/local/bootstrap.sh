@@ -2,18 +2,18 @@
 # ==================================================
 # One-command Argo CD bootstrap for the local (dev) cluster — see README for
 # the manual step-by-step. The remote (staging+prod) cluster is bootstrapped
-# by the CI pipeline instead (.github/workflows/bootstrap.yaml), which
+# by the CI pipeline instead (.github/workflows/argocd.yaml), which
 # substitutes the same argocd/bootstrap/ manifests with ENV=prod/DIR=remote.
 # ==================================================
 
 # Exit on error, on unset variables, and on failures inside pipelines
 set -euo pipefail
 
-# Absolute path to argocd/local/
+# Absolute path to argocd/clusters/local/
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# install.yaml/root.yaml live in the sibling argocd/bootstrap/
-BOOTSTRAP_DIR="$SCRIPT_DIR/../bootstrap"
+# install.yaml/root.yaml live in argocd/bootstrap/, two levels up
+BOOTSTRAP_DIR="$SCRIPT_DIR/../../bootstrap"
 
 # Chart version pin lives in install.yaml — read it here instead of duplicating it
 ARGOCD_VERSION="$(grep -m1 'targetRevision:' "$BOOTSTRAP_DIR/install.yaml" | awk '{print $2}')"

@@ -26,7 +26,7 @@ spec:
       helm:
         valueFiles:
           # Env-specific overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/remote/values/frontend-prod.yaml
+          - $values/argocd/clusters/remote/values/frontend-prod.yaml
 
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops

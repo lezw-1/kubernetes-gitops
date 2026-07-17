@@ -30,9 +30,9 @@ spec:
       helm:
         valueFiles:
           # Values file supplied by the $values Git source referenced below.
-          # Placeholder — substituted to argocd/local/values/argocd.yaml or
-          # argocd/remote/values/argocd.yaml.
-          - $values/argocd/__DIR__/values/argocd.yaml
+          # Placeholder — substituted to argocd/clusters/local/values/argocd.yaml or
+          # argocd/clusters/remote/values/argocd.yaml.
+          - $values/argocd/clusters/__DIR__/values/argocd.yaml
 
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops

@@ -24,12 +24,12 @@ spec:
     targetRevision: __ENV__
 
     # Path containing this cluster's Application manifests. Placeholder,
-    # substituted before this file is applied — argocd/local or argocd/remote.
-    path: argocd/__DIR__
+    # substituted before this file is applied — argocd/clusters/local or argocd/clusters/remote.
+    path: argocd/clusters/__DIR__
 
     directory:
-      # Every file directly under argocd/__DIR__/ is a child manifest.
-      # Non-recursive (the default) — argocd/__DIR__/values/ is a nested
+      # Every file directly under argocd/clusters/__DIR__/ is a child manifest.
+      # Non-recursive (the default) — argocd/clusters/__DIR__/values/ is a nested
       # subdirectory but is naturally excluded since it's not scanned.
       include: "*.yaml"
 
