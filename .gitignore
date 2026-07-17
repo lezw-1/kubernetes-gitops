@@ -1,7 +1,6 @@
 .env
 __pycache__/
 *.pyc
-apps/*/charts/
 .claude/
 features
 backlog

@@ -1,0 +1,45 @@
+# Lint and render every Helm chart in this repo
+#
+# Catches broken templates/values before Argo CD ever syncs them in-cluster.
+
+name: Helm Lint
+
+on:
+  pull_request:
+    paths:
+      - "helm/**"
+
+  push:
+    branches: [dev, staging, prod]
+    paths:
+      - "helm/**"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    strategy:
+      # One job per chart — a failure in one chart doesn't hide failures in the others.
+      matrix:
+        chart:
+          - helm/apps/frontend
+          - helm/apps/iam
+          - helm/platform/networking/namespace
+          - helm/platform/networking/certs-manager
+          - helm/platform/networking/gateway-class
+          - helm/platform/networking/gateway
+          - helm/platform/networking/gateway-controller
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint chart
+        run: helm lint ${{ matrix.chart }}
+
+      - name: Render chart
+        # Renders with default values only — catches template/syntax errors,
+        # not env-specific misconfiguration (that's covered by Argo CD's diff).
+        run: helm template ${{ matrix.chart }}
