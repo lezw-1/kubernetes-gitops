@@ -1,4 +1,7 @@
-# App-of-apps root Application — pulls in all child Applications from Git.
+# App-of-apps root Application — each cluster runs its own independent Argo CD
+# install, so this only pulls in this cluster's subset of child Applications.
+# The target env is configured below (targetRevision + directory.include).
+# Default: dev.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -16,8 +19,10 @@ spec:
     # Git repository containing the child Application manifests.
     repoURL: https://github.com/lezw-1/kubernetes-gitops
 
-    # App-of-apps tracks the prod branch.
-    targetRevision: prod
+    # Branch this cluster's Applications are picked up from. Change this
+    # (together with directory.include below) to repoint this file at a
+    # different cluster/env — e.g. "prod" for the staging/prod cluster.
+    targetRevision: dev
 
     # Path within the repo containing child Application manifests.
     path: argocd
@@ -26,8 +31,13 @@ spec:
       # Picks up per-service subfolders, e.g. argocd/frontend/.
       recurse: true
 
+      # Which per-env Application files this cluster loads, plus the
+      # platform singletons (install.yaml). Default: dev.
+      # Allowed values: "**/{dev,install}.yaml", "**/{staging,prod,install}.yaml".
+      include: "**/{dev,install}.yaml"
+
   destination:
-    # Target cluster API server — in-cluster.
+    # Target cluster API server — in-cluster (this cluster's own Argo CD).
     server: https://kubernetes.default.svc
 
     # Child Applications live here.

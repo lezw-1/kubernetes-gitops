@@ -9,6 +9,10 @@ set -euo pipefail
 # Absolute path to bootstrap/
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# This is the local, manual bootstrap for the dev cluster only — staging/prod
+# are bootstrapped by the CI pipeline instead (.github/workflows/bootstrap.yaml).
+# root.yaml's env is configured inside that file (default: dev).
+
 # Chart version pin lives in install.yaml — read it here instead of duplicating it
 ARGOCD_VERSION="$(grep -m1 'targetRevision:' "$SCRIPT_DIR/argocd/install.yaml" | awk '{print $2}')"
 
