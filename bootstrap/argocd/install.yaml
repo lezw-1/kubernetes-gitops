@@ -31,8 +31,10 @@ spec:
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
-      # Branch tracked for values files.
-      targetRevision: prod
+      # Branch tracked for values files. Placeholder, substituted by
+      # bootstrap.sh from its TARGET_ENV variable (default: dev; the CI
+      # pipeline sets TARGET_ENV=prod).
+      targetRevision: __TARGET_ENV__
 
       # Aliased so the chart source above can reference $values.
       ref: values

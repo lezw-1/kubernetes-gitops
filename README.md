@@ -4,7 +4,7 @@ GitOps repo: Argo CD watches this repo (app-of-apps) and syncs each service's He
 
 ## Architecture
 
-There are two clusters, each running its own independent Argo CD install: one for `dev`, one for `staging`+`prod`. The dev cluster is bootstrapped locally via `bootstrap/bootstrap.sh`; the staging/prod cluster is bootstrapped by the CI pipeline (`.github/workflows/bootstrap.yaml`) instead. `bootstrap/root.yaml` is the root app-of-apps Application — it recursively syncs Application manifests under `argocd/`, filtered via `directory.include` to just one cluster's subset. Which env it targets is configured inside the file (`targetRevision` + `directory.include`); default is `dev`. Each child Application points at a Helm chart in `helm/` and layers a per-environment values file from `envs/` via Argo CD's multi-source `ref: values` pattern.
+There are two clusters, each running its own independent Argo CD install: one for `dev`, one for `staging`+`prod`. The dev cluster is bootstrapped locally via `bootstrap/bootstrap.sh`; the staging/prod cluster is bootstrapped by the CI pipeline (`.github/workflows/bootstrap.yaml`) instead. `bootstrap/root.yaml` is the root app-of-apps Application — it recursively syncs Application manifests under `argocd/`, filtered via `directory.include` to just one cluster's subset. Which env it targets (`targetRevision` + `directory.include`) is a placeholder in the committed file, substituted by `bootstrap.sh`'s `TARGET_ENV` variable (default `dev`; the CI pipeline sets `TARGET_ENV=prod`) before it's applied — `bootstrap/argocd/install.yaml`'s values-source branch is templated the same way. Each child Application points at a Helm chart in `helm/` and layers a per-environment values file from `envs/` via Argo CD's multi-source `ref: values` pattern.
 
 Every Application's destination is the same in-cluster API server, since each cluster only ever manages itself — there's no cross-cluster reachability. `dev`/`staging`/`prod` Applications track their matching Git branch, while the cluster-wide singleton platform components track `prod` only, so shared infra only changes on reviewed merges. Platform singletons (`namespace`, `certs-manager`, `gateway-controller`, `gateway-class`) run independently on both clusters and are ordered with Argo CD `sync-wave` annotations so the shared `networking` namespace lands first.
 
@@ -25,7 +25,7 @@ Every Application's destination is the same in-cluster API server, since each cl
 
 ### Local
 
-One-time bootstrap for the dev cluster — installs Argo CD, then hands self-management and `root.yaml` (default env: dev) over to it:
+One-time bootstrap for the dev cluster — installs Argo CD, then hands self-management and `root.yaml` (`TARGET_ENV` defaults to `dev`) over to it:
 
 ```sh
 ./bootstrap/bootstrap.sh
