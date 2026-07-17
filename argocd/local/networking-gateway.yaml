@@ -1,0 +1,58 @@
+# Per-cluster Gateway — TLS Certificate/ClusterIssuer, health-check HTTPRoute.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Application resource name, shown in the Argo CD UI.
+  name: networking-gateway
+
+  # Namespace the Application resource itself lives in.
+  namespace: argocd
+
+  annotations:
+    # Needs namespace/certs-manager/gateway-controller/gateway-class first.
+    argocd.argoproj.io/sync-wave: "0"
+
+spec:
+  # Bound to AppProject "default" and its guardrails.
+  project: default
+
+  # Multi-source config: the gateway Helm chart plus a values-only Git source.
+  sources:
+    # Gateway Helm chart source.
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+      # Branch tracked for the chart source.
+      targetRevision: dev
+
+      # Path to the gateway Helm chart.
+      path: helm/platform/networking/gateway
+
+      helm:
+        valueFiles:
+          # Local-cluster overrides, supplied by the $values Git source referenced below.
+          - $values/argocd/local/values/networking.yaml
+
+    # Git source providing only values files, referenced via the `values` alias.
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+      # Branch tracked for values files.
+      targetRevision: dev
+
+      # Aliased so the chart source above can reference $values.
+      ref: values
+
+  destination:
+    # Target cluster API server — in-cluster.
+    server: https://kubernetes.default.svc
+
+    # Shared with the other networking singletons.
+    namespace: networking
+
+  # Fully automated GitOps sync — no manual apply needed.
+  syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true

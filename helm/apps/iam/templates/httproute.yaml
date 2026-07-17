@@ -15,8 +15,9 @@ spec:
   {{- end }}
 
   parentRefs:
-    # Must match the Gateway name in platform/networking/gateway, or the route silently never attaches
-    - name: cluster-gateway-{{ .Values.global.environment }}
+    # Must match the Gateway name in platform/networking/gateway, or the route silently never attaches.
+    # Uses gateway.targetEnvironment when set, else falls back to this app's own environment.
+    - name: cluster-gateway-{{ .Values.gateway.targetEnvironment | default .Values.global.environment }}
 
       # Gateway lives in the shared networking namespace.
       namespace: networking

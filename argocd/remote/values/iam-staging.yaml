@@ -1,0 +1,57 @@
+# IAM service overrides for staging, layered onto apps/iam/values.yaml
+# via the $values ref in the staging branch's argocd/remote/iam-staging.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name, used in hostnames and resource suffixes.
+  environment: staging
+
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+  hosts:
+    # Default: empty disables hostname-based routing (route matches any host).
+    domain: ""
+
+# Image: container image settings.
+image:
+  # Upgrade intentionally by changing this value — third-party image, not built by this repo's CI.
+  repository: quay.io/keycloak/keycloak
+
+  # Upgrade intentionally by changing this value.
+  tag: "26.5.5"
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: IfNotPresent
+
+# Subpath: URL prefix Keycloak is served under, behind the shared gateway.
+subpath: "/iam"
+
+# Service: ClusterIP configuration.
+service:
+  # Keycloak HTTP listen port.
+  port: 8080
+
+# TokenExpire: access token lifespan in seconds.
+tokenExpire: 3600
+
+# Debug: Keycloak log level.
+debug: "INFO"
+
+# Provision: seeds realms, clients, and users on install/upgrade.
+provision:
+  # Disabled — staging realm/client/user data is managed like prod, not re-seeded on every sync.
+  enabled: false
+
+# HPA: horizontal pod autoscaler.
+hpa:
+  # Enabled in staging for load-based scaling.
+  enabled: true
+
+  # Minimum pod count.
+  minReplicas: 1
+
+  # Maximum pod count.
+  maxReplicas: 5
+
+  # Target average CPU utilization percentage for scaling.
+  targetCPUUtilization: 70

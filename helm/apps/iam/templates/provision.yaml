@@ -69,29 +69,47 @@ spec:
         - name: bootstrap
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           env:
-            # Admin username used to authenticate kcadm.sh, sourced from values.admin.username.
+            # Admin username used to authenticate kcadm.sh, from credentialsSecret.
             - name: ADMIN_USERNAME
-              value: {{ .Values.admin.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: admin-username
 
-            # Admin password used to authenticate kcadm.sh, sourced from values.admin.password.
+            # Admin password used to authenticate kcadm.sh, from credentialsSecret.
             - name: ADMIN_PASSWORD
-              value: {{ .Values.admin.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: admin-password
 
-            # Seeded user1 username, sourced from values.provision.user1.username.
+            # Seeded user1 username, from credentialsSecret.
             - name: USER1_USERNAME
-              value: {{ .Values.provision.user1.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: user1-username
 
-            # Seeded user1 password, sourced from values.provision.user1.password.
+            # Seeded user1 password, from credentialsSecret.
             - name: USER1_PASSWORD
-              value: {{ .Values.provision.user1.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: user1-password
 
-            # Seeded user2 username, sourced from values.provision.user2.username.
+            # Seeded user2 username, from credentialsSecret.
             - name: USER2_USERNAME
-              value: {{ .Values.provision.user2.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: user2-username
 
-            # Seeded user2 password, sourced from values.provision.user2.password.
+            # Seeded user2 password, from credentialsSecret.
             - name: USER2_PASSWORD
-              value: {{ .Values.provision.user2.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: user2-password
 
           volumeMounts:
             # Realm JSON files, read by the realm provisioning loop below.

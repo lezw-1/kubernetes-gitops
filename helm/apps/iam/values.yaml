@@ -13,6 +13,14 @@ gateway:
     # Default: empty disables hostname-based routing (route matches any host).
     domain: ""
 
+  # Env suffix of the shared singleton Gateway (platform/networking/gateway)
+  # this HTTPRoute attaches to.
+  # Default: empty falls back to global.environment — correct whenever this
+  # app's own env IS the singleton gateway's env (e.g. dev, prod). Override
+  # when they differ, e.g. a staging deploy attaching to the shared
+  # cluster's "prod" gateway singleton.
+  targetEnvironment: ""
+
 # Image: container image settings.
 image:
   # Container image repository.
@@ -25,15 +33,11 @@ image:
   # Allowed values: Always, IfNotPresent, Never
   pullPolicy: IfNotPresent
 
-# Admin: bootstrap credentials for the Keycloak admin console.
-admin:
-  # Admin console username.
-  # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
-  username: ""
-
-  # Admin console password.
-  # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
-  password: ""
+# CredentialsSecret: name of a pre-existing Secret in the release namespace,
+# created out-of-band (never committed to Git — see README for how). Must
+# provide key admin-username/admin-password, plus user1-username/user1-password
+# and user2-username/user2-password when provision.enabled is true.
+credentialsSecret: iam-credentials
 
 # Subpath: URL prefix Keycloak is served under, behind the shared gateway.
 subpath: "/iam"
@@ -53,25 +57,8 @@ debug: "INFO"
 # Provision: post-install/upgrade job that seeds realms, clients, and users from config/.
 provision:
   # Default: disabled — enable per-environment to run the seeding job.
+  # user1/user2 credentials are read from credentialsSecret above when enabled.
   enabled: false
-
-  user1:
-    # Username for the seeded user1 account.
-    # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
-    username: ""
-
-    # Password for the seeded user1 account.
-    # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
-    password: ""
-
-  user2:
-    # Username for the seeded user2 account.
-    # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
-    username: ""
-
-    # Password for the seeded user2 account.
-    # Store sensitive values securely (e.g., External Secrets, Sealed Secrets).
-    password: ""
 
 # HPA: horizontal pod autoscaler.
 hpa:

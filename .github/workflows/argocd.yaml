@@ -1,0 +1,72 @@
+# Install Argo CD
+#
+# Required secrets:
+#   - CF_ORG_ID:              Cloudfleet organization ID -> run 'cloudfleet organization describe'
+#   - CF_ACCESS_TOKEN:        Cloudfleet token ID -> create token via UI and use 'Access Token'
+#   - CF_ACCESS_TOKEN_SECRET: Cloudfleet token secret -> create token via UI and use 'Access Token Secret'
+#   - CF_CLUSTER_ID:          Cloudfleet cluster ID -> get via UI 'https://console.cloudfleet.ai/clusters'
+
+name: Install Argo CD
+
+on:
+  workflow_dispatch:
+
+  # Bootstraps/re-bootstraps the shared staging+prod cluster on every push to
+  # either branch. Idempotent — helm upgrade --install and kubectl apply are
+  # safe to re-run.
+  push:
+    branches: [staging, prod]
+
+jobs:
+  install-argocd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install Cloudfleet CLI
+        run: |
+          curl -fsSL https://downloads.cloudfleet.ai/apt/pubkey.gpg | sudo tee /usr/share/keyrings/cloudfleet-archive-keyring.gpg >/dev/null
+          echo "deb [signed-by=/usr/share/keyrings/cloudfleet-archive-keyring.gpg] https://downloads.cloudfleet.ai/apt stable main" | sudo tee /etc/apt/sources.list.d/cloudfleet.list
+          sudo apt-get update && sudo apt-get install -y cloudfleet
+
+      - name: Configure kubeconfig
+        run: |
+          cloudfleet auth add-profile token default ${{ secrets.CF_ORG_ID }} ${{ secrets.CF_ACCESS_TOKEN }} ${{ secrets.CF_ACCESS_TOKEN_SECRET }}
+          cloudfleet clusters kubeconfig ${{ secrets.CF_CLUSTER_ID }}
+
+      - name: Add Argo Helm repository
+        run: |
+          helm repo add argo https://argoproj.github.io/argo-helm
+          helm repo update argo
+
+      - name: Install/Upgrade Argo CD
+        # Chart version pinned here — bump deliberately, re-run to upgrade.
+        # Values read straight from the checked-out repo, ahead of Argo CD
+        # existing to apply argocd/bootstrap/install.yaml itself.
+        run: |
+          helm upgrade --install argocd argo/argo-cd \
+            --version 10.1.3 \
+            --namespace argocd \
+            --create-namespace \
+            -f argocd/remote/values/argocd.yaml
+
+      - name: Hand self-management over to Argo CD
+        # Same argocd/bootstrap/install.yaml bootstrap.sh uses for the local
+        # cluster, with ENV=prod/DIR=remote substituted instead of dev/local.
+        run: |
+          sed -e 's/__ENV__/prod/g' -e 's/__DIR__/remote/g' argocd/bootstrap/install.yaml \
+            | kubectl apply -f - -n argocd
+
+      - name: Apply the app-of-apps
+        # Same argocd/bootstrap/root.yaml bootstrap.sh uses for the local
+        # cluster, with ENV=prod/DIR=remote substituted instead of dev/local.
+        run: |
+          sed -e 's/__ENV__/prod/g' -e 's/__DIR__/remote/g' argocd/bootstrap/root.yaml \
+            | kubectl apply -f - -n argocd

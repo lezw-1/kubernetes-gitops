@@ -1,0 +1,65 @@
+# Argo CD manages its own Helm install once bootstrapped (self-management).
+# Shared by both clusters — targetRevision and the values path are
+# placeholders: bootstrap.sh substitutes __ENV__=dev/__DIR__=local for the
+# local cluster; the CI pipeline substitutes __ENV__=prod/__DIR__=remote for
+# the remote cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Application resource name, shown in the Argo CD UI.
+  name: argocd
+
+  # Namespace the Application resource itself lives in.
+  namespace: argocd
+
+spec:
+  # Bound to AppProject "default" and its guardrails.
+  project: default
+
+  # Multi-source config: the Argo CD Helm chart plus a values-only Git source.
+  sources:
+    # Argo Helm chart repository source.
+    - repoURL: https://argoproj.github.io/argo-helm
+
+      # Chart name within the Argo Helm repo.
+      chart: argo-cd
+
+      # Pinned chart version — bump deliberately, re-sync to upgrade.
+      targetRevision: 10.1.3
+
+      helm:
+        valueFiles:
+          # Values file supplied by the $values Git source referenced below.
+          # Placeholder — substituted to argocd/local/values/argocd.yaml or
+          # argocd/remote/values/argocd.yaml.
+          - $values/argocd/__DIR__/values/argocd.yaml
+
+    # Git source providing only values files, referenced via the `values` alias.
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+      # Branch tracked for values files. Placeholder, substituted before
+      # this file is applied.
+      targetRevision: __ENV__
+
+      # Aliased so the chart source above can reference $values.
+      ref: values
+
+  destination:
+    # Target cluster API server — in-cluster.
+    server: https://kubernetes.default.svc
+
+    # Namespace Argo CD's own resources are deployed into.
+    namespace: argocd
+
+  # Fully automated GitOps sync — no manual apply needed after bootstrap.
+  syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
+    syncOptions:
+      # Auto-create the destination namespace.
+      - CreateNamespace=true

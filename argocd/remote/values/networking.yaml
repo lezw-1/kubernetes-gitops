@@ -1,0 +1,36 @@
+# Networking singleton overrides for prod, layered onto
+# platform/networking/gateway/values.yaml via the $values ref in the prod
+# branch's argocd/remote/networking-gateway.yaml. Only the gateway
+# component takes per-cluster values today — namespace/certs-manager/
+# gateway-controller/gateway-class use static chart defaults (single-source,
+# no $values). The gateway itself is a cluster-wide singleton too, shared by
+# staging and prod rather than split per environment.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name, used in resource suffixes.
+  environment: prod
+
+# Gateway: shared cluster Gateway configuration.
+gateway:
+  tls:
+    # Enables the HTTPS listener and Certificate/ClusterIssuer resources.
+    enabled: true
+
+    # Uses Let's Encrypt instead of a self-signed cert.
+    selfSigned: false
+
+  hosts:
+    # Default: empty disables hostname-based routing.
+    domain: ""
+
+    # Contact email for the Let's Encrypt ACME account.
+    email: ""
+
+  nodePort:
+    # Disabled — prod is fronted by a real LoadBalancer, not NodePort.
+    enabled: false
+
+  timeout:
+    # Request timeout applied via BackendTrafficPolicy.
+    requestTimeout: 1800s
