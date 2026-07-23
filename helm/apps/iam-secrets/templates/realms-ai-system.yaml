@@ -13,8 +13,9 @@ type: Opaque
 
 stringData:
   # Realm definition, read from values.secrets.realms.aiSystem.
-  realm: {{ .Values.secrets.realms.aiSystem.realm }}
-  enabled: {{ .Values.secrets.realms.aiSystem.enabled }}
-  verifyEmail: {{ .Values.secrets.realms.aiSystem.verifyEmail }}
-  requiredActionsToDisable:
-    {{- toYaml .Values.secrets.realms.aiSystem.requiredActionsToDisable | nindent 4 }}
+  # Secret.stringData requires string values, so booleans/lists are quoted
+  # or JSON-encoded rather than emitted as native YAML types.
+  realm: {{ .Values.secrets.realms.aiSystem.realm | quote }}
+  enabled: {{ .Values.secrets.realms.aiSystem.enabled | quote }}
+  verifyEmail: {{ .Values.secrets.realms.aiSystem.verifyEmail | quote }}
+  requiredActionsToDisable: {{ .Values.secrets.realms.aiSystem.requiredActionsToDisable | toJson | quote }}

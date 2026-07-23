@@ -13,9 +13,10 @@ type: Opaque
 
 stringData:
   # Client definition, read from values.secrets.clients.chronsorting.
-  clientId: {{ .Values.secrets.clients.chronsorting.clientId }}
-  enabled: {{ .Values.secrets.clients.chronsorting.enabled }}
-  publicClient: {{ .Values.secrets.clients.chronsorting.publicClient }}
-  directAccessGrantsEnabled: {{ .Values.secrets.clients.chronsorting.directAccessGrantsEnabled }}
-  roles:
-    {{- toYaml .Values.secrets.clients.chronsorting.roles | nindent 4 }}
+  # Secret.stringData requires string values, so booleans/lists are quoted
+  # or JSON-encoded rather than emitted as native YAML types.
+  clientId: {{ .Values.secrets.clients.chronsorting.clientId | quote }}
+  enabled: {{ .Values.secrets.clients.chronsorting.enabled | quote }}
+  publicClient: {{ .Values.secrets.clients.chronsorting.publicClient | quote }}
+  directAccessGrantsEnabled: {{ .Values.secrets.clients.chronsorting.directAccessGrantsEnabled | quote }}
+  roles: {{ .Values.secrets.clients.chronsorting.roles | toJson | quote }}

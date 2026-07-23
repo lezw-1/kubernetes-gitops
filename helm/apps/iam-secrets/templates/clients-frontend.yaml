@@ -13,9 +13,10 @@ type: Opaque
 
 stringData:
   # Client definition, read from values.secrets.clients.frontend.
-  clientId: {{ .Values.secrets.clients.frontend.clientId }}
-  enabled: {{ .Values.secrets.clients.frontend.enabled }}
-  publicClient: {{ .Values.secrets.clients.frontend.publicClient }}
-  directAccessGrantsEnabled: {{ .Values.secrets.clients.frontend.directAccessGrantsEnabled }}
-  roles:
-    {{- toYaml .Values.secrets.clients.frontend.roles | nindent 4 }}
+  # Secret.stringData requires string values, so booleans/lists are quoted
+  # or JSON-encoded rather than emitted as native YAML types.
+  clientId: {{ .Values.secrets.clients.frontend.clientId | quote }}
+  enabled: {{ .Values.secrets.clients.frontend.enabled | quote }}
+  publicClient: {{ .Values.secrets.clients.frontend.publicClient | quote }}
+  directAccessGrantsEnabled: {{ .Values.secrets.clients.frontend.directAccessGrantsEnabled | quote }}
+  roles: {{ .Values.secrets.clients.frontend.roles | toJson | quote }}
