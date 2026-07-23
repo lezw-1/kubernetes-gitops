@@ -33,9 +33,11 @@ image:
   # Allowed values: Always, IfNotPresent, Never
   pullPolicy: IfNotPresent
 
-# CredentialsSecret: name of a pre-existing Secret in the release namespace,
-# created out-of-band (never committed to Git — see README for how). Must
-# provide keys admin-username/admin-password.
+# CredentialsSecret: name of the Secret providing keys admin-username/
+# admin-password. When secretsProvisioning.enabled is true, this chart
+# creates it (templates/admin-credentials.yaml) from values.secrets.admin.
+# Otherwise it must be a pre-existing Secret created out-of-band (never
+# committed to Git — see README for how).
 credentialsSecret: admin-credentials
 
 # Subpath: URL prefix Keycloak is served under, behind the shared gateway.
@@ -66,3 +68,124 @@ hpa:
 
   # Target average CPU utilization percentage for scaling.
   targetCPUUtilization: 70
+
+# SecretsProvisioning: gates templates/admin-credentials.yaml,
+# templates/realms-*.yaml, templates/clients-*.yaml, templates/users-*.yaml,
+# and templates/provision-job.yaml — all sourced from values.secrets below.
+# Default: disabled, so staging/prod are unaffected until they opt in;
+# admin-credentials must then be created out-of-band there (see README).
+secretsProvisioning:
+  # Enabled per environment via envs/<env>/iam.yaml — currently only dev.
+  enabled: false
+
+# Secrets: realm, client, and user definitions materialized as Kubernetes
+# Secrets and provisioned into Keycloak by templates/provision-job.yaml.
+# Only read when secretsProvisioning.enabled is true.
+# Override per environment via envs/<env>/iam.yaml and the matching
+# SOPS-encrypted values file (e.g. argocd/clusters/local/values/iam-secrets.enc.yaml).
+secrets:
+  # Keycloak bootstrap admin credentials — materialized as the
+  # admin-credentials Secret by templates/admin-credentials.yaml. The iam
+  # Deployment reads KC_BOOTSTRAP_ADMIN_USERNAME/PASSWORD from it via
+  # credentialsSecret above.
+  admin:
+    # Keycloak bootstrap admin username.
+    # Default: empty — never commit a real value here. Supply it via a
+    # SOPS-encrypted environment override at deploy time (see
+    # argocd/clusters/local/values/iam-secrets.enc.yaml).
+    username: ""
+
+    # Keycloak bootstrap admin password.
+    # Default: empty — same rule as username above; never commit a real password.
+    password: ""
+
+  # Realm definitions, keyed by a values-safe name (see templates/realms-*.yaml).
+  realms:
+    aiSystem:
+      # Realm name.
+      realm: ai-system
+
+      # Whether the realm is enabled.
+      enabled: true
+
+      # Whether new users must verify their email.
+      verifyEmail: false
+
+      # Required actions disabled at realm creation.
+      requiredActionsToDisable:
+        - VERIFY_PROFILE
+
+  # Client definitions, keyed by clientId (see templates/clients-*.yaml).
+  clients:
+    chronsorting:
+      # Keycloak client ID.
+      clientId: chronsorting
+
+      # Whether the client is enabled.
+      enabled: true
+
+      # Whether the client can authenticate without a client secret.
+      publicClient: false
+
+      # Whether Resource Owner Password Credentials grant is allowed.
+      directAccessGrantsEnabled: false
+
+      # Client roles to create.
+      roles:
+        - viewer
+
+    frontend:
+      clientId: frontend
+      enabled: true
+      publicClient: true
+      directAccessGrantsEnabled: true
+      roles:
+        - viewer
+
+  # User definitions, keyed by a values-safe name (see templates/users-*.yaml).
+  users:
+    user1:
+      # User email address.
+      email: user1@ai-system.local
+
+      # User first name.
+      firstName: User
+
+      # User last name.
+      lastName: One
+
+      # Whether the user is enabled.
+      enabled: true
+
+      # Whether the user's email is marked verified.
+      emailVerified: true
+
+      # Keycloak login username.
+      # Default: empty — never commit a real value here. Supply it via a
+      # SOPS-encrypted environment override at deploy time (see
+      # argocd/clusters/local/values/iam-secrets.enc.yaml).
+      username: ""
+
+      # Keycloak login password.
+      # Default: empty — same rule as username above; never commit a real password.
+      password: ""
+
+      # Client roles assigned to this user.
+      roles:
+        - client: chronsorting
+          role: viewer
+        - client: frontend
+          role: viewer
+
+    user2:
+      email: user2@ai-system.local
+      firstName: User
+      lastName: Two
+      enabled: true
+      emailVerified: true
+
+      # See user1's username/password comments above — never commit real values.
+      username: ""
+      password: ""
+
+      roles: []

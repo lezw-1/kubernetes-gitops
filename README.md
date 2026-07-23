@@ -8,7 +8,7 @@ Two independent clusters, each with its own Argo CD install:
 
 - **`local` (dev)** and **`remote` (staging+prod)** — bootstrapped from shared manifests in `argocd/bootstrap/` (`root.yaml`, `install.yaml`), with `__ENV__`/`__DIR__` placeholders substituted per cluster: `argocd/clusters/local/bootstrap.sh` for local, `.github/workflows/argocd.yaml` for remote.
 - **Root app-of-apps** — `argocd/bootstrap/root.yaml` recursively syncs every Application under `argocd/clusters/local/` or `argocd/clusters/remote/`.
-- **Values layering** — each child Application layers a per-cluster values file from `argocd/clusters/local/values/` or `argocd/clusters/remote/values/` via Argo CD's multi-source `ref: values` pattern (nested, so it's excluded from the root Application's flat `*.yaml` scan). Argo CD's own Helm install is layered the same way, from `values/argocd.yaml`. Exception: `iam-secrets` has a SOPS-encrypted values file, so it uses the `sops-helm` Config Management Plugin (single source at repo root) instead — native Helm value files can't decrypt SOPS.
+- **Values layering** — each child Application layers a per-cluster values file from `argocd/clusters/local/values/` or `argocd/clusters/remote/values/` via Argo CD's multi-source `ref: values` pattern (nested, so it's excluded from the root Application's flat `*.yaml` scan). Argo CD's own Helm install is layered the same way, from `values/argocd.yaml`. Exception: `iam` on local has a SOPS-encrypted values file, so it uses the `sops-helm` Config Management Plugin (single source at repo root) instead — native Helm value files can't decrypt SOPS.
 - **Single destination** — every Application targets its own in-cluster API server; clusters never reach across.
 - **Promotion** — on remote, `frontend`/`iam` get one Application per environment (`-staging`/`-prod`), each tracking its own Git branch, so promotion is independent.
 - **Shared infra** — platform singletons (`namespace`, `certs-manager`, `gateway-controller`, `gateway-class`, `gateway`) track `prod` only and run as one instance; local tracks `dev` only. `sync-wave` annotations land `networking`'s namespace first.
@@ -19,8 +19,7 @@ Two independent clusters, each with its own Argo CD install:
 - **App-of-apps, remote (`argocd/clusters/remote/`)** — one file per Application for the staging+prod cluster, plus `values/` for this cluster's Helm values overrides.
 - **Bootstrap (`argocd/bootstrap/`)** — `root.yaml`, `install.yaml`: the one-time install manifests shared by both clusters, applied with `__ENV__`/`__DIR__` substituted by `argocd/clusters/local/bootstrap.sh` (local) or `.github/workflows/argocd.yaml` (remote).
 - **Frontend (`helm/apps/frontend`)** — React dashboard Helm chart: Deployment, Service, HPA, HTTPRoute.
-- **IAM (`helm/apps/iam`)** — Keycloak-based authentication and token issuance: Deployment, Service, HPA, HTTPRoute.
-- **IAM secrets (`helm/apps/iam-secrets`)** — realm/client/user definitions as Kubernetes Secrets, rendered via the `sops-helm` CMP so credentials stay SOPS-encrypted in Git.
+- **IAM (`helm/apps/iam`)** — Keycloak-based authentication and token issuance: Deployment, Service, HPA, HTTPRoute, plus realm/client/user Secrets and a provisioning Job, gated by `secretsProvisioning.enabled` (on for local, off for staging/prod). On local, rendered via the `sops-helm` CMP so credentials stay SOPS-encrypted in Git.
 - **Networking platform (`helm/platform/networking`)** — shared namespace, cert-manager, Envoy Gateway controller/class, and the cluster Gateway (TLS Certificate/ClusterIssuer, health-check HTTPRoute).
 
 ## Prerequisites
@@ -42,19 +41,13 @@ The remote (staging+prod) cluster is bootstrapped by `.github/workflows/argocd.y
 
 ### Dev
 
-Env variables can be found in: `argocd/clusters/local/values/frontend.yaml`, `argocd/clusters/local/values/iam.yaml`, `argocd/clusters/local/values/networking.yaml`.
+Env variables can be found in: `argocd/clusters/local/values/frontend.yaml`, `argocd/clusters/local/values/iam-secrets.enc.yaml`, `argocd/clusters/local/values/networking.yaml`.
 
 Deployment is orchestrated by Argo CD syncing the `dev` branch — every Application on the local cluster has `syncPolicy.automated` (prune + self-heal). The frontend image is built locally via `nerdctl build -t frontend:local ...` and never pulled from a registry.
 
-The `iam` chart reads its admin/seeded-user credentials from a Secret (`admin-credentials`, default name — see `helm/apps/iam/values.yaml`'s `credentialsSecret`) that is never committed to Git. Create it once per cluster before `iam` can start:
+On local, `secretsProvisioning.enabled` is `true`, so the `iam` chart creates `admin-credentials` itself (from `argocd/clusters/local/values/iam-secrets.enc.yaml`'s `secrets.admin`) and a Job seeds the `ai-system` realm/clients/users on every install/upgrade — no manual Secret needed.
 
-```sh
-kubectl create secret generic admin-credentials -n ai-system-dev \
-  --from-literal=admin-username=<admin-username> \
-  --from-literal=admin-password=<admin-password>
-```
-
-The `iam` app's `argocd/clusters/local/values/iam-secrets.enc.yaml` is SOPS-encrypted with the age recipient in `.sops.yaml`. Argo CD's repo server decrypts it via the `sops-helm` Config Management Plugin (`argocd/clusters/local/values/argocd.yaml`), which needs the matching age **private** key as a `sops-age-key` Secret in the `argocd` namespace — never committed to Git:
+`argocd/clusters/local/values/iam-secrets.enc.yaml` is SOPS-encrypted with the age recipient in `.sops.yaml` — only its `username`/`password` leaf fields; the rest (image, subpath, realm/client names, roles, etc.) stays plaintext so it's readable in Git diffs. Argo CD's repo server decrypts it via the `sops-helm` Config Management Plugin (`argocd/clusters/local/values/argocd-cmp.yaml`), which needs the matching age **private** key as a `sops-age-key` Secret in the `argocd` namespace — never committed to Git:
 
 ```sh
 kubectl create secret generic sops-age-key -n argocd \

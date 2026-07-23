@@ -1,0 +1,192 @@
+{{- if .Values.secretsProvisioning.enabled }}
+# Provisioning Job: seeds Keycloak with the realm, clients, and users defined
+# under values.secrets.* (see values.yaml), using the kcadm.sh CLI that ships
+# in the Keycloak image. Runs as a Helm hook on every install/upgrade so the
+# realm config in Git stays the source of truth even after manual drift.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  # Job resource name.
+  name: iam-provision
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+  annotations:
+    # Run this Job on every install/upgrade, not just once.
+    "helm.sh/hook": post-install,post-upgrade
+
+    # Delete the previous run's Job before creating a new one, and clean up
+    # once this run succeeds — a failed Pod is left for `kubectl logs`.
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+
+spec:
+  # Surface failures immediately rather than retrying against a possibly
+  # half-provisioned realm.
+  backoffLimit: 0
+
+  template:
+    metadata:
+      labels:
+        # Pod label, useful for `kubectl logs -l`.
+        app: iam-provision
+
+    spec:
+      # Never restart — a failed run should be inspected, not retried in place.
+      restartPolicy: Never
+
+      containers:
+        # kcadm.sh runner.
+        - name: provision
+
+          # Same image as the iam Deployment (values.image) — kcadm.sh must
+          # match the server's Keycloak version.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          # Image pull policy, sourced from values.image.pullPolicy.
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          env:
+            # Admin login kcadm.sh authenticates with — same Secret the iam
+            # Deployment bootstraps from (templates/admin-credentials.yaml).
+            - name: ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: admin-credentials
+                  key: admin-username
+
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: admin-credentials
+                  key: admin-password
+
+            # user1 login credentials, applied via `kcadm set-password` below.
+            - name: USER1_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: users-user1
+                  key: username
+
+            - name: USER1_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: users-user1
+                  key: password
+
+            # user2 login credentials, applied via `kcadm set-password` below.
+            - name: USER2_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: users-user2
+                  key: username
+
+            - name: USER2_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: users-user2
+                  key: password
+
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -euo pipefail
+
+              KCADM=/opt/keycloak/bin/kcadm.sh
+              # Service name "iam" matches templates/service.yaml's metadata.name.
+              SERVER_URL="http://iam:{{ .Values.service.port }}{{ .Values.subpath }}"
+              REALM={{ .Values.secrets.realms.aiSystem.realm | quote }}
+
+              # Looks up a client's internal id by clientId — the role-management
+              # endpoints below take the internal id, not the clientId.
+              client_internal_id() {
+                "$KCADM" get clients -r "$REALM" -q "clientId=$1" --fields id --format csv --noquotes
+              }
+
+              # Looks up a user's internal id by username — `update users/...`
+              # below takes the internal id, not the username.
+              user_internal_id() {
+                "$KCADM" get users -r "$REALM" -q "username=$1" --fields id --format csv --noquotes
+              }
+
+              # Retry login until Keycloak finishes starting — start-dev has no
+              # readiness probe wired up yet (helm/apps/iam/templates/deployment.yaml).
+              LOGGED_IN=false
+              for i in $(seq 1 30); do
+                if "$KCADM" config credentials --server "$SERVER_URL" --realm master \
+                    --user "$ADMIN_USERNAME" --password "$ADMIN_PASSWORD"; then
+                  LOGGED_IN=true
+                  break
+                fi
+                echo "Waiting for Keycloak at $SERVER_URL ($i/30)..."
+                sleep 5
+              done
+              if [ "$LOGGED_IN" != true ]; then
+                echo "Keycloak did not become reachable at $SERVER_URL after 150s" >&2
+                exit 1
+              fi
+
+              # Realm (values.secrets.realms.aiSystem) — create if missing, then
+              # enforce the desired state on every run (idempotent upsert).
+              "$KCADM" create realms -s realm="$REALM" 2>/dev/null || true
+              "$KCADM" update realms/"$REALM" \
+                -s enabled={{ .Values.secrets.realms.aiSystem.enabled }} \
+                -s verifyEmail={{ .Values.secrets.realms.aiSystem.verifyEmail }}
+
+              # Required actions disabled at realm creation.
+              {{- range .Values.secrets.realms.aiSystem.requiredActionsToDisable }}
+              "$KCADM" update authentication/required-actions/{{ . }} -r "$REALM" -s enabled=false
+              {{- end }}
+
+              # Client: chronsorting (values.secrets.clients.chronsorting).
+              "$KCADM" create clients -r "$REALM" -s clientId={{ .Values.secrets.clients.chronsorting.clientId | quote }} 2>/dev/null || true
+              CHRONSORTING_ID=$(client_internal_id {{ .Values.secrets.clients.chronsorting.clientId | quote }})
+              "$KCADM" update clients/"$CHRONSORTING_ID" -r "$REALM" \
+                -s enabled={{ .Values.secrets.clients.chronsorting.enabled }} \
+                -s publicClient={{ .Values.secrets.clients.chronsorting.publicClient }} \
+                -s directAccessGrantsEnabled={{ .Values.secrets.clients.chronsorting.directAccessGrantsEnabled }}
+              {{- range .Values.secrets.clients.chronsorting.roles }}
+              "$KCADM" create clients/"$CHRONSORTING_ID"/roles -r "$REALM" -s name={{ . | quote }} 2>/dev/null || true
+              {{- end }}
+
+              # Client: frontend (values.secrets.clients.frontend).
+              "$KCADM" create clients -r "$REALM" -s clientId={{ .Values.secrets.clients.frontend.clientId | quote }} 2>/dev/null || true
+              FRONTEND_ID=$(client_internal_id {{ .Values.secrets.clients.frontend.clientId | quote }})
+              "$KCADM" update clients/"$FRONTEND_ID" -r "$REALM" \
+                -s enabled={{ .Values.secrets.clients.frontend.enabled }} \
+                -s publicClient={{ .Values.secrets.clients.frontend.publicClient }} \
+                -s directAccessGrantsEnabled={{ .Values.secrets.clients.frontend.directAccessGrantsEnabled }}
+              {{- range .Values.secrets.clients.frontend.roles }}
+              "$KCADM" create clients/"$FRONTEND_ID"/roles -r "$REALM" -s name={{ . | quote }} 2>/dev/null || true
+              {{- end }}
+
+              # User: user1 (values.secrets.users.user1) — USER1_USERNAME/
+              # USER1_PASSWORD come from the SOPS-encrypted env override above.
+              "$KCADM" create users -r "$REALM" -s username="$USER1_USERNAME" 2>/dev/null || true
+              USER1_ID=$(user_internal_id "$USER1_USERNAME")
+              "$KCADM" update users/"$USER1_ID" -r "$REALM" \
+                -s email={{ .Values.secrets.users.user1.email | quote }} \
+                -s firstName={{ .Values.secrets.users.user1.firstName | quote }} \
+                -s lastName={{ .Values.secrets.users.user1.lastName | quote }} \
+                -s enabled={{ .Values.secrets.users.user1.enabled }} \
+                -s emailVerified={{ .Values.secrets.users.user1.emailVerified }}
+              "$KCADM" set-password -r "$REALM" --username "$USER1_USERNAME" --new-password "$USER1_PASSWORD"
+              {{- range .Values.secrets.users.user1.roles }}
+              "$KCADM" add-roles -r "$REALM" --uusername "$USER1_USERNAME" --cclientid {{ .client | quote }} --rolename {{ .role | quote }} 2>/dev/null || true
+              {{- end }}
+
+              # User: user2 (values.secrets.users.user2).
+              "$KCADM" create users -r "$REALM" -s username="$USER2_USERNAME" 2>/dev/null || true
+              USER2_ID=$(user_internal_id "$USER2_USERNAME")
+              "$KCADM" update users/"$USER2_ID" -r "$REALM" \
+                -s email={{ .Values.secrets.users.user2.email | quote }} \
+                -s firstName={{ .Values.secrets.users.user2.firstName | quote }} \
+                -s lastName={{ .Values.secrets.users.user2.lastName | quote }} \
+                -s enabled={{ .Values.secrets.users.user2.enabled }} \
+                -s emailVerified={{ .Values.secrets.users.user2.emailVerified }}
+              "$KCADM" set-password -r "$REALM" --username "$USER2_USERNAME" --new-password "$USER2_PASSWORD"
+              {{- range .Values.secrets.users.user2.roles }}
+              "$KCADM" add-roles -r "$REALM" --uusername "$USER2_USERNAME" --cclientid {{ .client | quote }} --rolename {{ .role | quote }} 2>/dev/null || true
+              {{- end }}
+{{- end }}

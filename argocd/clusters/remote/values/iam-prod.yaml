@@ -37,11 +37,6 @@ tokenExpire: 3600
 # Debug: Keycloak log level.
 debug: "INFO"
 
-# Provision: seeds realms, clients, and users on install/upgrade.
-provision:
-  # Disabled — prod realm/client/user data is managed manually, not re-seeded on every sync.
-  enabled: false
-
 # HPA: horizontal pod autoscaler.
 hpa:
   # Enabled in prod for load-based scaling.
