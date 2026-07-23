@@ -1,0 +1,50 @@
+# Networking singleton overrides for prod, layered onto
+# platform/networking/gateway/values.yaml via the SECRETS_FILE env in the
+# sops-helm plugin source (argocd/clusters/remote/networking-gateway.yaml).
+# Only the gateway component takes per-cluster values today — namespace/
+# certs-manager/gateway-controller/gateway-class use static chart defaults
+# (single-source, no plugin). The gateway itself is a cluster-wide singleton
+# too, shared by staging and prod rather than split per environment.
+#
+# domain/email below are SOPS-encrypted (real hostname + contact email) —
+# only those leaf fields; the rest of this file stays plaintext so it's
+# readable in Git diffs.
+# Global: shared across templates.
+global:
+    # Deployment environment name, used in resource suffixes.
+    environment: prod
+# Gateway: shared cluster Gateway configuration.
+gateway:
+    tls:
+        # Enables the HTTPS listener and Certificate/ClusterIssuer resources.
+        enabled: true
+        # Uses Let's Encrypt instead of a self-signed cert.
+        selfSigned: false
+    hosts:
+        # Public hostname the gateway routes.
+        # This field is SOPS-encrypted; decrypt/edit via `sops` rather than by hand.
+        domain: ENC[AES256_GCM,data:XZRcOr8U9w==,iv:B7AvJnSajdS1G982Fpt6MWG4FgjGROSO/eZx4Bcuvxc=,tag:BLOvz/IDOxubLOhFvysAhg==,type:str]
+        # Contact email for the Let's Encrypt ACME account.
+        # This field is SOPS-encrypted; decrypt/edit via `sops` rather than by hand.
+        email: ENC[AES256_GCM,data:vr1I1LW/QaDUXJ6upOoDyXgB,iv:Fr6LnQprK8O+d32pzOJDMaMYxd9UZFyIW4J9+xcM96Q=,tag:JBFWk/LBiT5caK7x/5kbmg==,type:str]
+    nodePort:
+        # Disabled — prod is fronted by a real LoadBalancer, not NodePort.
+        enabled: false
+    timeout:
+        # Request timeout applied via BackendTrafficPolicy.
+        requestTimeout: 1800s
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBOUlRqajRsZVBLQXFuRW5a
+            UTdxNVVMNElCVGVNSUtESm1OMitFUTJadG5JCkUxRHdab2VyUEt0Q1pqQ0RJWDll
+            OEZGM3A4ckVYclpGOU5vVVpnU2FJOGMKLS0tIFljUXQ1NGFTMHBXSFh1aWg0V2RC
+            eForTUZCcjZNQm1SNklza2pDWmJXeGsKmKuDUfNlnKhTPcAn9JPS1Dsn8wbR5fzO
+            wuYBSF3KnJfV8uBbWtnOnq4z2bCZlue2VI9c7AimfxjRj4SWLU6HYA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
+    encrypted_regex: ^(username|password|domain|email)$
+    lastmodified: "2026-07-23T19:03:57Z"
+    mac: ENC[AES256_GCM,data:sOVADUPZhRhhEILsKyrBrB120+UbXeZ3Nr0L7mNF22T1TMkRCJI/7uRBood/lXOjZdj0NU1XFycC9s5DdVztOZ8mas/azJC/zq6ROUuNvOE7kkghClhHddHvYTZOQSRKstvYqAB5IDvegbJ5XEEUkLl4icaFIjYxMYsxJSSgdDY=,iv:PDNlgIwEIFsqzeq8sbS8p4FqFGW+3FqVOi7efBRp9vg=,tag:T4rjxmJ/493OHg7CvjNJiQ==,type:str]
+    version: 3.13.2
