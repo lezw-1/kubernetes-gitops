@@ -33,7 +33,8 @@ helm upgrade --install argocd argo/argo-cd \
   --version "$ARGOCD_VERSION" \
   --namespace argocd \
   --create-namespace \
-  -f "$SCRIPT_DIR/values/argocd.yaml"
+  -f "$SCRIPT_DIR/values/argocd.yaml" \
+  -f "$SCRIPT_DIR/values/argocd-cmp.yaml"
 
 CURRENT_STEP="hand self-management over to Argo CD"
 echo "Step: $CURRENT_STEP"

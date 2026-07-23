@@ -35,9 +35,8 @@ image:
 
 # CredentialsSecret: name of a pre-existing Secret in the release namespace,
 # created out-of-band (never committed to Git — see README for how). Must
-# provide key admin-username/admin-password, plus user1-username/user1-password
-# and user2-username/user2-password when provision.enabled is true.
-credentialsSecret: iam-credentials
+# provide keys admin-username/admin-password.
+credentialsSecret: admin-credentials
 
 # Subpath: URL prefix Keycloak is served under, behind the shared gateway.
 subpath: "/iam"
@@ -53,12 +52,6 @@ tokenExpire: 3600
 # Debug: Keycloak log level.
 # Allowed values: DEBUG, INFO, WARN, ERROR
 debug: "INFO"
-
-# Provision: post-install/upgrade job that seeds realms, clients, and users from config/.
-provision:
-  # Default: disabled — enable per-environment to run the seeding job.
-  # user1/user2 credentials are read from credentialsSecret above when enabled.
-  enabled: false
 
 # HPA: horizontal pod autoscaler.
 hpa:

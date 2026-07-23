@@ -1,0 +1,21 @@
+# Client Secret: frontend.
+apiVersion: v1
+kind: Secret
+metadata:
+  # Secret resource name.
+  name: clients-frontend
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+# Opaque: arbitrary key/value data, not one of Kubernetes' typed secrets (e.g. tls, basic-auth).
+type: Opaque
+
+stringData:
+  # Client definition, read from values.secrets.clients.frontend.
+  clientId: {{ .Values.secrets.clients.frontend.clientId }}
+  enabled: {{ .Values.secrets.clients.frontend.enabled }}
+  publicClient: {{ .Values.secrets.clients.frontend.publicClient }}
+  directAccessGrantsEnabled: {{ .Values.secrets.clients.frontend.directAccessGrantsEnabled }}
+  roles:
+    {{- toYaml .Values.secrets.clients.frontend.roles | nindent 4 }}

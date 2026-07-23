@@ -34,6 +34,11 @@ spec:
           # argocd/clusters/remote/values/argocd.yaml.
           - $values/argocd/clusters/__DIR__/values/argocd.yaml
 
+          # CMP plugin overrides (e.g. sops-helm on local/dev), layered as a
+          # separate values file from the base settings above — see
+          # argocd/clusters/local/values/argocd-cmp.yaml.
+          - $values/argocd/clusters/__DIR__/values/argocd-cmp.yaml
+
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 

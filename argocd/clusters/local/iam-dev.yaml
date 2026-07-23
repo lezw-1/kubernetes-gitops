@@ -13,11 +13,15 @@ spec:
   project: default
 
   # Multi-source config: the iam Helm chart plus a values-only Git source.
+  # Native Helm, no CMP plugin — this chart has no SOPS-encrypted values.
+  # The realm/client/user Secrets (which do need decryption) are a separate
+  # Application, iam-secrets-dev.yaml, so a decryption failure there can't
+  # block this Application's Deployment/Service/HTTPRoute from syncing.
   sources:
     # IAM Helm chart source.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
-      # Branch tracked for the chart source.
+      # Branch tracked for this source.
       targetRevision: dev
 
       # Path to the iam Helm chart.

@@ -1,0 +1,118 @@
+# Config Management Plugin (CMP) overrides for Argo CD's repo-server —
+# layered on top of values/argocd.yaml via the same Application's
+# helm.valueFiles list (see argocd/bootstrap/install.yaml). Split into its
+# own file since it configures a distinct concern (the sops-helm plugin)
+# from the base server/controller/redis-ha settings in argocd.yaml.
+configs:
+  # Config Management Plugins — extends manifest generation beyond native Helm/Kustomize.
+  cmp:
+    # Creates the argocd-cmp-cm ConfigMap holding the plugin.yaml below.
+    create: true
+
+    # sops-helm: decrypts SOPS-encrypted values files (*.enc.yaml), then
+    # renders the target Helm chart with them. Used by Applications that
+    # set sources[].plugin.name: sops-helm (e.g. iam-dev.yaml) instead of
+    # sources[].helm, since native Helm value files can't decrypt SOPS.
+    plugins:
+      sops-helm:
+        generate:
+          command: [sh, -c]
+          args:
+            - |
+              set -eu
+
+              # Application env vars (ARGOCD_ENV_*) set per-source via sources[].plugin.env.
+              # Argo CD's CMP server auto-prefixes each plugin.env name with
+              # ARGOCD_ENV_ before injecting it here — a plugin.env entry
+              # named CHART_PATH is read below as ARGOCD_ENV_CHART_PATH, etc.
+              #   CHART_PATH   — path to the Helm chart, relative to repo root.
+              #   VALUES_FILE  — plain values file, relative to repo root.
+              #   SECRETS_FILE — SOPS-encrypted values file, relative to repo
+              #                  root; decrypted to a temp dir before use.
+              tmpdir=$(mktemp -d)
+              trap 'rm -rf "$tmpdir"' EXIT INT TERM
+
+              decrypted="$tmpdir/$(basename "$ARGOCD_ENV_SECRETS_FILE")"
+              sops -d "$ARGOCD_ENV_SECRETS_FILE" > "$decrypted"
+
+              exec helm template "$ARGOCD_APP_NAME" "$ARGOCD_ENV_CHART_PATH" \
+                --namespace "$ARGOCD_APP_NAMESPACE" \
+                -f "$ARGOCD_ENV_VALUES_FILE" \
+                -f "$decrypted"
+
+# Repo server deployment settings — sidecar/init container that run the plugin above.
+repoServer:
+  # Downloads the sops binary onto a shared volume before the cmp-sops-helm
+  # sidecar starts — no image bundles both helm and sops, so this composes
+  # the alpine/helm sidecar image with a pinned sops release instead of
+  # maintaining a custom image.
+  initContainers:
+    - name: download-sops
+      image: curlimages/curl:8.16.0
+      command: [sh, -c]
+      args:
+        - |
+          set -eu
+
+          # Pinned sops release — bump deliberately, update both checksums below.
+          SOPS_VERSION=3.13.3
+
+          case "$(uname -m)" in
+            x86_64) ARCH=amd64; SHA256=e5bec3346a873ae91d871550f3e698c1aad962aff462a080e40f25fde17fef6b ;;
+            aarch64) ARCH=arm64; SHA256=53b0abacd38ef1b12a66d6c100956691b9cefce018d91f81e73ddf7438b94d77 ;;
+            *) echo "unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+          esac
+
+          curl -fsSL -o /sops-bin/sops \
+            "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.${ARCH}"
+          echo "${SHA256}  /sops-bin/sops" | sha256sum -c -
+          chmod 755 /sops-bin/sops
+      volumeMounts:
+        - name: sops-bin
+          mountPath: /sops-bin
+
+  # cmp-sops-helm: the CMP v2 sidecar that runs the sops-helm plugin defined
+  # in configs.cmp.plugins above. Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/config-management-plugins/
+  extraContainers:
+    - name: cmp-sops-helm
+      # Matches the local helm CLI version — avoid template-behavior drift
+      # between what's tested locally and what's rendered in-cluster.
+      image: alpine/helm:4.2.1
+      command: ["/var/run/argocd/argocd-cmp-server"]
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+      env:
+        # Path sops looks for its decryption key — see the sops-age-key
+        # volume/Secret below (created out-of-band, see README).
+        - name: SOPS_AGE_KEY_FILE
+          value: /helm-secrets-private-keys/key.txt
+      volumeMounts:
+        - name: var-files
+          mountPath: /var/run/argocd
+        - name: plugins
+          mountPath: /home/argocd/cmp-server/plugins
+        - name: argocd-cmp-cm
+          mountPath: /home/argocd/cmp-server/config/plugin.yaml
+          subPath: sops-helm.yaml
+        - name: cmp-tmp
+          mountPath: /tmp
+        - name: sops-bin
+          mountPath: /usr/local/bin/sops
+          subPath: sops
+        - name: sops-age-key
+          mountPath: /helm-secrets-private-keys
+          readOnly: true
+
+  volumes:
+    - name: argocd-cmp-cm
+      configMap:
+        name: argocd-cmp-cm
+    - name: cmp-tmp
+      emptyDir: {}
+    - name: sops-bin
+      emptyDir: {}
+    - name: sops-age-key
+      # Created out-of-band, never committed to Git — see README.
+      secret:
+        secretName: sops-age-key

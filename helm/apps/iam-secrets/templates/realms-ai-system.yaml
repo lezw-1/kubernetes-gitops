@@ -1,0 +1,20 @@
+# Realm Secret: ai-system.
+apiVersion: v1
+kind: Secret
+metadata:
+  # Secret resource name.
+  name: realms-ai-system
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+# Opaque: arbitrary key/value data, not one of Kubernetes' typed secrets (e.g. tls, basic-auth).
+type: Opaque
+
+stringData:
+  # Realm definition, read from values.secrets.realms.aiSystem.
+  realm: {{ .Values.secrets.realms.aiSystem.realm }}
+  enabled: {{ .Values.secrets.realms.aiSystem.enabled }}
+  verifyEmail: {{ .Values.secrets.realms.aiSystem.verifyEmail }}
+  requiredActionsToDisable:
+    {{- toYaml .Values.secrets.realms.aiSystem.requiredActionsToDisable | nindent 4 }}

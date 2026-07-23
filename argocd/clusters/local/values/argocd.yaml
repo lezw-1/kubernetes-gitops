@@ -22,6 +22,8 @@ controller:
   replicas: 1
 
 # Repo server deployment settings — clones and renders manifests from Git.
+# CMP/SOPS-specific repo-server overrides (sidecar, init container, volumes)
+# live in values/argocd-cmp.yaml instead — see that file for details.
 repoServer:
   autoscaling:
     # Disables horizontal pod autoscaling for the repo server component.

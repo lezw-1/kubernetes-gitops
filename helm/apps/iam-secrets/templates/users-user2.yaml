@@ -1,0 +1,28 @@
+# User Secret: user2.
+apiVersion: v1
+kind: Secret
+metadata:
+  # Secret resource name.
+  name: users-user2
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+# Opaque: arbitrary key/value data, not one of Kubernetes' typed secrets (e.g. tls, basic-auth).
+type: Opaque
+
+stringData:
+  # User definition, read from values.secrets.users.user2.
+  email: {{ .Values.secrets.users.user2.email }}
+  firstName: {{ .Values.secrets.users.user2.firstName }}
+  lastName: {{ .Values.secrets.users.user2.lastName }}
+  enabled: {{ .Values.secrets.users.user2.enabled }}
+  emailVerified: {{ .Values.secrets.users.user2.emailVerified }}
+
+  # Login credentials — must be supplied by a real environment override;
+  # chart/env defaults are intentionally empty (see values.yaml comments).
+  username: {{ .Values.secrets.users.user2.username | quote }}
+  password: {{ .Values.secrets.users.user2.password | quote }}
+
+  roles:
+    {{- toYaml .Values.secrets.users.user2.roles | nindent 4 }}
