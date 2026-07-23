@@ -126,9 +126,11 @@ spec:
                 echo "Keycloak did not become reachable at $SERVER_URL after 150s" >&2
                 exit 1
               fi
+              echo "Logged in to $SERVER_URL as $ADMIN_USERNAME"
 
               # Realm (values.secrets.realms.aiSystem) — create if missing, then
               # enforce the desired state on every run (idempotent upsert).
+              echo "Provisioning realm: $REALM"
               "$KCADM" create realms -s realm="$REALM" 2>/dev/null || true
               "$KCADM" update realms/"$REALM" \
                 -s enabled={{ .Values.secrets.realms.aiSystem.enabled }} \
@@ -136,10 +138,13 @@ spec:
 
               # Required actions disabled at realm creation.
               {{- range .Values.secrets.realms.aiSystem.requiredActionsToDisable }}
+              echo "  disabling required action: {{ . }}"
               "$KCADM" update authentication/required-actions/{{ . }} -r "$REALM" -s enabled=false
               {{- end }}
+              echo "Realm $REALM provisioned"
 
               # Client: chronsorting (values.secrets.clients.chronsorting).
+              echo "Provisioning client: {{ .Values.secrets.clients.chronsorting.clientId }}"
               "$KCADM" create clients -r "$REALM" -s clientId={{ .Values.secrets.clients.chronsorting.clientId | quote }} 2>/dev/null || true
               CHRONSORTING_ID=$(client_internal_id {{ .Values.secrets.clients.chronsorting.clientId | quote }})
               "$KCADM" update clients/"$CHRONSORTING_ID" -r "$REALM" \
@@ -147,10 +152,13 @@ spec:
                 -s publicClient={{ .Values.secrets.clients.chronsorting.publicClient }} \
                 -s directAccessGrantsEnabled={{ .Values.secrets.clients.chronsorting.directAccessGrantsEnabled }}
               {{- range .Values.secrets.clients.chronsorting.roles }}
+              echo "  role: {{ . }}"
               "$KCADM" create clients/"$CHRONSORTING_ID"/roles -r "$REALM" -s name={{ . | quote }} 2>/dev/null || true
               {{- end }}
+              echo "Client {{ .Values.secrets.clients.chronsorting.clientId }} provisioned (id=$CHRONSORTING_ID)"
 
               # Client: frontend (values.secrets.clients.frontend).
+              echo "Provisioning client: {{ .Values.secrets.clients.frontend.clientId }}"
               "$KCADM" create clients -r "$REALM" -s clientId={{ .Values.secrets.clients.frontend.clientId | quote }} 2>/dev/null || true
               FRONTEND_ID=$(client_internal_id {{ .Values.secrets.clients.frontend.clientId | quote }})
               "$KCADM" update clients/"$FRONTEND_ID" -r "$REALM" \
@@ -158,11 +166,14 @@ spec:
                 -s publicClient={{ .Values.secrets.clients.frontend.publicClient }} \
                 -s directAccessGrantsEnabled={{ .Values.secrets.clients.frontend.directAccessGrantsEnabled }}
               {{- range .Values.secrets.clients.frontend.roles }}
+              echo "  role: {{ . }}"
               "$KCADM" create clients/"$FRONTEND_ID"/roles -r "$REALM" -s name={{ . | quote }} 2>/dev/null || true
               {{- end }}
+              echo "Client {{ .Values.secrets.clients.frontend.clientId }} provisioned (id=$FRONTEND_ID)"
 
               # User: user1 (values.secrets.users.user1) — USER1_USERNAME/
               # USER1_PASSWORD come from the SOPS-encrypted env override above.
+              echo "Provisioning user: $USER1_USERNAME"
               "$KCADM" create users -r "$REALM" -s username="$USER1_USERNAME" 2>/dev/null || true
               USER1_ID=$(user_internal_id "$USER1_USERNAME")
               "$KCADM" update users/"$USER1_ID" -r "$REALM" \
@@ -173,10 +184,13 @@ spec:
                 -s emailVerified={{ .Values.secrets.users.user1.emailVerified }}
               "$KCADM" set-password -r "$REALM" --username "$USER1_USERNAME" --new-password "$USER1_PASSWORD"
               {{- range .Values.secrets.users.user1.roles }}
+              echo "  role: {{ .client }}/{{ .role }}"
               "$KCADM" add-roles -r "$REALM" --uusername "$USER1_USERNAME" --cclientid {{ .client | quote }} --rolename {{ .role | quote }} 2>/dev/null || true
               {{- end }}
+              echo "User $USER1_USERNAME provisioned (id=$USER1_ID)"
 
               # User: user2 (values.secrets.users.user2).
+              echo "Provisioning user: $USER2_USERNAME"
               "$KCADM" create users -r "$REALM" -s username="$USER2_USERNAME" 2>/dev/null || true
               USER2_ID=$(user_internal_id "$USER2_USERNAME")
               "$KCADM" update users/"$USER2_ID" -r "$REALM" \
@@ -187,6 +201,10 @@ spec:
                 -s emailVerified={{ .Values.secrets.users.user2.emailVerified }}
               "$KCADM" set-password -r "$REALM" --username "$USER2_USERNAME" --new-password "$USER2_PASSWORD"
               {{- range .Values.secrets.users.user2.roles }}
+              echo "  role: {{ .client }}/{{ .role }}"
               "$KCADM" add-roles -r "$REALM" --uusername "$USER2_USERNAME" --cclientid {{ .client | quote }} --rolename {{ .role | quote }} 2>/dev/null || true
               {{- end }}
+              echo "User $USER2_USERNAME provisioned (id=$USER2_ID)"
+
+              echo "Provisioning complete"
 {{- end }}
