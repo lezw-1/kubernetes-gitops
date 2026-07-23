@@ -42,7 +42,7 @@ spec:
           # only username/password leaf fields; the rest stays plaintext —
           # decrypted by the plugin before rendering).
           - name: SECRETS_FILE
-            value: argocd/clusters/local/values/iam-secrets.enc.yaml
+            value: argocd/clusters/local/values/iam.enc.yaml
 
   destination:
     # Target cluster API server — in-cluster.
