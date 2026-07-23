@@ -56,14 +56,13 @@ kubectl create secret generic sops-age-key -n argocd \
 
 ### Staging
 
-Env variables can be found in: `argocd/clusters/remote/values/frontend-staging.yaml`, `argocd/clusters/remote/values/iam-staging.yaml`.
+Env variables can be found in: `argocd/clusters/remote/values/frontend-staging.enc.yaml`, `argocd/clusters/remote/values/iam-staging.yaml`.
 
-Deployment is orchestrated by Argo CD syncing the `staging` branch — sync is manual (no `syncPolicy.automated`). The frontend image tag in `argocd/clusters/remote/values/frontend-staging.yaml` is bumped by hand today (no CI wires this up yet) once the app source repo publishes a new image.
+Deployment is orchestrated by Argo CD syncing the `staging` branch — sync is manual (no `syncPolicy.automated`). The frontend image tag in `argocd/clusters/remote/values/frontend-staging.enc.yaml` is bumped by hand today (no CI wires this up yet) once the app source repo publishes a new image.
 
 Same `admin-credentials` Secret requirement as Dev, created in the `ai-system-staging` namespace.
-<<<<<<< HEAD
 
-`argocd/clusters/remote/values/networking.enc.yaml` (the shared cluster Gateway's `domain`/`email`) is SOPS-encrypted the same way — see the Dev section above. Argo CD's repo server on the remote cluster decrypts it via the `sops-helm` CMP (`argocd/clusters/remote/values/argocd-cmp.yaml`), which needs the matching age **private** key as a `sops-age-key` Secret in the `argocd` namespace — never committed to Git:
+`argocd/clusters/remote/values/networking.enc.yaml` (the shared cluster Gateway's `domain`/`email`) and `frontend-staging.enc.yaml` (the frontend image's `repository`) are SOPS-encrypted the same way — see the Dev section above. Argo CD's repo server on the remote cluster decrypts them via the `sops-helm` CMP (`argocd/clusters/remote/values/argocd-cmp.yaml`), which needs the matching age **private** key as a `sops-age-key` Secret in the `argocd` namespace — never committed to Git:
 
 ```sh
 kubectl create secret generic sops-age-key -n argocd \
@@ -71,8 +70,6 @@ kubectl create secret generic sops-age-key -n argocd \
 ```
 
 This is a one-time setup shared with Prod below (one Argo CD install for both).
-=======
->>>>>>> 5d3d3aee5a40fd57ebb851252fd6cf36c3e6f894
 
 ### Prod
 
