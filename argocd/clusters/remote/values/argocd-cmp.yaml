@@ -1,0 +1,6 @@
+# Config Management Plugin (CMP) overrides for Argo CD's repo-server.
+# Empty for now — remote (staging/prod) has no SOPS-encrypted Applications
+# yet, so the sops-helm plugin isn't needed here. Kept as an empty file
+# (rather than omitted) so this Application's helm.valueFiles list in
+# argocd/bootstrap/install.yaml stays identical across clusters. See
+# argocd/clusters/local/values/argocd-cmp.yaml for the local/dev version.
