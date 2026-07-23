@@ -26,7 +26,7 @@ gateway:
         domain: ENC[AES256_GCM,data:XZRcOr8U9w==,iv:B7AvJnSajdS1G982Fpt6MWG4FgjGROSO/eZx4Bcuvxc=,tag:BLOvz/IDOxubLOhFvysAhg==,type:str]
         # Contact email for the Let's Encrypt ACME account.
         # This field is SOPS-encrypted; decrypt/edit via `sops` rather than by hand.
-        email: ENC[AES256_GCM,data:vr1I1LW/QaDUXJ6upOoDyXgB,iv:Fr6LnQprK8O+d32pzOJDMaMYxd9UZFyIW4J9+xcM96Q=,tag:JBFWk/LBiT5caK7x/5kbmg==,type:str]
+        email: ENC[AES256_GCM,data:I32P4YKS22IZApOxks4=,iv:u3Rvo4BA3gchqKbwX1dtPiWgCiI7jsmiBELaJeSQqc4=,tag:LnVgE1iMTUdAVCR5NA5R5g==,type:str]
     nodePort:
         # Disabled — prod is fronted by a real LoadBalancer, not NodePort.
         enabled: false
@@ -45,6 +45,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
     encrypted_regex: ^(username|password|domain|email)$
-    lastmodified: "2026-07-23T19:03:57Z"
-    mac: ENC[AES256_GCM,data:sOVADUPZhRhhEILsKyrBrB120+UbXeZ3Nr0L7mNF22T1TMkRCJI/7uRBood/lXOjZdj0NU1XFycC9s5DdVztOZ8mas/azJC/zq6ROUuNvOE7kkghClhHddHvYTZOQSRKstvYqAB5IDvegbJ5XEEUkLl4icaFIjYxMYsxJSSgdDY=,iv:PDNlgIwEIFsqzeq8sbS8p4FqFGW+3FqVOi7efBRp9vg=,tag:T4rjxmJ/493OHg7CvjNJiQ==,type:str]
+    lastmodified: "2026-07-23T19:48:51Z"
+    mac: ENC[AES256_GCM,data:z1RLBZKNO4Q8NhftrPpm7BmqCMU2ePdelunhCgRl7tCz1TSo96W+lepHybV+duNeTmZnR2c9znzn8zTS/VSPS8kC76UTdPNt6bP3214S+GYC38lPk+d1Xw+sUSV2ndQyJefsT/ujFGl0swzN//NoQD2SLMRcWNlHh0k6QVEmGB4=,iv:WHk4Vb6Y9S/htbetAjc3WZ2qWrmkdX6W0kBKWlby+rY=,tag:h5i5eSmsZbrgtxYoZ6pECA==,type:str]
     version: 3.13.2
