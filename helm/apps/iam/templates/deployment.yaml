@@ -49,13 +49,19 @@ spec:
             - containerPort: 8080
 
           env:
-            # Bootstrap admin username, sourced from values.admin.username.
+            # Bootstrap admin username, from credentialsSecret (key: admin-username).
             - name: KC_BOOTSTRAP_ADMIN_USERNAME
-              value: {{ .Values.admin.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: admin-username
 
-            # Bootstrap admin password, sourced from values.admin.password.
+            # Bootstrap admin password, from credentialsSecret (key: admin-password).
             - name: KC_BOOTSTRAP_ADMIN_PASSWORD
-              value: {{ .Values.admin.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.credentialsSecret }}
+                  key: admin-password
 
             # Access token lifespan in seconds, sourced from values.tokenExpire.
             - name: KC_SPI_TOKEN_ACCESS_LIFESPAN

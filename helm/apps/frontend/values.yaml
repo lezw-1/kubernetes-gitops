@@ -13,6 +13,14 @@ gateway:
     # Default: empty disables hostname-based routing (route matches any host).
     domain: ""
 
+  # Env suffix of the shared singleton Gateway (platform/networking/gateway)
+  # this HTTPRoute attaches to.
+  # Default: empty falls back to global.environment — correct whenever this
+  # app's own env IS the singleton gateway's env (e.g. dev, prod). Override
+  # when they differ, e.g. a staging deploy attaching to the shared
+  # cluster's "prod" gateway singleton.
+  targetEnvironment: ""
+
 # Image: container image settings (CI updates tag on each push).
 image:
   # Container image repository.

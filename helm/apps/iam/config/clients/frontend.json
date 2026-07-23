@@ -1,7 +1,0 @@
-{
-  "clientId": "frontend",
-  "enabled": true,
-  "publicClient": true,
-  "directAccessGrantsEnabled": true,
-  "roles": ["viewer"]
-}

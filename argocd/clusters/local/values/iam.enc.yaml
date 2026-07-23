@@ -1,0 +1,165 @@
+# IAM service overrides for the local cluster, layered onto
+# helm/apps/iam/values.yaml via the SECRETS_FILE env in the sops-helm plugin
+# source (argocd/clusters/local/iam-dev.yaml). Only the username/password
+# leaf fields under secrets.* below are SOPS-encrypted — the rest of this
+# file stays plaintext so it's readable in Git diffs.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name, used in hostnames and resource suffixes.
+  # Allowed values: dev, staging, prod
+  environment: dev
+
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+  hosts:
+    # Default: empty disables hostname-based routing (route matches any host).
+    domain: ""
+
+# Image: container image settings.
+image:
+  # Upgrade intentionally by changing this value — third-party image, not built by this repo's CI.
+  repository: quay.io/keycloak/keycloak
+
+  # Upgrade intentionally by changing this value.
+  tag: "26.5.5"
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: IfNotPresent
+
+# Subpath: URL prefix Keycloak is served under, behind the shared gateway.
+subpath: "/iam"
+
+# Service: ClusterIP configuration.
+service:
+  # Keycloak HTTP listen port.
+  port: 8080
+
+# TokenExpire: access token lifespan in seconds.
+tokenExpire: 3600
+
+# Debug: Keycloak log level.
+# Allowed values: DEBUG, INFO, WARN, ERROR
+debug: "INFO"
+
+# HPA: horizontal pod autoscaler.
+hpa:
+  # Default: disabled — Keycloak dev mode (in-memory H2) is single-instance only.
+  enabled: false
+
+# SecretsProvisioning: seeds realms, clients, and users on install/upgrade.
+secretsProvisioning:
+  # Enabled in dev to exercise the seeding job. user1/user2/admin
+  # credentials are read from secrets.* below.
+  enabled: true
+
+# Secrets: realm, client, and user definitions materialized as Kubernetes
+# Secrets by templates/realms-*.yaml, templates/clients-*.yaml,
+# templates/users-*.yaml, templates/admin-credentials.yaml.
+secrets:
+  # Realm definitions, keyed by a values-safe name.
+  realms:
+    aiSystem:
+      # Realm name.
+      realm: ai-system
+
+      # Whether the realm is enabled.
+      enabled: true
+
+      # Whether new users must verify their email.
+      verifyEmail: false
+
+      # Required actions disabled at realm creation.
+      requiredActionsToDisable:
+        - VERIFY_PROFILE
+
+  # Client definitions, keyed by clientId.
+  clients:
+    chronsorting:
+      # Keycloak client ID.
+      clientId: chronsorting
+
+      # Whether the client is enabled.
+      enabled: true
+
+      # Whether the client can authenticate without a client secret.
+      publicClient: false
+
+      # Whether Resource Owner Password Credentials grant is allowed.
+      directAccessGrantsEnabled: false
+
+      # Client roles to create.
+      roles:
+        - viewer
+
+    frontend:
+      clientId: frontend
+      enabled: true
+      publicClient: true
+      directAccessGrantsEnabled: true
+      roles:
+        - viewer
+
+  # User definitions, keyed by a values-safe name.
+  users:
+    user1:
+      # User email address.
+      email: user1@ai-system.local
+
+      # User first name.
+      firstName: User
+
+      # User last name.
+      lastName: One
+
+      # Whether the user is enabled.
+      enabled: true
+
+      # Whether the user's email is marked verified.
+      emailVerified: true
+
+      # Keycloak login username.
+      # This field is SOPS-encrypted; decrypt/edit via `sops` rather than by hand.
+      username: ENC[AES256_GCM,data:u2VOTeY=,iv:SpTav1kgDU7YocV321eNnJGC4mRXcEnTPNt7WPb+DOw=,tag:6O8y2oqeYp+Pmo13jsin0w==,type:str]
+
+      # Keycloak login password.
+      password: ENC[AES256_GCM,data:IetJbOY=,iv:5R2mApJPixIhGA3tGYRUFf9xIJZnrEg2biH1tYJpzZE=,tag:i8r5nAVPP4Y07iUIlGAhAw==,type:str]
+
+      # Client roles assigned to this user.
+      roles:
+        - client: chronsorting
+          role: viewer
+        - client: frontend
+          role: viewer
+
+    user2:
+      email: user2@ai-system.local
+      firstName: User
+      lastName: Two
+      enabled: true
+      emailVerified: true
+
+      # See user1's username/password comments above.
+      username: ENC[AES256_GCM,data:EtgUq+g=,iv:PYtPPOCR8Ht2UhB9NCJ3ZlT0Hr/zfeTkKQJGyClX/sQ=,tag:s/hn/ykf7AtAD6dHUUUHkQ==,type:str]
+      password: ENC[AES256_GCM,data:O6IZSSY=,iv:5tWhjE+0Vwaodz7ZrspwvTU/xdnRpPjBYmRAUiZgKRI=,tag:Jf6Q+CyvQeQI1N8SaiZkwA==,type:str]
+
+      roles: []
+
+  admin:
+    username: ENC[AES256_GCM,data:vFGsOFo=,iv:YjBvUhs/rPwBl8wKZYXAxbL57763mFHFLwAAr1DvLJo=,tag:P+qnxAgTqtKY3lXpBaa9OQ==,type:str]
+    password: ENC[AES256_GCM,data:b+mxoUU=,iv:trOThcA5ec5gsSQKuhkkQXe/YJxynde3EDL+4NrGKgo=,tag:9Ow/ceZyz5JIIm+xBzE1oA==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBUdTl2aCtEVjNJdCt3M1pa
+            SThnRUdQQW1EMTYxUHdKcGsvajZ0TFlWSlVnCnJJNC9PeWFQWG0xRE1qcTFtLzFI
+            SjdMOHVoNVF4WjB5TlBuQjJsWDlmdTgKLS0tIG9acm5qd2hUbmJOVTBlbUNRbmJr
+            YzVyaU4ycEFUU24xb0RPQjJsbW8zTlkKt1BctmO+G/+ZXeFqelq+XYF82IYLl8wQ
+            TCD3g6Tnmk+v3YqvgtxG+UTK2tPxx3kKIz9uD846hJ3bchDD53+osg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1tnz3fux4w76dzm6swlf09zflxsku0haf0hl6f4g4a89sxs9y0cxs30eq4u
+    encrypted_regex: ^(username|password)$
+    lastmodified: "2026-07-23T10:33:35Z"
+    mac: ENC[AES256_GCM,data:efk5eoh8t9f9aYk5zFpOujnnj78B4HVPFsvkjV3g6AKv/qd/t6RKtpEnjl7zmDS7eUH2PYeGiSz1hyi8hfFkploHiAVPSRSWtG5waFOTNkmgRG/v2iBm1vEJRXdKXAQ+osYZlls3jPrQmJWF8H1MtnoXXkSELHlnC1iXwPo1UcE=,iv:jC/HxVY9N4nAdTpXVLtOwg58iJnnE4CnEo2D2MelTZk=,tag:sZdRKK8zrH6zza6ThlFBOw==,type:str]
+    version: 3.13.2

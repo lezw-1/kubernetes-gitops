@@ -1,0 +1,35 @@
+# Argo CD server runtime configuration overrides.
+configs:
+  params:
+    # SECURITY: disables TLS on the Argo CD server itself. Only safe when an
+    # external proxy/ingress terminates TLS in front of it — otherwise all
+    # traffic, including login credentials, is exposed in plaintext.
+    server.insecure: true
+
+# Argo CD API/UI server deployment settings.
+server:
+  service:
+    # Allowed values: ClusterIP, NodePort, LoadBalancer
+    type: ClusterIP
+
+  autoscaling:
+    # Disables horizontal pod autoscaling for the server component.
+    enabled: false
+
+# Application controller deployment settings.
+controller:
+  # Number of controller replicas to run.
+  replicas: 1
+
+# Repo server deployment settings — clones and renders manifests from Git.
+# CMP/SOPS-specific repo-server overrides (sidecar, init container, volumes)
+# live in values/argocd-cmp.yaml instead — see that file for details.
+repoServer:
+  autoscaling:
+    # Disables horizontal pod autoscaling for the repo server component.
+    enabled: false
+
+# Highly-available Redis subchart, used for caching.
+redis-ha:
+  # Disables the Redis HA subchart in favor of the chart's default single-instance Redis.
+  enabled: false
