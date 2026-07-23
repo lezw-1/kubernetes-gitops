@@ -6,12 +6,20 @@
 creation_rules:
   # Any *.enc.yaml file under argocd/clusters/remote/ holds real secret
   # material for the staging+prod cluster (e.g. networking.enc.yaml's
+<<<<<<< HEAD
   # domain/email, frontend-*.enc.yaml's repository). Only these leaf
   # fields are encrypted so the rest of each file stays readable in Git
   # diffs. The .enc.yaml suffix is the hard marker that a file is (or
   # must be) SOPS-encrypted.
   - path_regex: argocd/clusters/remote/.*\.enc\.yaml$
     encrypted_regex: "^(username|password|domain|email|repository)$"
+=======
+  # domain/email). Only these leaf fields are encrypted so the rest of
+  # each file stays readable in Git diffs. The .enc.yaml suffix is the
+  # hard marker that a file is (or must be) SOPS-encrypted.
+  - path_regex: argocd/clusters/remote/.*\.enc\.yaml$
+    encrypted_regex: "^(username|password|domain|email)$"
+>>>>>>> a518fe22bc240655aef68183ae9ef4cb3f050e72
 
     # Remote (staging+prod) age public key — the matching private key
     # lives in the `sops-age-key` Secret in the remote cluster's argocd
