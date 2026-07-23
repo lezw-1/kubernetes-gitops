@@ -5,6 +5,7 @@
 #   - CF_ACCESS_TOKEN:        Cloudfleet token ID -> create token via UI and use 'Access Token'
 #   - CF_ACCESS_TOKEN_SECRET: Cloudfleet token secret -> create token via UI and use 'Access Token Secret'
 #   - CF_CLUSTER_ID:          Cloudfleet cluster ID -> get via UI 'https://console.cloudfleet.ai/clusters'
+#   - SOPS_AGE_KEY:           Age private key for remote's sops-age-key Secret -> contents of the remote keys.txt (never the local dev key)
 
 name: Install Argo CD
 
@@ -57,6 +58,18 @@ jobs:
             --create-namespace \
             -f argocd/clusters/remote/values/argocd.yaml \
             -f argocd/clusters/remote/values/argocd-cmp.yaml
+
+      - name: Configure SOPS age key
+        # Mirrors the manual `kubectl create secret` step README.md documents
+        # for local, so the sops-helm CMP can decrypt *.enc.yaml on remote.
+        # Written to a temp file first since --from-file needs a real path.
+        run: |
+          key_file="$(mktemp)"
+          printf '%s' "${{ secrets.SOPS_AGE_KEY }}" > "$key_file"
+          kubectl create secret generic sops-age-key -n argocd \
+            --from-file=key.txt="$key_file" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          rm -f "$key_file"
 
       - name: Hand self-management over to Argo CD
         # Same argocd/bootstrap/install.yaml bootstrap.sh uses for the local

@@ -12,3 +12,12 @@ creation_rules:
     # (~/Library/Application Support/sops/age/keys.txt) for the matching
     # private key (never commit the private key).
     age: age1tnz3fux4w76dzm6swlf09zflxsku0haf0hl6f4g4a89sxs9y0cxs30eq4u
+
+
+  - path_regex: argocd/clusters/remote/.*\.enc\.yaml$
+    encrypted_regex: "^(username|password)$"
+
+    # Local dev age public key — see macOS's default sops key file
+    # (~/Library/Application Support/sops/age/keys.txt) for the matching
+    # private key (never commit the private key).
+    age: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
