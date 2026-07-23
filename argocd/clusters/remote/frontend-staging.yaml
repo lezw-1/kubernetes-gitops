@@ -12,30 +12,35 @@ spec:
   # Bound to AppProject "default" and its guardrails.
   project: default
 
-  # Multi-source config: the frontend Helm chart plus a values-only Git source.
+  # Single source, rendered by the sops-helm Config Management Plugin
+  # (argocd/clusters/remote/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
+  # instead of native Helm, since its values file is SOPS-encrypted and
+  # native Helm value files can't decrypt it. Checked out at repo root so
+  # the plugin can read both the chart (helm/apps/frontend) and the
+  # values file (argocd/clusters/remote/values/) from one source.
   sources:
-    # Frontend Helm chart source.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
-      # Branch tracked for the chart source.
+      # Branch tracked for this source.
       targetRevision: staging
 
-      # Path to the frontend Helm chart.
-      path: helm/apps/frontend
+      # Repo root — see comment above for why.
+      path: .
 
-      helm:
-        valueFiles:
-          # Env-specific overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/clusters/remote/values/frontend-staging.yaml
+      plugin:
+        # Must match a key under configs.cmp.plugins in argocd-cmp.yaml.
+        name: sops-helm
 
-    # Git source providing only values files, referenced via the `values` alias.
-    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+        env:
+          # Path to the frontend Helm chart, relative to repo root.
+          - name: CHART_PATH
+            value: helm/apps/frontend
 
-      # Branch tracked for values files.
-      targetRevision: staging
-
-      # Aliased so the chart source above can reference $values.
-      ref: values
+          # Env-specific overrides, relative to repo root (SOPS-encrypted —
+          # only the repository leaf field; the rest stays plaintext —
+          # decrypted by the plugin before rendering).
+          - name: SECRETS_FILE
+            value: argocd/clusters/remote/values/frontend-staging.enc.yaml
 
   destination:
     # Target cluster API server — in-cluster.

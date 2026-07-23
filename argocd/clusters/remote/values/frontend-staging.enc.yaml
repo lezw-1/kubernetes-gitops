@@ -1,0 +1,51 @@
+# Frontend service overrides for the remote cluster's staging environment,
+# rendered by the sops-helm Config Management Plugin (repository is
+# SOPS-encrypted — real Cloudfleet registry path).
+# Global: shared across templates.
+global:
+    # Deployment environment name, used in hostnames and resource suffixes.
+    environment: staging
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+    hosts:
+        # Default: empty disables hostname-based routing (route matches any host).
+        domain: ""
+# Image: container image settings.
+image:
+    # Cloudfleet private registry path. SOPS-encrypted — real registry
+    # host; decrypt/edit via `sops` rather than by hand.
+    repository: ENC[AES256_GCM,data:b6Ywbl9Hw/Y7OwMWk5/R77WVcGYzVX9x7qRHjlE4C5JyA4pcLrerWlTxZuBo4WBvw+J78kJTKNkAFHVOcp/MD053zYzCTTdIEVrSTQ==,iv:K18Q2s6x5ryH1jYnXpAf/sjbOTAocwDCATSPTAJFq0I=,tag:6gBG10R26ObiuhsM0gWWkQ==,type:str]
+    # Image tag — bumped by hand once the source repo publishes a new image (see README).
+    tag: staging
+    # Allowed values: Always, IfNotPresent, Never
+    # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
+    pullPolicy: Always
+# Service: ClusterIP configuration.
+service:
+    # nginx listen port.
+    port: 80
+# HPA: horizontal pod autoscaler.
+hpa:
+    # Enabled in staging to exercise autoscaling behavior.
+    enabled: true
+    # Minimum pod count.
+    minReplicas: 1
+    # Maximum pod count.
+    maxReplicas: 5
+    # Target average CPU utilization percentage for scaling.
+    targetCPUUtilization: 70
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBVVlcrMGFUWll5WndzRmVt
+            SVNoT3pWRXdmNzQ1cDJwWERyK0M5WTRLZUJJCjZrWkgwd1NwQ08xZFFrTzhyY1lZ
+            Y3hobUhEb2tkU0RaSFkwVnpRaFdLZ2MKLS0tIFRTcG4rbTYwbEZ0aWdEL3d6UlM3
+            MFFXRTcyWXdqYXlHRHoxZjZWSXg4dVUKS7OssVn/U5tV76n0fzs0C+spMJo50doV
+            UiL1FAiIs5tRdxNZzvc+Iha/NpJOE03ru2QUSYecIEToD3mKIVr89A==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
+    encrypted_regex: ^(username|password|domain|email|repository)$
+    lastmodified: "2026-07-23T20:29:13Z"
+    mac: ENC[AES256_GCM,data:/sHF7RHBe+1yf6ldyFTI3j+orrhye/NRXfUg0MiauMTOXu7b2X5xtLfAFTx7DotGpTzxUDYN+yQd0amSPCJSLLm/nd9mIYXwnzoJgW6tmH7qO4KSJmey3sFaS9vbuzzdGjejyb14l5gEsQJHunnZgkFm53rMs7Q5pf3ogz6Cy1Q=,iv:f41tw5FItKdp4NeBbRJDGI3f7CFSeMvLcdOKeI41ItE=,tag:CL+42gJqtpUCTjb5p1tk5A==,type:str]
+    version: 3.13.2
