@@ -4,7 +4,7 @@
 # Global: shared across templates.
 global:
   # Deployment environment name, used in hostnames and resource suffixes.
-  environment: prod
+  environment: dev
 
 # Gateway: HTTPRoute hostname configuration.
 gateway:
@@ -14,14 +14,15 @@ gateway:
 
 # Image: container image settings.
 image:
-  # CI updates the tag below on each push.
-  repository: <CF_ORG_ID>.<CF_CR_REGION>.registry.cloudfleet.dev/frontend
+  # Built locally via `nerdctl build -t frontend:local ...`.
+  repository: frontend
 
-  # CI overwrites this with the commit SHA on each push.
-  tag: prod
+  # Local image tag.
+  tag: local
 
   # Allowed values: Always, IfNotPresent, Never
-  pullPolicy: Always
+  # Use the local nerdctl image, never pull from a registry.
+  pullPolicy: Never
 
 # Service: ClusterIP configuration.
 service:
@@ -30,11 +31,11 @@ service:
 
 # HPA: horizontal pod autoscaler.
 hpa:
-  # Enabled in prod for load-based scaling.
+  # Enabled in dev to exercise autoscaling behavior.
   enabled: true
 
-  # Minimum pod count — 2 for baseline redundancy in prod.
-  minReplicas: 2
+  # Minimum pod count.
+  minReplicas: 1
 
   # Maximum pod count.
   maxReplicas: 5
