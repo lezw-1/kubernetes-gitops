@@ -13,17 +13,15 @@
 #   - DEPLOY_STAGING: 'true' runs install-argocd-staging; false/unset runs teardown-staging instead ->
 #                     repo Settings > Secrets and variables > Actions > Variables.
 #                     Single flag for staging: true creates/keeps everything in sync, false deletes
-#                     every staging resource (Argo CD itself included) on the next push/dispatch.
+#                     every staging resource (Argo CD itself included) on the next push.
 #   - DEPLOY_PROD:    'true' runs install-argocd-prod; false/unset runs teardown-prod instead ->
 #                     repo Settings > Secrets and variables > Actions > Variables.
 #                     Single flag for prod: true creates/keeps everything in sync, false deletes
-#                     every prod resource (Argo CD itself included) on the next push/dispatch.
+#                     every prod resource (Argo CD itself included) on the next push.
 
 name: Install Argo CD
 
 on:
-  workflow_dispatch:
-
   # Bootstraps/re-bootstraps staging and prod — two independent clusters, each
   # only on push to its own branch. Idempotent — helm upgrade --install and
   # kubectl apply are safe to re-run.
@@ -40,12 +38,12 @@ jobs:
     runs-on: ubuntu-latest
 
     # A push only bootstraps the cluster matching the branch that triggered
-    # it; workflow_dispatch runs both jobs. Additionally gated by the
-    # DEPLOY_STAGING repo variable — the single flag controlling whether any
-    # staging resource gets created at all (see "Required variables" above).
+    # it. Additionally gated by the DEPLOY_STAGING repo variable — the single
+    # flag controlling whether any staging resource gets created at all (see
+    # "Required variables" above).
     if: |
       vars.DEPLOY_STAGING == 'true' &&
-      (github.event_name == 'workflow_dispatch' || github.ref_name == 'staging')
+      github.ref_name == 'staging'
 
     steps:
       - uses: actions/checkout@v4
@@ -117,7 +115,7 @@ jobs:
     # DEPLOY_STAGING value — same flag, so the two jobs never both run.
     if: |
       vars.DEPLOY_STAGING != 'true' &&
-      (github.event_name == 'workflow_dispatch' || github.ref_name == 'staging')
+      github.ref_name == 'staging'
 
     steps:
       - name: Setup kubectl
@@ -188,12 +186,12 @@ jobs:
     runs-on: ubuntu-latest
 
     # A push only bootstraps the cluster matching the branch that triggered
-    # it; workflow_dispatch runs both jobs. Additionally gated by the
-    # DEPLOY_PROD repo variable — the single flag controlling whether any
-    # prod resource gets created at all (see "Required variables" above).
+    # it. Additionally gated by the DEPLOY_PROD repo variable — the single
+    # flag controlling whether any prod resource gets created at all (see
+    # "Required variables" above).
     if: |
       vars.DEPLOY_PROD == 'true' &&
-      (github.event_name == 'workflow_dispatch' || github.ref_name == 'prod')
+      github.ref_name == 'prod'
 
     steps:
       - uses: actions/checkout@v4
@@ -265,7 +263,7 @@ jobs:
     # DEPLOY_PROD value — same flag, so the two jobs never both run.
     if: |
       vars.DEPLOY_PROD != 'true' &&
-      (github.event_name == 'workflow_dispatch' || github.ref_name == 'prod')
+      github.ref_name == 'prod'
 
     steps:
       - name: Setup kubectl
