@@ -4,8 +4,8 @@
 #   - CF_ORG_ID:              Cloudfleet organization ID -> run 'cloudfleet organization describe'
 #   - CF_ACCESS_TOKEN:        Cloudfleet token ID -> create token via UI and use 'Access Token'
 #   - CF_ACCESS_TOKEN_SECRET: Cloudfleet token secret -> create token via UI and use 'Access Token Secret'
-#   - CF_CLUSTER_ID_PROD:          Cloudfleet cluster ID for prod -> get via UI 'https://console.cloudfleet.ai/clusters'
-#   - SOPS_AGE_KEY_PROD:           Age private key for prod's sops-age-key Secret -> contents of the prod keys.txt (never the dev or staging key)
+#   - CF_CLUSTER_ID_PROD:     Cloudfleet cluster ID for prod -> get via UI 'https://console.cloudfleet.ai/clusters'
+#   - SOPS_AGE_KEY_PROD:      Age private key for prod's sops-age-key Secret -> contents of the prod keys.txt (never the dev or staging key)
 #   - CF_CLUSTER_ID_STAGING:  Cloudfleet cluster ID for staging -> get via UI 'https://console.cloudfleet.ai/clusters'
 #   - SOPS_AGE_KEY_STAGING:   Age private key for staging's sops-age-key Secret -> contents of the staging keys.txt (never the dev or prod key)
 
@@ -21,24 +21,16 @@ on:
     branches: [staging, prod]
 
 jobs:
-  install-argocd:
+  # Two standalone jobs, not a matrix — a matrix's `if:` can't reference
+  # `matrix.*` (not in GitHub Actions' context-availability list for
+  # jobs.<job_id>.if), so per-branch gating has to live in a static
+  # condition instead. Same steps in both; only the env differs.
+  install-argocd-staging:
     runs-on: ubuntu-latest
 
-    strategy:
-      # One leg per remote cluster — same steps, only the env/secrets differ.
-      matrix:
-        include:
-          - env: staging
-            cluster_id_secret: CF_CLUSTER_ID_STAGING
-            sops_age_key_secret: SOPS_AGE_KEY_STAGING
-
-          - env: prod
-            cluster_id_secret: CF_CLUSTER_ID_PROD
-            sops_age_key_secret: SOPS_AGE_KEY_PROD
-
     # A push only bootstraps the cluster matching the branch that triggered
-    # it; workflow_dispatch runs both legs.
-    if: github.event_name == 'workflow_dispatch' || github.ref_name == matrix.env
+    # it; workflow_dispatch runs both jobs.
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'staging'
 
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +50,7 @@ jobs:
       - name: Configure kubeconfig
         run: |
           cloudfleet auth add-profile token default ${{ secrets.CF_ORG_ID }} ${{ secrets.CF_ACCESS_TOKEN }} ${{ secrets.CF_ACCESS_TOKEN_SECRET }}
-          cloudfleet clusters kubeconfig ${{ secrets[matrix.cluster_id_secret] }}
+          cloudfleet clusters kubeconfig ${{ secrets.CF_CLUSTER_ID_STAGING }}
 
       - name: Add Argo Helm repository
         run: |
@@ -74,8 +66,8 @@ jobs:
             --version 10.1.3 \
             --namespace argocd \
             --create-namespace \
-            -f argocd/clusters/${{ matrix.env }}/values/argocd.yaml \
-            -f argocd/clusters/${{ matrix.env }}/values/argocd-cmp.yaml
+            -f argocd/clusters/staging/values/argocd.yaml \
+            -f argocd/clusters/staging/values/argocd-cmp.yaml
 
       - name: Configure SOPS age key
         # Mirrors the manual `kubectl create secret` step README.md documents
@@ -83,7 +75,7 @@ jobs:
         # Written to a temp file first since --from-file needs a real path.
         run: |
           key_file="$(mktemp)"
-          printf '%s' "${{ secrets[matrix.sops_age_key_secret] }}" > "$key_file"
+          printf '%s' "${{ secrets.SOPS_AGE_KEY_STAGING }}" > "$key_file"
           kubectl create secret generic sops-age-key -n argocd \
             --from-file=key.txt="$key_file" \
             --dry-run=client -o yaml | kubectl apply -f -
@@ -91,14 +83,84 @@ jobs:
 
       - name: Hand self-management over to Argo CD
         # Same argocd/bootstrap/install.yaml bootstrap.sh uses for the dev
-        # cluster, with ENV=DIR=matrix.env substituted instead of dev.
+        # cluster, with ENV=DIR=staging substituted instead of dev.
         run: |
-          sed -e 's/__ENV__/${{ matrix.env }}/g' -e 's/__DIR__/${{ matrix.env }}/g' argocd/bootstrap/install.yaml \
+          sed -e 's/__ENV__/staging/g' -e 's/__DIR__/staging/g' argocd/bootstrap/install.yaml \
             | kubectl apply -f - -n argocd
 
       - name: Apply the app-of-apps
         # Same argocd/bootstrap/root.yaml bootstrap.sh uses for the dev
-        # cluster, with ENV=DIR=matrix.env substituted instead of dev.
+        # cluster, with ENV=DIR=staging substituted instead of dev.
         run: |
-          sed -e 's/__ENV__/${{ matrix.env }}/g' -e 's/__DIR__/${{ matrix.env }}/g' argocd/bootstrap/root.yaml \
+          sed -e 's/__ENV__/staging/g' -e 's/__DIR__/staging/g' argocd/bootstrap/root.yaml \
+            | kubectl apply -f - -n argocd
+
+  install-argocd-prod:
+    runs-on: ubuntu-latest
+
+    # A push only bootstraps the cluster matching the branch that triggered
+    # it; workflow_dispatch runs both jobs.
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'prod'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install Cloudfleet CLI
+        run: |
+          curl -fsSL https://downloads.cloudfleet.ai/apt/pubkey.gpg | sudo tee /usr/share/keyrings/cloudfleet-archive-keyring.gpg >/dev/null
+          echo "deb [signed-by=/usr/share/keyrings/cloudfleet-archive-keyring.gpg] https://downloads.cloudfleet.ai/apt stable main" | sudo tee /etc/apt/sources.list.d/cloudfleet.list
+          sudo apt-get update && sudo apt-get install -y cloudfleet
+
+      - name: Configure kubeconfig
+        run: |
+          cloudfleet auth add-profile token default ${{ secrets.CF_ORG_ID }} ${{ secrets.CF_ACCESS_TOKEN }} ${{ secrets.CF_ACCESS_TOKEN_SECRET }}
+          cloudfleet clusters kubeconfig ${{ secrets.CF_CLUSTER_ID_PROD }}
+
+      - name: Add Argo Helm repository
+        run: |
+          helm repo add argo https://argoproj.github.io/argo-helm
+          helm repo update argo
+
+      - name: Install/Upgrade Argo CD
+        # Chart version pinned here — bump deliberately, re-run to upgrade.
+        # Values read straight from the checked-out repo, ahead of Argo CD
+        # existing to apply argocd/bootstrap/install.yaml itself.
+        run: |
+          helm upgrade --install argocd argo/argo-cd \
+            --version 10.1.3 \
+            --namespace argocd \
+            --create-namespace \
+            -f argocd/clusters/prod/values/argocd.yaml \
+            -f argocd/clusters/prod/values/argocd-cmp.yaml
+
+      - name: Configure SOPS age key
+        # Mirrors the manual `kubectl create secret` step README.md documents
+        # for dev, so the sops-helm CMP can decrypt *.enc.yaml on this cluster.
+        # Written to a temp file first since --from-file needs a real path.
+        run: |
+          key_file="$(mktemp)"
+          printf '%s' "${{ secrets.SOPS_AGE_KEY_PROD }}" > "$key_file"
+          kubectl create secret generic sops-age-key -n argocd \
+            --from-file=key.txt="$key_file" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          rm -f "$key_file"
+
+      - name: Hand self-management over to Argo CD
+        # Same argocd/bootstrap/install.yaml bootstrap.sh uses for the dev
+        # cluster, with ENV=DIR=prod substituted instead of dev.
+        run: |
+          sed -e 's/__ENV__/prod/g' -e 's/__DIR__/prod/g' argocd/bootstrap/install.yaml \
+            | kubectl apply -f - -n argocd
+
+      - name: Apply the app-of-apps
+        # Same argocd/bootstrap/root.yaml bootstrap.sh uses for the dev
+        # cluster, with ENV=DIR=prod substituted instead of dev.
+        run: |
+          sed -e 's/__ENV__/prod/g' -e 's/__DIR__/prod/g' argocd/bootstrap/root.yaml \
             | kubectl apply -f - -n argocd
