@@ -12,30 +12,35 @@ spec:
   # Bound to AppProject "default" and its guardrails.
   project: default
 
-  # Multi-source config: the iam Helm chart plus a values-only Git source.
+  # Single source, rendered by the sops-helm Config Management Plugin
+  # (argocd/clusters/prod/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
+  # instead of native Helm, since its values file is SOPS-encrypted and
+  # native Helm value files can't decrypt it. Checked out at repo root so
+  # the plugin can read both the chart (helm/apps/iam) and the values
+  # file (argocd/clusters/prod/values/) from one source.
   sources:
-    # IAM Helm chart source.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
-      # Branch tracked for the chart source.
+      # Branch tracked for this source.
       targetRevision: prod
 
-      # Path to the iam Helm chart.
-      path: helm/apps/iam
+      # Repo root — see comment above for why.
+      path: .
 
-      helm:
-        valueFiles:
-          # Env-specific overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/clusters/prod/values/iam.yaml
+      plugin:
+        # Must match a key under configs.cmp.plugins in argocd-cmp.yaml.
+        name: sops-helm
 
-    # Git source providing only values files, referenced via the `values` alias.
-    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+        env:
+          # Path to the iam Helm chart, relative to repo root.
+          - name: CHART_PATH
+            value: helm/apps/iam
 
-      # Branch tracked for values files.
-      targetRevision: prod
-
-      # Aliased so the chart source above can reference $values.
-      ref: values
+          # Env-specific overrides, relative to repo root (SOPS-encrypted —
+          # only username/password/domain/email leaf fields; the rest stays
+          # plaintext — decrypted by the plugin before rendering).
+          - name: SECRETS_FILE
+            value: argocd/clusters/prod/values/iam.enc.yaml
 
   destination:
     # Target cluster API server — in-cluster.
@@ -44,8 +49,15 @@ spec:
     # Namespace the iam app is deployed into.
     namespace: ai-system-prod
 
-  # Manual sync only — no automated block, so promotion to prod requires an explicit sync in Argo CD.
+  # Fully automated GitOps sync — no manual apply needed.
   syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
     syncOptions:
       # Auto-create the destination namespace.
       - CreateNamespace=true
