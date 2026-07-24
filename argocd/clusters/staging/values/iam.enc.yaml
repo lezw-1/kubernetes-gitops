@@ -38,7 +38,7 @@ hpa:
     # Minimum pod count.
     minReplicas: 1
     # Maximum pod count.
-    maxReplicas: 2
+    maxReplicas: 1
     # Target average CPU utilization percentage for scaling.
     targetCPUUtilization: 80
 # SecretsProvisioning: seeds realms, clients, and users on install/upgrade.
@@ -131,6 +131,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email)$
-    lastmodified: "2026-07-24T08:54:40Z"
-    mac: ENC[AES256_GCM,data:zf47j9evOt8fjS1AcASuEU9kPY7T0AStI9YoZXXXWPhrKfrtDhgrz9fIP8XYBWfey6+HBNinkqyMrS4BpAnccpqRb2Gw6vR25fDVzgFz0HQ0n9Ibd86fqgX/pLy7IYJg0XxJsCbzOfjfpME8FAxRqPfrAoYpjrV/OsTABQ7aX0I=,iv:2Wx3N8y1NGAIzIPcklYpakhDM8R02jvWE8oYWpwDIuA=,tag:LQ65QDdUlLgea6SlqIMe+Q==,type:str]
+    lastmodified: "2026-07-24T08:57:18Z"
+    mac: ENC[AES256_GCM,data:sEHTjfJ8ZFvGe4kw1ZuFX+LPD+nZvwsQQ7bsSZohoweHCjulmYSkqVujF3kd29xMi99p4gOFh0Gn9CVu80AT7zcXv+ICBB/Ii8QAOoFpQdUDGaTAcAIwKqAnJk/4GioE8WKYEZFs2kFvbrOXzhccNnQMHkNU1TWoCdLpdycy63c=,iv:l1fKjqsAGdhSBJblF8f2VM5iJnHa0UZ2MmDMcCObWuE=,tag:3THPx1aQ8TeO9k2bqebDCw==,type:str]
     version: 3.13.2

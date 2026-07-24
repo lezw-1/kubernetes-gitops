@@ -30,6 +30,8 @@ Three independent clusters, each with its own Argo CD install:
 
 ## Deployment
 
+Every `*.enc.yaml` file below is SOPS-encrypted, but only its `username`/`password`/`domain`/`email` leaf fields — the rest stays plaintext so it's readable in Git diffs. SOPS still computes a single integrity MAC over the *whole* file, encrypted and plaintext fields alike, so hand-editing even a plaintext field (e.g. `maxReplicas`) outside of `sops` invalidates it and breaks decryption for everyone (`MAC mismatch` when Argo CD's `sops-helm` CMP tries to sync). Always edit these files via `sops <file>` (opens a decrypted buffer and re-encrypts on save) rather than a plain text editor.
+
 ### Local
 
 One-time bootstrap for the dev cluster (runs locally) — installs Argo CD, then hands self-management and the app-of-apps (`argocd/bootstrap/root.yaml`) over to it:
