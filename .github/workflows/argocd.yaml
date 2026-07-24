@@ -33,8 +33,8 @@ jobs:
             sops_age_key_secret: SOPS_AGE_KEY_STAGING
 
           - env: prod
-            cluster_id_secret: CF_CLUSTER_ID
-            sops_age_key_secret: SOPS_AGE_KEY
+            cluster_id_secret: CF_CLUSTER_ID_PROD
+            sops_age_key_secret: SOPS_AGE_KEY_PROD
 
     # A push only bootstraps the cluster matching the branch that triggered
     # it; workflow_dispatch runs both legs.
