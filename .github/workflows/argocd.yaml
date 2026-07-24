@@ -142,10 +142,30 @@ jobs:
         # and GatewayClass are cluster-scoped (outside any namespace), so
         # they're deleted explicitly. --ignore-not-found makes this safe to
         # rerun and safe on a cluster that was never installed.
+        #
+        # Namespaces are deleted one at a time with --timeout, since a
+        # namespace can hang in Terminating forever if a resource inside it
+        # (e.g. an Application/AppProject CR) has a finalizer that only Argo
+        # CD's own controller can clear — and that controller's pod is being
+        # deleted in this same operation. On timeout, the namespace's status
+        # conditions name exactly what's still blocking it.
         run: |
+          echo "Deleting ClusterIssuers selfsigned-staging, letsencrypt-staging..."
           kubectl delete clusterissuer selfsigned-staging letsencrypt-staging --ignore-not-found
+
+          echo "Deleting GatewayClass eg..."
           kubectl delete gatewayclass eg --ignore-not-found
-          kubectl delete namespace ai-system-staging networking argocd --ignore-not-found
+
+          for ns in ai-system-staging networking argocd; do
+            echo "Deleting namespace $ns..."
+            if ! kubectl delete namespace "$ns" --ignore-not-found --timeout=180s; then
+              echo "::error::Namespace $ns did not terminate within 180s — status conditions:"
+              kubectl get namespace "$ns" -o jsonpath='{.status.conditions}'
+              echo
+              exit 1
+            fi
+            echo "Namespace $ns deleted."
+          done
 
   install-argocd-prod:
     runs-on: ubuntu-latest
@@ -253,7 +273,27 @@ jobs:
         # and GatewayClass are cluster-scoped (outside any namespace), so
         # they're deleted explicitly. --ignore-not-found makes this safe to
         # rerun and safe on a cluster that was never installed.
+        #
+        # Namespaces are deleted one at a time with --timeout, since a
+        # namespace can hang in Terminating forever if a resource inside it
+        # (e.g. an Application/AppProject CR) has a finalizer that only Argo
+        # CD's own controller can clear — and that controller's pod is being
+        # deleted in this same operation. On timeout, the namespace's status
+        # conditions name exactly what's still blocking it.
         run: |
+          echo "Deleting ClusterIssuers selfsigned-prod, letsencrypt-prod..."
           kubectl delete clusterissuer selfsigned-prod letsencrypt-prod --ignore-not-found
+
+          echo "Deleting GatewayClass eg..."
           kubectl delete gatewayclass eg --ignore-not-found
-          kubectl delete namespace ai-system-prod networking argocd --ignore-not-found
+
+          for ns in ai-system-prod networking argocd; do
+            echo "Deleting namespace $ns..."
+            if ! kubectl delete namespace "$ns" --ignore-not-found --timeout=180s; then
+              echo "::error::Namespace $ns did not terminate within 180s — status conditions:"
+              kubectl get namespace "$ns" -o jsonpath='{.status.conditions}'
+              echo
+              exit 1
+            fi
+            echo "Namespace $ns deleted."
+          done
