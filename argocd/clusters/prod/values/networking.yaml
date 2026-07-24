@@ -1,10 +1,10 @@
 # Networking singleton overrides for prod, layered onto
 # platform/networking/gateway/values.yaml via the $values ref in the prod
-# branch's argocd/clusters/remote/networking-gateway.yaml. Only the gateway
+# branch's argocd/clusters/prod/networking-gateway.yaml. Only the gateway
 # component takes per-cluster values today — namespace/certs-manager/
 # gateway-controller/gateway-class use static chart defaults (single-source,
-# no $values). The gateway itself is a cluster-wide singleton too, shared by
-# staging and prod rather than split per environment.
+# no $values). The gateway itself is a per-cluster singleton too, one
+# instance for this cluster only.
 
 # Global: shared across templates.
 global:

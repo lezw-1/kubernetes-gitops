@@ -1,9 +1,9 @@
-# Frontend service — React dashboard.
+# IAM service — Keycloak-based authentication and token issuance, staging environment.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Application resource name, shown in the Argo CD UI.
-  name: frontend
+  name: iam-staging
 
   # Namespace the Application resource itself lives in.
   namespace: argocd
@@ -12,27 +12,27 @@ spec:
   # Bound to AppProject "default" and its guardrails.
   project: default
 
-  # Multi-source config: the frontend Helm chart plus a values-only Git source.
+  # Multi-source config: the iam Helm chart plus a values-only Git source.
   sources:
-    # Frontend Helm chart source.
+    # IAM Helm chart source.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for the chart source.
-      targetRevision: dev
+      targetRevision: staging
 
-      # Path to the frontend Helm chart.
-      path: helm/apps/frontend
+      # Path to the iam Helm chart.
+      path: helm/apps/iam
 
       helm:
         valueFiles:
-          # Local-cluster overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/clusters/local/values/frontend.yaml
+          # Env-specific overrides, supplied by the $values Git source referenced below.
+          - $values/argocd/clusters/staging/values/iam.yaml
 
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for values files.
-      targetRevision: dev
+      targetRevision: staging
 
       # Aliased so the chart source above can reference $values.
       ref: values
@@ -41,18 +41,11 @@ spec:
     # Target cluster API server — in-cluster.
     server: https://kubernetes.default.svc
 
-    # Namespace the frontend app is deployed into.
-    namespace: ai-system-dev
+    # Namespace the iam app is deployed into.
+    namespace: ai-system-staging
 
-  # Fully automated GitOps sync — no manual apply needed.
+  # Manual sync only — no automated block, so promotion to staging requires an explicit sync in Argo CD.
   syncPolicy:
-    automated:
-      # Remove resources no longer defined in Git.
-      prune: true
-
-      # Revert manual drift back to match Git.
-      selfHeal: true
-
     syncOptions:
       # Auto-create the destination namespace.
       - CreateNamespace=true

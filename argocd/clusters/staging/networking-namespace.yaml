@@ -1,0 +1,47 @@
+# Singleton — creates the shared "networking" namespace once per cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Application resource name, shown in the Argo CD UI.
+  name: networking-namespace
+
+  # Namespace the Application resource itself lives in.
+  namespace: argocd
+
+  annotations:
+    # Must exist before certs-manager/gateway-controller/gateway-class/gateway.
+    argocd.argoproj.io/sync-wave: "-3"
+
+spec:
+  # Bound to AppProject "default" and its guardrails.
+  project: default
+
+  source:
+    # Git repository containing the Helm chart.
+    repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+    # Branch tracked for the chart source.
+    targetRevision: staging
+
+    # Path to the namespace Helm chart.
+    path: helm/platform/networking/namespace
+
+  destination:
+    # Target cluster API server — in-cluster.
+    server: https://kubernetes.default.svc
+
+    # Namespace this Application manages.
+    namespace: networking
+
+  # Fully automated GitOps sync — no manual apply needed.
+  syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
+    syncOptions:
+      # Auto-create the destination namespace.
+      - CreateNamespace=true

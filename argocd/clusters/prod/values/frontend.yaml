@@ -1,10 +1,10 @@
-# Frontend service overrides for the local cluster, layered onto
-# apps/frontend/values.yaml via the $values ref in argocd/clusters/local/frontend.yaml.
+# Frontend service overrides for prod, layered onto apps/frontend/values.yaml
+# via the $values ref in the prod branch's argocd/clusters/prod/frontend.yaml.
 
 # Global: shared across templates.
 global:
   # Deployment environment name, used in hostnames and resource suffixes.
-  environment: dev
+  environment: prod
 
 # Gateway: HTTPRoute hostname configuration.
 gateway:
@@ -14,15 +14,14 @@ gateway:
 
 # Image: container image settings.
 image:
-  # Built locally via `nerdctl build -t frontend:local ...`.
-  repository: frontend
+  # CI updates the tag below on each push.
+  repository: <CF_ORG_ID>.<CF_CR_REGION>.registry.cloudfleet.dev/frontend
 
-  # Local image tag.
-  tag: local
+  # CI overwrites this with the commit SHA on each push.
+  tag: prod
 
   # Allowed values: Always, IfNotPresent, Never
-  # Use the local nerdctl image, never pull from a registry.
-  pullPolicy: Never
+  pullPolicy: Always
 
 # Service: ClusterIP configuration.
 service:
@@ -31,11 +30,11 @@ service:
 
 # HPA: horizontal pod autoscaler.
 hpa:
-  # Enabled in dev to exercise autoscaling behavior.
+  # Enabled in prod for load-based scaling.
   enabled: true
 
-  # Minimum pod count.
-  minReplicas: 1
+  # Minimum pod count — 2 for baseline redundancy in prod.
+  minReplicas: 2
 
   # Maximum pod count.
   maxReplicas: 5

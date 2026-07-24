@@ -1,5 +1,5 @@
-# IAM service overrides for staging, layered onto apps/iam/values.yaml
-# via the $values ref in the staging branch's argocd/clusters/remote/iam-staging.yaml.
+# Frontend service overrides for staging, layered onto apps/frontend/values.yaml
+# via the $values ref in the staging branch's argocd/clusters/staging/frontend.yaml.
 
 # Global: shared across templates.
 global:
@@ -14,28 +14,19 @@ gateway:
 
 # Image: container image settings.
 image:
-  # Upgrade intentionally by changing this value — third-party image, not built by this repo's CI.
-  repository: quay.io/keycloak/keycloak
+  # CI updates the tag below on each push.
+  repository: <CF_ORG_ID>.<CF_CR_REGION>.registry.cloudfleet.dev/frontend
 
-  # Upgrade intentionally by changing this value.
-  tag: "26.5.5"
+  # CI overwrites this with the commit SHA on each push.
+  tag: staging
 
   # Allowed values: Always, IfNotPresent, Never
-  pullPolicy: IfNotPresent
-
-# Subpath: URL prefix Keycloak is served under, behind the shared gateway.
-subpath: "/iam"
+  pullPolicy: Always
 
 # Service: ClusterIP configuration.
 service:
-  # Keycloak HTTP listen port.
-  port: 8080
-
-# TokenExpire: access token lifespan in seconds.
-tokenExpire: 3600
-
-# Debug: Keycloak log level.
-debug: "INFO"
+  # nginx listen port.
+  port: 80
 
 # HPA: horizontal pod autoscaler.
 hpa:

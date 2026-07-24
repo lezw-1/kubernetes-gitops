@@ -1,9 +1,9 @@
-# Frontend service — React dashboard, staging environment.
+# Frontend service — React dashboard.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Application resource name, shown in the Argo CD UI.
-  name: frontend-staging
+  name: frontend
 
   # Namespace the Application resource itself lives in.
   namespace: argocd
@@ -18,21 +18,21 @@ spec:
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for the chart source.
-      targetRevision: staging
+      targetRevision: dev
 
       # Path to the frontend Helm chart.
       path: helm/apps/frontend
 
       helm:
         valueFiles:
-          # Env-specific overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/clusters/remote/values/frontend-staging.yaml
+          # Local-cluster overrides, supplied by the $values Git source referenced below.
+          - $values/argocd/clusters/dev/values/frontend.yaml
 
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for values files.
-      targetRevision: staging
+      targetRevision: dev
 
       # Aliased so the chart source above can reference $values.
       ref: values
@@ -42,10 +42,17 @@ spec:
     server: https://kubernetes.default.svc
 
     # Namespace the frontend app is deployed into.
-    namespace: ai-system-staging
+    namespace: ai-system-dev
 
-  # Manual sync only — no automated block, so promotion to staging requires an explicit sync in Argo CD.
+  # Fully automated GitOps sync — no manual apply needed.
   syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
     syncOptions:
       # Auto-create the destination namespace.
       - CreateNamespace=true
