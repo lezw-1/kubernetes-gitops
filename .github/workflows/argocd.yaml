@@ -8,6 +8,16 @@
 #   - SOPS_AGE_KEY_PROD:      Age private key for prod's sops-age-key Secret -> contents of the prod keys.txt (never the dev or staging key)
 #   - CF_CLUSTER_ID_STAGING:  Cloudfleet cluster ID for staging -> get via UI 'https://console.cloudfleet.ai/clusters'
 #   - SOPS_AGE_KEY_STAGING:   Age private key for staging's sops-age-key Secret -> contents of the staging keys.txt (never the dev or prod key)
+#
+# Required variables:
+#   - DEPLOY_STAGING: 'true' runs install-argocd-staging; false/unset runs teardown-staging instead ->
+#                     repo Settings > Secrets and variables > Actions > Variables.
+#                     Single flag for staging: true creates/keeps everything in sync, false deletes
+#                     every staging resource (Argo CD itself included) on the next push/dispatch.
+#   - DEPLOY_PROD:    'true' runs install-argocd-prod; false/unset runs teardown-prod instead ->
+#                     repo Settings > Secrets and variables > Actions > Variables.
+#                     Single flag for prod: true creates/keeps everything in sync, false deletes
+#                     every prod resource (Argo CD itself included) on the next push/dispatch.
 
 name: Install Argo CD
 
@@ -21,16 +31,21 @@ on:
     branches: [staging, prod]
 
 jobs:
-  # Two standalone jobs, not a matrix — a matrix's `if:` can't reference
+  # Four standalone jobs, not a matrix — a matrix's `if:` can't reference
   # `matrix.*` (not in GitHub Actions' context-availability list for
-  # jobs.<job_id>.if), so per-branch gating has to live in a static
-  # condition instead. Same steps in both; only the env differs.
+  # jobs.<job_id>.if), so per-branch/per-flag gating has to live in a static
+  # condition instead. install-argocd-<env> and teardown-<env> are mutually
+  # exclusive (DEPLOY_<ENV> can't be both 'true' and not 'true' at once).
   install-argocd-staging:
     runs-on: ubuntu-latest
 
     # A push only bootstraps the cluster matching the branch that triggered
-    # it; workflow_dispatch runs both jobs.
-    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'staging'
+    # it; workflow_dispatch runs both jobs. Additionally gated by the
+    # DEPLOY_STAGING repo variable — the single flag controlling whether any
+    # staging resource gets created at all (see "Required variables" above).
+    if: |
+      vars.DEPLOY_STAGING == 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.ref_name == 'staging')
 
     steps:
       - uses: actions/checkout@v4
@@ -95,12 +110,53 @@ jobs:
           sed -e 's/__ENV__/staging/g' -e 's/__DIR__/staging/g' argocd/bootstrap/root.yaml \
             | kubectl apply -f - -n argocd
 
+  teardown-staging:
+    runs-on: ubuntu-latest
+
+    # Mirrors install-argocd-staging's trigger, but fires on the opposite
+    # DEPLOY_STAGING value — same flag, so the two jobs never both run.
+    if: |
+      vars.DEPLOY_STAGING != 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.ref_name == 'staging')
+
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Install Cloudfleet CLI
+        run: |
+          curl -fsSL https://downloads.cloudfleet.ai/apt/pubkey.gpg | sudo tee /usr/share/keyrings/cloudfleet-archive-keyring.gpg >/dev/null
+          echo "deb [signed-by=/usr/share/keyrings/cloudfleet-archive-keyring.gpg] https://downloads.cloudfleet.ai/apt stable main" | sudo tee /etc/apt/sources.list.d/cloudfleet.list
+          sudo apt-get update && sudo apt-get install -y cloudfleet
+
+      - name: Configure kubeconfig
+        run: |
+          cloudfleet auth add-profile token default ${{ secrets.CF_ORG_ID }} ${{ secrets.CF_ACCESS_TOKEN }} ${{ secrets.CF_ACCESS_TOKEN_SECRET }}
+          cloudfleet clusters kubeconfig ${{ secrets.CF_CLUSTER_ID_STAGING }}
+
+      - name: Delete every staging resource
+        # Namespace deletion natively cascades to everything inside it
+        # (Deployments, Secrets, Argo CD's own install, its Application/
+        # AppProject CRs) — no dependency on Argo CD's own cascade/finalizer
+        # mechanism, which none of these Applications opt into. ClusterIssuer
+        # and GatewayClass are cluster-scoped (outside any namespace), so
+        # they're deleted explicitly. --ignore-not-found makes this safe to
+        # rerun and safe on a cluster that was never installed.
+        run: |
+          kubectl delete clusterissuer selfsigned-staging letsencrypt-staging --ignore-not-found
+          kubectl delete gatewayclass eg --ignore-not-found
+          kubectl delete namespace ai-system-staging networking argocd --ignore-not-found
+
   install-argocd-prod:
     runs-on: ubuntu-latest
 
     # A push only bootstraps the cluster matching the branch that triggered
-    # it; workflow_dispatch runs both jobs.
-    if: github.event_name == 'workflow_dispatch' || github.ref_name == 'prod'
+    # it; workflow_dispatch runs both jobs. Additionally gated by the
+    # DEPLOY_PROD repo variable — the single flag controlling whether any
+    # prod resource gets created at all (see "Required variables" above).
+    if: |
+      vars.DEPLOY_PROD == 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.ref_name == 'prod')
 
     steps:
       - uses: actions/checkout@v4
@@ -164,3 +220,40 @@ jobs:
         run: |
           sed -e 's/__ENV__/prod/g' -e 's/__DIR__/prod/g' argocd/bootstrap/root.yaml \
             | kubectl apply -f - -n argocd
+
+  teardown-prod:
+    runs-on: ubuntu-latest
+
+    # Mirrors install-argocd-prod's trigger, but fires on the opposite
+    # DEPLOY_PROD value — same flag, so the two jobs never both run.
+    if: |
+      vars.DEPLOY_PROD != 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.ref_name == 'prod')
+
+    steps:
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Install Cloudfleet CLI
+        run: |
+          curl -fsSL https://downloads.cloudfleet.ai/apt/pubkey.gpg | sudo tee /usr/share/keyrings/cloudfleet-archive-keyring.gpg >/dev/null
+          echo "deb [signed-by=/usr/share/keyrings/cloudfleet-archive-keyring.gpg] https://downloads.cloudfleet.ai/apt stable main" | sudo tee /etc/apt/sources.list.d/cloudfleet.list
+          sudo apt-get update && sudo apt-get install -y cloudfleet
+
+      - name: Configure kubeconfig
+        run: |
+          cloudfleet auth add-profile token default ${{ secrets.CF_ORG_ID }} ${{ secrets.CF_ACCESS_TOKEN }} ${{ secrets.CF_ACCESS_TOKEN_SECRET }}
+          cloudfleet clusters kubeconfig ${{ secrets.CF_CLUSTER_ID_PROD }}
+
+      - name: Delete every prod resource
+        # Namespace deletion natively cascades to everything inside it
+        # (Deployments, Secrets, Argo CD's own install, its Application/
+        # AppProject CRs) — no dependency on Argo CD's own cascade/finalizer
+        # mechanism, which none of these Applications opt into. ClusterIssuer
+        # and GatewayClass are cluster-scoped (outside any namespace), so
+        # they're deleted explicitly. --ignore-not-found makes this safe to
+        # rerun and safe on a cluster that was never installed.
+        run: |
+          kubectl delete clusterissuer selfsigned-prod letsencrypt-prod --ignore-not-found
+          kubectl delete gatewayclass eg --ignore-not-found
+          kubectl delete namespace ai-system-prod networking argocd --ignore-not-found
