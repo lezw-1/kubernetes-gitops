@@ -26,7 +26,7 @@ spec:
       helm:
         valueFiles:
           # Local-cluster overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/clusters/local/values/frontend.yaml
+          - $values/argocd/clusters/dev/values/frontend.yaml
 
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops

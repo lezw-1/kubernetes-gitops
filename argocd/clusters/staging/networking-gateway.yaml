@@ -1,0 +1,64 @@
+# Singleton — cluster Gateway, one instance per cluster (TLS
+# Certificate/ClusterIssuer, health-check HTTPRoute).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Application resource name, shown in the Argo CD UI.
+  name: networking-gateway
+
+  # Namespace the Application resource itself lives in.
+  namespace: argocd
+
+  annotations:
+    # Needs namespace/certs-manager/gateway-controller/gateway-class first.
+    argocd.argoproj.io/sync-wave: "0"
+
+spec:
+  # Bound to AppProject "default" and its guardrails.
+  project: default
+
+  # Single source, rendered by the sops-helm Config Management Plugin
+  # (argocd/clusters/staging/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
+  # instead of native Helm, since its values file is SOPS-encrypted and
+  # native Helm value files can't decrypt it. Checked out at repo root so
+  # the plugin can read both the chart (helm/platform/networking/gateway)
+  # and the values file (argocd/clusters/staging/values/) from one source.
+  sources:
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+      # Branch tracked for this source.
+      targetRevision: staging
+
+      # Repo root — see comment above for why.
+      path: .
+
+      plugin:
+        # Must match a key under configs.cmp.plugins in argocd-cmp.yaml.
+        name: sops-helm
+
+        env:
+          # Path to the gateway Helm chart, relative to repo root.
+          - name: CHART_PATH
+            value: helm/platform/networking/gateway
+
+          # Staging-cluster overrides, relative to repo root (SOPS-encrypted —
+          # only domain/email leaf fields; the rest stays plaintext —
+          # decrypted by the plugin before rendering).
+          - name: SECRETS_FILE
+            value: argocd/clusters/staging/values/networking.enc.yaml
+
+  destination:
+    # Target cluster API server — in-cluster.
+    server: https://kubernetes.default.svc
+
+    # Shared with the other networking singletons.
+    namespace: networking
+
+  # Fully automated GitOps sync — no manual apply needed.
+  syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true

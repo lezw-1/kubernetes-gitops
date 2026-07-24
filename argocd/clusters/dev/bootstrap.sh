@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # ==================================================
-# One-command Argo CD bootstrap for the local (dev) cluster — see README for
-# the manual step-by-step. The remote (staging+prod) cluster is bootstrapped
-# by the CI pipeline instead (.github/workflows/argocd.yaml), which
-# substitutes the same argocd/bootstrap/ manifests with ENV=prod/DIR=remote.
+# One-command Argo CD bootstrap for the dev cluster (runs locally) — see
+# README for the manual step-by-step. The staging and prod clusters are each
+# bootstrapped by the CI pipeline instead (.github/workflows/argocd.yaml),
+# which substitutes the same argocd/bootstrap/ manifests with
+# ENV=staging/DIR=staging and ENV=prod/DIR=prod respectively.
 # ==================================================
 
 # Exit on error, on unset variables, and on failures inside pipelines
 set -euo pipefail
 
-# Absolute path to argocd/clusters/local/
+# Absolute path to argocd/clusters/dev/
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # install.yaml/root.yaml live in argocd/bootstrap/, two levels up
@@ -38,10 +39,10 @@ helm upgrade --install argocd argo/argo-cd \
 
 CURRENT_STEP="hand self-management over to Argo CD"
 echo "Step: $CURRENT_STEP"
-sed -e 's/__ENV__/dev/g' -e 's/__DIR__/local/g' "$BOOTSTRAP_DIR/install.yaml" | kubectl apply -f - -n argocd
+sed -e 's/__ENV__/dev/g' -e 's/__DIR__/dev/g' "$BOOTSTRAP_DIR/install.yaml" | kubectl apply -f - -n argocd
 
 CURRENT_STEP="apply the app-of-apps"
 echo "Step: $CURRENT_STEP"
-sed -e 's/__ENV__/dev/g' -e 's/__DIR__/local/g' "$BOOTSTRAP_DIR/root.yaml" | kubectl apply -f - -n argocd
+sed -e 's/__ENV__/dev/g' -e 's/__DIR__/dev/g' "$BOOTSTRAP_DIR/root.yaml" | kubectl apply -f - -n argocd
 
 echo "Bootstrap complete — Argo CD is now managing itself and the app-of-apps."

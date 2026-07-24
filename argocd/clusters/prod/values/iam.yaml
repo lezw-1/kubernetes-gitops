@@ -1,5 +1,5 @@
 # IAM service overrides for prod, layered onto apps/iam/values.yaml
-# via the $values ref in the prod branch's argocd/clusters/remote/iam-prod.yaml.
+# via the $values ref in the prod branch's argocd/clusters/prod/iam.yaml.
 
 # Global: shared across templates.
 global:

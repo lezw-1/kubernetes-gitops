@@ -1,5 +1,5 @@
 # Frontend service overrides for the local cluster, layered onto
-# apps/frontend/values.yaml via the $values ref in argocd/clusters/local/frontend.yaml.
+# apps/frontend/values.yaml via the $values ref in argocd/clusters/dev/frontend.yaml.
 
 # Global: shared across templates.
 global:

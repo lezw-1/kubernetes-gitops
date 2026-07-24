@@ -1,9 +1,11 @@
-# Frontend service — React dashboard, staging environment.
+# IAM service — Keycloak-based authentication and token issuance, plus its
+# realm/client/user Secrets and provisioning Job (secretsProvisioning.enabled
+# in argocd/clusters/dev/values/iam.enc.yaml).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Application resource name, shown in the Argo CD UI.
-  name: frontend-staging
+  name: iam
 
   # Namespace the Application resource itself lives in.
   namespace: argocd
@@ -13,16 +15,16 @@ spec:
   project: default
 
   # Single source, rendered by the sops-helm Config Management Plugin
-  # (argocd/clusters/remote/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
+  # (argocd/clusters/dev/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
   # instead of native Helm, since its values file is SOPS-encrypted and
   # native Helm value files can't decrypt it. Checked out at repo root so
-  # the plugin can read both the chart (helm/apps/frontend) and the
-  # values file (argocd/clusters/remote/values/) from one source.
+  # the plugin can read both the chart (helm/apps/iam) and the values
+  # files (argocd/clusters/dev/values/) from one source.
   sources:
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for this source.
-      targetRevision: staging
+      targetRevision: dev
 
       # Repo root — see comment above for why.
       path: .
@@ -32,25 +34,32 @@ spec:
         name: sops-helm
 
         env:
-          # Path to the frontend Helm chart, relative to repo root.
+          # Path to the iam Helm chart, relative to repo root.
           - name: CHART_PATH
-            value: helm/apps/frontend
+            value: helm/apps/iam
 
-          # Env-specific overrides, relative to repo root (SOPS-encrypted —
-          # only the repository leaf field; the rest stays plaintext —
+          # Local-cluster overrides, relative to repo root (SOPS-encrypted —
+          # only username/password leaf fields; the rest stays plaintext —
           # decrypted by the plugin before rendering).
           - name: SECRETS_FILE
-            value: argocd/clusters/remote/values/frontend-staging.enc.yaml
+            value: argocd/clusters/dev/values/iam.enc.yaml
 
   destination:
     # Target cluster API server — in-cluster.
     server: https://kubernetes.default.svc
 
-    # Namespace the frontend app is deployed into.
-    namespace: ai-system-staging
+    # Namespace the iam app is deployed into.
+    namespace: ai-system-dev
 
-  # Manual sync only — no automated block, so promotion to staging requires an explicit sync in Argo CD.
+  # Fully automated GitOps sync — no manual apply needed.
   syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
     syncOptions:
       # Auto-create the destination namespace.
       - CreateNamespace=true

@@ -1,7 +1,7 @@
-# App-of-apps root Application — shared by both clusters. targetRevision and
-# path are placeholders: bootstrap.sh substitutes __ENV__=dev/__DIR__=local
-# for the local cluster; the CI pipeline substitutes __ENV__=prod/__DIR__=remote
-# for the remote cluster.
+# App-of-apps root Application — shared by all three clusters. targetRevision
+# and path are placeholders: bootstrap.sh substitutes __ENV__=dev/__DIR__=dev
+# for the dev cluster; the CI pipeline substitutes __ENV__=staging/__DIR__=staging
+# for the staging cluster and __ENV__=prod/__DIR__=prod for the prod cluster.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -24,7 +24,7 @@ spec:
     targetRevision: __ENV__
 
     # Path containing this cluster's Application manifests. Placeholder,
-    # substituted before this file is applied — argocd/clusters/local or argocd/clusters/remote.
+    # substituted before this file is applied — argocd/clusters/dev, argocd/clusters/staging, or argocd/clusters/prod.
     path: argocd/clusters/__DIR__
 
     directory:
