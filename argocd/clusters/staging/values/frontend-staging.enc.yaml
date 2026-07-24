@@ -1,0 +1,54 @@
+# Frontend service overrides for staging, layered onto helm/apps/frontend/values.yaml
+# via the SECRETS_FILE env in the sops-helm plugin source (argocd/clusters/staging/frontend.yaml).
+#
+# repository below is SOPS-encrypted (real Cloudfleet registry host) — only
+# that leaf field; the rest of this file stays plaintext so it's readable in
+# Git diffs.
+# Global: shared across templates.
+global:
+    # Deployment environment name, used in hostnames and resource suffixes.
+    environment: staging
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+    hosts:
+        # Default: empty disables hostname-based routing (route matches any host).
+        domain: ""
+# Image: container image settings.
+image:
+    # Cloudfleet private registry path. SOPS-encrypted — real registry
+    # host; decrypt/edit via `sops` rather than by hand.
+    repository: ENC[AES256_GCM,data:h/6pKXlDoj8SkdSwqAtrxZc76ATTtbCu2uCINz86uTrhBGL9aKf+92HakFIjxPKkq7sgDcDIEsR/u468MvbMucYZRPY1ATc3OMnDOQ==,iv:AagZD1dOWTGxcOqDlS2irXyJjooLVKxVRrtmnUZUxfo=,tag:iLIFux+u7btP8rBLpxy0Wg==,type:str]
+    # Image tag — bumped by hand once the source repo publishes a new image (see README).
+    tag: staging
+    # Allowed values: Always, IfNotPresent, Never
+    # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
+    pullPolicy: Always
+# Service: ClusterIP configuration.
+service:
+    # nginx listen port.
+    port: 80
+# HPA: horizontal pod autoscaler.
+hpa:
+    # Enabled in staging to exercise autoscaling behavior.
+    enabled: true
+    # Minimum pod count.
+    minReplicas: 1
+    # Maximum pod count.
+    maxReplicas: 5
+    # Target average CPU utilization percentage for scaling.
+    targetCPUUtilization: 70
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBBY2llam1SQStkVW9vTHQy
+            YjYxeHl1Q1AvdmV5c01KeVBhdGFKL3FxL1dFCmVJTmxWSE5veXFzQmFzUVFhNjNl
+            THVQR0xncThmcG5JTjB2aW5qaXdvZHMKLS0tIGVFNndvdEpzWWJmdFBWcGxJU1po
+            ZnR2K1plaElrNHJEdW1IMTBiUXVCdTgKpfapSl87fzjyM4O1/VmzmH+NPONpEmNS
+            OZAxlQenw4qRnCBvx3EPAoco4Rzx9oWYTQ3l9/MpOhCQotPSd72hEg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository)$
+    lastmodified: "2026-07-24T07:46:33Z"
+    mac: ENC[AES256_GCM,data:cq+xql4F+B1xz+Vap6xICE5AVzc9XgInRnmZOU0LgbwFyvf5b/xBro9wTFHg/wkQPV12/5Jwfyyc4DVC6Dc6TvilaaRdX5dqFhzGJT4jZPxOReFzc8g92vTcy+w6AMQ1n8jgHLN09v4yxwVeJsuw+bFUpHyQrNsXLQBSnTbvV/o=,iv:YTyHmQKKpWm9INfaa2lLyKGiMs3JZV8RYHacpOQmttE=,tag:8u03qEf1F3VhX8FlpuOhTw==,type:str]
+    version: 3.13.2

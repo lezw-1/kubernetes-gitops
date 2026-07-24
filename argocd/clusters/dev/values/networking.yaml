@@ -1,6 +1,6 @@
 # Networking singleton overrides for the local cluster, layered onto
 # platform/networking/gateway/values.yaml via the $values ref in
-# argocd/clusters/local/networking-gateway.yaml. Only the gateway component takes
+# argocd/clusters/dev/networking-gateway.yaml. Only the gateway component takes
 # per-cluster values today — namespace/certs-manager/gateway-controller/
 # gateway-class use static chart defaults (single-source, no $values).
 

@@ -1,8 +1,8 @@
 # Argo CD manages its own Helm install once bootstrapped (self-management).
-# Shared by both clusters — targetRevision and the values path are
-# placeholders: bootstrap.sh substitutes __ENV__=dev/__DIR__=local for the
-# local cluster; the CI pipeline substitutes __ENV__=prod/__DIR__=remote for
-# the remote cluster.
+# Shared by all three clusters — targetRevision and the values path are
+# placeholders: bootstrap.sh substitutes __ENV__=dev/__DIR__=dev for the dev
+# cluster; the CI pipeline substitutes __ENV__=staging/__DIR__=staging for the
+# staging cluster and __ENV__=prod/__DIR__=prod for the prod cluster.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -30,13 +30,13 @@ spec:
       helm:
         valueFiles:
           # Values file supplied by the $values Git source referenced below.
-          # Placeholder — substituted to argocd/clusters/local/values/argocd.yaml or
-          # argocd/clusters/remote/values/argocd.yaml.
+          # Placeholder — substituted to argocd/clusters/dev/values/argocd.yaml,
+          # argocd/clusters/staging/values/argocd.yaml, or argocd/clusters/prod/values/argocd.yaml.
           - $values/argocd/clusters/__DIR__/values/argocd.yaml
 
-          # CMP plugin overrides (e.g. sops-helm on local/dev), layered as a
+          # CMP plugin overrides (e.g. sops-helm on dev), layered as a
           # separate values file from the base settings above — see
-          # argocd/clusters/local/values/argocd-cmp.yaml.
+          # argocd/clusters/dev/values/argocd-cmp.yaml.
           - $values/argocd/clusters/__DIR__/values/argocd-cmp.yaml
 
     # Git source providing only values files, referenced via the `values` alias.

@@ -1,33 +1,44 @@
 # SOPS encryption rules — which files get encrypted, and with which key.
-# Rule order matters: sops uses the first matching path_regex. The
-# remote-specific rule must precede the generic clusters/*/values rule
-# below — otherwise remote paths would match the generic rule first and
-# get encrypted with the local dev key instead of the remote key.
+# One rule per cluster, each scoped to its own argocd/clusters/<env>/ path —
+# the three path prefixes are mutually exclusive, so rule order doesn't matter.
 creation_rules:
-  # Any *.enc.yaml file under argocd/clusters/remote/ holds real secret
-  # material for the staging+prod cluster (e.g. networking.enc.yaml's
-  # domain/email, frontend-*.enc.yaml's repository). Only these leaf
-  # fields are encrypted so the rest of each file stays readable in Git
-  # diffs. The .enc.yaml suffix is the hard marker that a file is (or
-  # must be) SOPS-encrypted.
-  - path_regex: argocd/clusters/remote/.*\.enc\.yaml$
-    encrypted_regex: "^(username|password|domain|email|repository)$"
-
-    # Remote (staging+prod) age public key — the matching private key
-    # lives in the `sops-age-key` Secret in the remote cluster's argocd
-    # namespace (never committed to Git — see README).
-    age: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
-
-
-  # Any *.enc.yaml file under argocd/clusters/local/ holds real secret
-  # material for the dev cluster (e.g. networking.enc.yaml's
+  # Any *.enc.yaml file under argocd/clusters/prod/ holds real secret
+  # material for the prod cluster (e.g. networking.enc.yaml's
   # domain/email). Only these leaf fields are encrypted so the rest of
   # each file stays readable in Git diffs. The .enc.yaml suffix is the
   # hard marker that a file is (or must be) SOPS-encrypted.
-  - path_regex: argocd/clusters/local/.*\.enc\.yaml$
+  - path_regex: argocd/clusters/prod/.*\.enc\.yaml$
+    encrypted_regex: "^(username|password|domain|email)$"
+
+    # Prod age public key — the matching private key lives in the
+    # `sops-age-key` Secret in the prod cluster's argocd namespace
+    # (never committed to Git — see README).
+    age: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
+
+
+  # Any *.enc.yaml file under argocd/clusters/staging/ holds real secret
+  # material for the staging cluster (e.g. networking.enc.yaml's
+  # domain/email). Only these leaf fields are encrypted so the rest of
+  # each file stays readable in Git diffs. The .enc.yaml suffix is the
+  # hard marker that a file is (or must be) SOPS-encrypted.
+  - path_regex: argocd/clusters/staging/.*\.enc\.yaml$
+    encrypted_regex: "^(username|password|domain|email)$"
+
+    # Staging age public key — the matching private key lives in the
+    # `sops-age-key` Secret in the staging cluster's argocd namespace
+    # (never committed to Git — see README).
+    age: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+
+
+  # Any *.enc.yaml file under argocd/clusters/dev/ holds real secret
+  # material for the dev cluster (e.g. iam.enc.yaml's username/password).
+  # Only these leaf fields are encrypted so the rest of each file stays
+  # readable in Git diffs. The .enc.yaml suffix is the hard marker that a
+  # file is (or must be) SOPS-encrypted.
+  - path_regex: argocd/clusters/dev/.*\.enc\.yaml$
     encrypted_regex: "^(username|password)$"
 
-    # Local (dev) age public key — the matching private key
-    # lives in the `sops-age-key` Secret in the local cluster's argocd
-    # namespace (never committed to Git — see README).
+    # Dev age public key — the matching private key lives in the
+    # `sops-age-key` Secret in the dev cluster's argocd namespace
+    # (never committed to Git — see README).
     age: age1tnz3fux4w76dzm6swlf09zflxsku0haf0hl6f4g4a89sxs9y0cxs30eq4u

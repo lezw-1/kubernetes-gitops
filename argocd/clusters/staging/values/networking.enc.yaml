@@ -1,0 +1,48 @@
+# Networking singleton overrides for staging, layered onto
+# platform/networking/gateway/values.yaml via the SECRETS_FILE env in the
+# sops-helm plugin source (argocd/clusters/staging/networking-gateway.yaml).
+# Only the gateway component takes per-cluster values today — namespace/
+# certs-manager/gateway-controller/gateway-class use static chart defaults
+# (single-source, no plugin). The gateway itself is a per-cluster singleton
+# too, one instance for this cluster only.
+#
+# domain/email below are SOPS-encrypted (real hostname + contact email) —
+# only those leaf fields; the rest of this file stays plaintext so it's
+# readable in Git diffs.
+# Global: shared across templates.
+global:
+    # Deployment environment name, used in resource suffixes.
+    environment: staging
+# Gateway: shared cluster Gateway configuration.
+gateway:
+    tls:
+        # Enables the HTTPS listener and Certificate/ClusterIssuer resources.
+        enabled: true
+        # Uses Let's Encrypt instead of a self-signed cert.
+        selfSigned: false
+    hosts:
+        # Public hostname the gateway routes.
+        domain: ENC[AES256_GCM,data:a/BM7hT3gg==,iv:PQEZyHHYGzL5Cu4P08SVy+XgZRmsEEMcbCmAVZY2Hj4=,tag:m+E9FjQzwNiZtrEwoupDXg==,type:str]
+        # Contact email for the Let's Encrypt ACME account.
+        email: ENC[AES256_GCM,data:7brT8xG6eJHSTvrWK+g=,iv:tdQ7fy7Lf+pEI1RNnAmahjUuNqpUGNtapdouoHlQGMc=,tag:yvLEb0zuyF43fA+ksseRoQ==,type:str]
+    nodePort:
+        # Disabled — staging is fronted by a real LoadBalancer, not NodePort.
+        enabled: false
+    timeout:
+        # Request timeout applied via BackendTrafficPolicy.
+        requestTimeout: 1800s
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBXRzU3bTdUU25TeGhFVHhZ
+            cXFFQTBDTXBIeFN5Q3BLK1FlRWVIY3lsQ0I0CjZSMDg0bThLRjJxaUx1THowZm0x
+            V2hhODlnWjliam9uQVJJcy9aTk5qazgKLS0tIC8zbzBiRVN6bGFEVnJuT3VmdWRH
+            SlphV21LYzdsc2tUQkp4ZEVuOUUycU0Kft3c06nxImOw1lLSa3ap+6wUKZYw9O3b
+            6eIAsyRH44qdoSb3t+aDkkYIoEuBIQV8pOsSm3xUG1i3/UsZ2e+MtA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email)$
+    lastmodified: "2026-07-24T07:22:05Z"
+    mac: ENC[AES256_GCM,data:1Gk/mHf5q24ZPYTsc2ciTSWGCKD1Gh1fd4myha2CS/XoVNX4Xr2H3pStW27ZWneEbdrOVyv9c59BDp9YApSWPcAvznzyFRD6Io8RUO2ufmXZl1Ba1oW5cyrdaYQxLX5vw/MLGqyTVxXRVslOrggMdVTN1KHOFQZtbpFaiW1nSpA=,iv:aaAiaYuFx/RdU972xbkU/dBARb71R2bp3b43kYnN6ec=,tag:14z0n117q5OykAMJvS7ieA==,type:str]
+    version: 3.13.2

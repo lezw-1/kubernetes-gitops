@@ -1,5 +1,5 @@
-# Singleton — shared cluster Gateway, one instance for both staging and
-# prod (TLS Certificate/ClusterIssuer, health-check HTTPRoute).
+# Singleton — cluster Gateway, one instance per cluster (TLS
+# Certificate/ClusterIssuer, health-check HTTPRoute).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -18,16 +18,16 @@ spec:
   project: default
 
   # Single source, rendered by the sops-helm Config Management Plugin
-  # (argocd/clusters/remote/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
+  # (argocd/clusters/staging/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
   # instead of native Helm, since its values file is SOPS-encrypted and
   # native Helm value files can't decrypt it. Checked out at repo root so
   # the plugin can read both the chart (helm/platform/networking/gateway)
-  # and the values file (argocd/clusters/remote/values/) from one source.
+  # and the values file (argocd/clusters/staging/values/) from one source.
   sources:
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for this source.
-      targetRevision: prod
+      targetRevision: staging
 
       # Repo root — see comment above for why.
       path: .
@@ -41,11 +41,11 @@ spec:
           - name: CHART_PATH
             value: helm/platform/networking/gateway
 
-          # Remote-cluster overrides, relative to repo root (SOPS-encrypted —
+          # Staging-cluster overrides, relative to repo root (SOPS-encrypted —
           # only domain/email leaf fields; the rest stays plaintext —
           # decrypted by the plugin before rendering).
           - name: SECRETS_FILE
-            value: argocd/clusters/remote/values/networking.enc.yaml
+            value: argocd/clusters/staging/values/networking.enc.yaml
 
   destination:
     # Target cluster API server — in-cluster.

@@ -103,6 +103,6 @@ repoServer:
       emptyDir: {}
 
     - name: sops-age-key
-      # Created out-of-band on the remote cluster, never committed to Git — see README.
+      # Created out-of-band on the prod cluster, never committed to Git — see README.
       secret:
         secretName: sops-age-key

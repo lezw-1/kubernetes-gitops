@@ -82,7 +82,7 @@ secretsProvisioning:
 # Secrets and provisioned into Keycloak by templates/provision-job.yaml.
 # Only read when secretsProvisioning.enabled is true.
 # Override per environment via envs/<env>/iam.yaml and the matching
-# SOPS-encrypted values file (e.g. argocd/clusters/local/values/iam-secrets.enc.yaml).
+# SOPS-encrypted values file (e.g. argocd/clusters/dev/values/iam-secrets.enc.yaml).
 secrets:
   # Keycloak bootstrap admin credentials — materialized as the
   # admin-credentials Secret by templates/admin-credentials.yaml. The iam
@@ -92,7 +92,7 @@ secrets:
     # Keycloak bootstrap admin username.
     # Default: empty — never commit a real value here. Supply it via a
     # SOPS-encrypted environment override at deploy time (see
-    # argocd/clusters/local/values/iam-secrets.enc.yaml).
+    # argocd/clusters/dev/values/iam-secrets.enc.yaml).
     username: ""
 
     # Keycloak bootstrap admin password.
@@ -163,7 +163,7 @@ secrets:
       # Keycloak login username.
       # Default: empty — never commit a real value here. Supply it via a
       # SOPS-encrypted environment override at deploy time (see
-      # argocd/clusters/local/values/iam-secrets.enc.yaml).
+      # argocd/clusters/dev/values/iam-secrets.enc.yaml).
       username: ""
 
       # Keycloak login password.

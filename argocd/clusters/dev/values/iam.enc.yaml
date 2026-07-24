@@ -1,6 +1,6 @@
 # IAM service overrides for the local cluster, layered onto
 # helm/apps/iam/values.yaml via the SECRETS_FILE env in the sops-helm plugin
-# source (argocd/clusters/local/iam-dev.yaml). Only the username/password
+# source (argocd/clusters/dev/iam.yaml). Only the username/password
 # leaf fields under secrets.* below are SOPS-encrypted — the rest of this
 # file stays plaintext so it's readable in Git diffs.
 

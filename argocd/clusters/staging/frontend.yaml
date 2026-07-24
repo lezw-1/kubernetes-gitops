@@ -13,11 +13,11 @@ spec:
   project: default
 
   # Single source, rendered by the sops-helm Config Management Plugin
-  # (argocd/clusters/remote/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
+  # (argocd/clusters/staging/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
   # instead of native Helm, since its values file is SOPS-encrypted and
   # native Helm value files can't decrypt it. Checked out at repo root so
   # the plugin can read both the chart (helm/apps/frontend) and the
-  # values file (argocd/clusters/remote/values/) from one source.
+  # values file (argocd/clusters/staging/values/) from one source.
   sources:
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
@@ -40,7 +40,7 @@ spec:
           # only the repository leaf field; the rest stays plaintext —
           # decrypted by the plugin before rendering).
           - name: SECRETS_FILE
-            value: argocd/clusters/remote/values/frontend-staging.enc.yaml
+            value: argocd/clusters/staging/values/frontend-staging.enc.yaml
 
   destination:
     # Target cluster API server — in-cluster.

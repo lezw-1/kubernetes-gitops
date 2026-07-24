@@ -8,7 +8,7 @@ configs:
 
     # sops-helm: decrypts a SOPS values file, then helm-templates the chart
     # with it. Used by Applications with sources[].plugin.name: sops-helm
-    # (e.g. iam-dev.yaml) instead of sources[].helm.
+    # (e.g. networking-gateway.yaml) instead of sources[].helm.
     plugins:
       sops-helm:
         generate:
@@ -103,6 +103,6 @@ repoServer:
       emptyDir: {}
 
     - name: sops-age-key
-      # Created out-of-band, never committed to Git — see README.
+      # Created out-of-band on the staging cluster, never committed to Git — see README.
       secret:
         secretName: sops-age-key

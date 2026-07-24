@@ -93,16 +93,16 @@
 ## Clean Up
 
 - [x] **iam-secrets `stringData` type errors** — `realms-ai-system.yaml`, `clients-chronsorting.yaml`, `clients-frontend.yaml`, `users-user1.yaml`, `users-user2.yaml` emitted raw booleans/lists into `Secret.stringData` (must be `map[string]string`), causing Argo CD sync to fail with `cannot unmarshal bool into Go struct field Secret.stringData of type string`; only `admin-credentials` (already quoted) applied. Fixed by quoting scalars and JSON-encoding lists.
-- [x] **`iam-secrets` `VALUES_FILE` pointed at the wrong chart's values** — `iam-secrets-dev.yaml` reused `argocd/clusters/local/values/iam.yaml` (overrides for the `iam` chart: image, gateway, hpa, etc.), which shares no keys with `iam-secrets/values.yaml`'s `secrets:` tree — a no-op copy-paste from `iam-dev.yaml`. Split into a dedicated `argocd/clusters/local/values/iam-secrets.yaml` for plain (non-secret) overrides.
-- [ ] **Stale `provision` key in `iam.yaml`** — `argocd/clusters/local/values/iam.yaml` still sets `provision.enabled: true`, but `helm/apps/iam/templates/provision.yaml`/`provision-config.yaml` and the `iam/config/*` JSON files were deleted when the iam-secrets chart was split out (commit `e40bad1`); the key is now read by nothing — remove it or confirm a replacement provisioning path is still planned.
+- [x] **`iam-secrets` `VALUES_FILE` pointed at the wrong chart's values** — `iam-secrets-dev.yaml` reused `argocd/clusters/dev/values/iam.yaml` (overrides for the `iam` chart: image, gateway, hpa, etc.), which shares no keys with `iam-secrets/values.yaml`'s `secrets:` tree — a no-op copy-paste from `iam-dev.yaml`. Split into a dedicated `argocd/clusters/dev/values/iam-secrets.yaml` for plain (non-secret) overrides.
+- [ ] **Stale `provision` key in `iam.yaml`** — `argocd/clusters/dev/values/iam.yaml` still sets `provision.enabled: true`, but `helm/apps/iam/templates/provision.yaml`/`provision-config.yaml` and the `iam/config/*` JSON files were deleted when the iam-secrets chart was split out (commit `e40bad1`); the key is now read by nothing — remove it or confirm a replacement provisioning path is still planned.
 
 ### Secrets Workflow (SOPS)
 
-- [ ] **Document the SOPS secrets workflow** — how `helm/apps/iam-secrets` + `argocd/clusters/local/values/iam-secrets.enc.yaml` fit together, for anyone rotating credentials or adding a new secret-backed chart:
+- [ ] **Document the SOPS secrets workflow** — how `helm/apps/iam-secrets` + `argocd/clusters/dev/values/iam-secrets.enc.yaml` fit together, for anyone rotating credentials or adding a new secret-backed chart:
   1. Non-secret chart defaults live in `helm/apps/<chart>/values.yaml`.
-  2. Real secret values are only ever edited via `sops argocd/clusters/local/values/<chart>.enc.yaml` (never hand-edited — `encrypted_regex: ^(username|password)$` in `.sops.yaml` controls what gets encrypted).
-  3. Plain, non-secret per-cluster overrides (if any) go in a sibling plain file, e.g. `argocd/clusters/local/values/iam-secrets.yaml` — never mix secret and non-secret overrides in the same file.
-  4. The Argo CD Application for the chart uses `sources[].plugin.name: sops-helm` (not `sources[].helm`), with `CHART_PATH`/`VALUES_FILE`/`SECRETS_FILE` env vars — see `argocd/clusters/local/iam-secrets-dev.yaml` and the plugin definition in `argocd/clusters/local/values/argocd-cmp.yaml`.
+  2. Real secret values are only ever edited via `sops argocd/clusters/dev/values/<chart>.enc.yaml` (never hand-edited — `encrypted_regex: ^(username|password)$` in `.sops.yaml` controls what gets encrypted).
+  3. Plain, non-secret per-cluster overrides (if any) go in a sibling plain file, e.g. `argocd/clusters/dev/values/iam-secrets.yaml` — never mix secret and non-secret overrides in the same file.
+  4. The Argo CD Application for the chart uses `sources[].plugin.name: sops-helm` (not `sources[].helm`), with `CHART_PATH`/`VALUES_FILE`/`SECRETS_FILE` env vars — see `argocd/clusters/dev/iam-secrets-dev.yaml` and the plugin definition in `argocd/clusters/dev/values/argocd-cmp.yaml`.
   5. The decryption key (`sops-age-key` Secret) is created out-of-band per-cluster, never committed — see README.
   6. Every field the templates put in `stringData` must be a real string — quote booleans/numbers, JSON-encode lists/objects (see the fix above).
   - [ ] Add a "Secrets (SOPS)" section to `README.md` covering steps 1-6 above and the local `sops-age-key` setup.
