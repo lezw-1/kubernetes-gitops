@@ -148,6 +148,10 @@ jobs:
         # deleted in this same operation. On timeout, the namespace's status
         # conditions name exactly what's still blocking it.
         run: |
+          # Echoes each command (with expanded args) before running it, for
+          # debugging which exact kubectl call is hanging on a stuck run.
+          set -x
+
           echo "Deleting ClusterIssuers selfsigned-staging, letsencrypt-staging..."
           kubectl delete clusterissuer selfsigned-staging letsencrypt-staging --ignore-not-found
 
@@ -279,6 +283,10 @@ jobs:
         # deleted in this same operation. On timeout, the namespace's status
         # conditions name exactly what's still blocking it.
         run: |
+          # Echoes each command (with expanded args) before running it, for
+          # debugging which exact kubectl call is hanging on a stuck run.
+          set -x
+
           echo "Deleting ClusterIssuers selfsigned-prod, letsencrypt-prod..."
           kubectl delete clusterissuer selfsigned-prod letsencrypt-prod --ignore-not-found
 
