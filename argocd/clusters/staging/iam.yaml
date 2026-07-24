@@ -51,8 +51,15 @@ spec:
     # Namespace the iam app is deployed into.
     namespace: ai-system-staging
 
-  # Manual sync only — no automated block, so promotion to staging requires an explicit sync in Argo CD.
+  # Fully automated GitOps sync — no manual apply needed.
   syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
     syncOptions:
       # Auto-create the destination namespace.
       - CreateNamespace=true
