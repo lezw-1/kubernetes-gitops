@@ -72,6 +72,14 @@ kubectl create secret generic sops-age-key -n argocd \
   --from-file=key.txt="$HOME/Library/Application Support/sops/age/keys.txt"
 ```
 
+If the Secret already exists, overwrite it instead:
+
+```sh
+kubectl create secret generic sops-age-key -n argocd \
+  --from-file=key.txt="$HOME/Library/Application Support/sops/age/keys.txt" \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
 ### Prod
 
 Env variables can be found in: `argocd/clusters/prod/values/frontend.yaml`, `argocd/clusters/prod/values/iam.yaml`.
