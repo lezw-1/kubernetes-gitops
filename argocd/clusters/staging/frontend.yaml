@@ -40,7 +40,7 @@ spec:
           # only the repository leaf field; the rest stays plaintext —
           # decrypted by the plugin before rendering).
           - name: SECRETS_FILE
-            value: argocd/clusters/staging/values/frontend-staging.enc.yaml
+            value: argocd/clusters/staging/values/frontend.enc.yaml
 
   destination:
     # Target cluster API server — in-cluster.
