@@ -59,11 +59,11 @@ kubectl create secret generic sops-age-key -n argocd \
 
 Its own independent remote cluster and Argo CD install — no longer shared with prod.
 
-Env variables can be found in: `argocd/clusters/staging/values/frontend.yaml`, `argocd/clusters/staging/values/iam.yaml`.
+Env variables can be found in: `argocd/clusters/staging/values/frontend.enc.yaml`, `argocd/clusters/staging/values/iam.enc.yaml`.
 
-Deployment is orchestrated by Argo CD syncing the `staging` branch — sync is manual (no `syncPolicy.automated`). The frontend image tag in `argocd/clusters/staging/values/frontend.yaml` is bumped by hand today (no CI wires this up yet) once the app source repo publishes a new image.
+Deployment is orchestrated by Argo CD syncing the `staging` branch — sync is manual (no `syncPolicy.automated`). The frontend image tag in `argocd/clusters/staging/values/frontend.enc.yaml` is bumped by hand today (no CI wires this up yet) once the app source repo publishes a new image.
 
-Same `admin-credentials` Secret requirement as Dev, created in the `ai-system-staging` namespace.
+Like dev, `secretsProvisioning.enabled` is `true`, so the `iam` chart creates `admin-credentials` itself (from `argocd/clusters/staging/values/iam.enc.yaml`'s `secrets.admin`) and a Job seeds the `ai-system` realm/clients/users on every install/upgrade — no manual Secret needed. `argocd/clusters/staging/values/iam.enc.yaml` is SOPS-encrypted the same way as `frontend.enc.yaml` below — only its `username`/`password`/`email` leaf fields.
 
 `argocd/clusters/staging/values/networking.enc.yaml` (the cluster Gateway's `domain`/`email`) is SOPS-encrypted the same way — see the Dev section above, but under staging's own age key (`.sops.yaml`'s `argocd/clusters/staging/` rule, distinct from dev's and prod's). Argo CD's repo server on the staging cluster decrypts it via the `sops-helm` CMP (`argocd/clusters/staging/values/argocd-cmp.yaml`), which needs the matching age **private** key as a `sops-age-key` Secret in the `argocd` namespace — never committed to Git:
 
