@@ -86,7 +86,7 @@ secrets:
     users:
         user1:
             # User email address.
-            email: ENC[AES256_GCM,data:VQd3PIu6lNor/POrmDyhyew+CQxU,iv:Xxg4pfPJk0opji5lPMfxkUusRim1Rxcz1drPe3BBUeE=,tag:+82Qv0zNw3KlL0Hx4iNU8Q==,type:str]
+            email: ENC[AES256_GCM,data:RSjbqZGwqkTHwDzsn+Z+Ul5HlXHc,iv:Ki8NbGrmfTxfjBfF+RIjOm0h8FsrJQ2Hor/9Kax3O70=,tag:p9yRmDb9l6lCjtYhiJ0JJg==,type:str]
             # User first name.
             firstName: User
             # User last name.
@@ -97,9 +97,9 @@ secrets:
             emailVerified: true
             # Keycloak login username.
             # This field is SOPS-encrypted; decrypt/edit via `sops` rather than by hand.
-            username: ENC[AES256_GCM,data:M/6TotI=,iv:izOg0QpUXqmQr+dUOH6d6yidCz3p2YZCGGBtgDpcM7U=,tag:IvzOGL0ISxZRsG+bAO8HdA==,type:str]
+            username: ENC[AES256_GCM,data:icfxiPc=,iv:ufi1y1iP3aYVl5p0fWmW8RxzDPFzRXOhb1RXO6usvis=,tag:+7Kkiv7Us6rHS8IyTJxIbA==,type:str]
             # Keycloak login password.
-            password: ENC[AES256_GCM,data:vgcu5q6osQ6pjd094SG9NkPO2HlRvyeO,iv:UBHjIjeZWOA+worbJWpmJWuCz4TbgV0YkLWK2YRrD+o=,tag:psshs40gTzVeZ7gdY8zP9w==,type:str]
+            password: ENC[AES256_GCM,data:AD5wWwXpPhNcLhruBOJbi/Lsp4kZzhNe,iv:t5v6StNS1gWCp45TinMDhLjPwytF3M6K5L4x1xWIorg=,tag:ZLVj2/bxFKenzyifQrfCgQ==,type:str]
             # Client roles assigned to this user.
             roles:
                 - client: chronsorting
@@ -107,30 +107,30 @@ secrets:
                 - client: frontend
                   role: viewer
         user2:
-            email: ENC[AES256_GCM,data:dZjZvQHrlk3mxxfWI91dNvdxh0Er,iv:+Tb0v5C10xKLEJWmkF2dKZdk6b23qF5vUpoazS5FkYA=,tag:hGMD5TEL2gVCshFIqmjDKg==,type:str]
+            email: ENC[AES256_GCM,data:uLHq7L16VD9pENOI6Mn40EjPe01k,iv:OXFpaGFrPFgXi8uq4DcMYTpSSmu5D/qn6H7axGJLgtI=,tag:NsEYAsqNrwkDUJ4q3jb28Q==,type:str]
             firstName: User
             lastName: Two
             enabled: true
             emailVerified: true
             # See user1's username/password comments above.
-            username: ENC[AES256_GCM,data:7cLo4BM=,iv:JjlLYnGkV20wMwrvqRtmDVSyELb6XWseq2bx0Yfitrc=,tag:XZEvZ4I8DtBtmEynjXKF8A==,type:str]
-            password: ENC[AES256_GCM,data:f0DhdRnXHo3Dpj1E/RRLQFaNU+L4JdEK,iv:yAom0l3/wR2DouVnzS+9XVpXHYKV+Hs6I/jFDl3Pmrw=,tag:QHrWsLEnsqMu3EjRNcDVZw==,type:str]
+            username: ENC[AES256_GCM,data:Sh986qE=,iv:bKWDRhSI/3qLP9F3qWK+VIqwbjB0OX54tHyePtVclEg=,tag:4r17kgkuOK7URBckfOH6Ug==,type:str]
+            password: ENC[AES256_GCM,data:rP8dTdxi5sIuAw//w7kkFJSUP5N2ikGH,iv:28T+ZxWNsI+WdJxRj3q6qHyykdhSOTM58o+5PYkO8cQ=,tag:ijEgumdkLkJrb7upO5q/Gw==,type:str]
             roles: []
     admin:
-        username: ENC[AES256_GCM,data:YScdXn8=,iv:oJxEqtB2VB5lx3gS1nL5EOAEqlZusj5JpveOj0xE2kU=,tag:udbpsbTIvmeVrdUKoQZvfQ==,type:str]
-        password: ENC[AES256_GCM,data:YPoGl6Pat/pRAunQM7Ci4YhiOVRWfJyJ,iv:XqzQgFKviita/Az92iTCxo49d/RUyenOvpNqjWivnwE=,tag:Kn2XnZ1jwgTndV4pIzi9Sw==,type:str]
+        username: ENC[AES256_GCM,data:KvF+xxE=,iv:exKk92LmMvTSpIxyPTK7jq4mqRRnAYI0ttnRee0i2dY=,tag:zJYCN2JdPAsYmFLQ+4BMNQ==,type:str]
+        password: ENC[AES256_GCM,data:SCbRWIV0UN6isEGRX0iUbpgckH5qK1Wa,iv:gyqerSTDeahVmJQGwtSDLIX7sjrL5+ug+Mi4Z7y19tk=,tag:TOv23zP3EGwEk78N91krDg==,type:str]
 sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBLWWkwRWtKQkhVcnVhWTgv
-            R08yaG5UR3krdDh6bzJrU3M2ek1DaE9OM2hnCjB0WkcvcWt3am9KdjFBY1VlN1Fm
-            cmN5bVNUSExWQmRRMlZaMGZIWVVVTHcKLS0tIFVXVytzS3YyY2R3OHNmUHJvMmR3
-            VGFJVE9aOWJYRTZadGxWWm05d0RvTGcKtxNYB0KPQtQyeo3D22nvKPn5o0TTksQ7
-            JFc3SkVG7ruoeklCou9dLpTw1mEAd/AtawLK2LEq63cHUT2lhfs4Yg==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB3T0ZJZGRDZlNmVStvR0Vj
+            clo0MVBBREpnRlVXU3F1d1FlRGR4Rmc1cHlNClNZWHZ3eUpRM1lXVzBqNG0xaEVR
+            VkZGL21BMm1ZS3pWMmtEeW1YY0VQWUUKLS0tIFh0OXVUZXZ6ZU1NcVY2RWN3VnNC
+            QUc3RDZSQjR6UnV6OE9Vck9adHk1OTQK1hUoUSb5oDybWdU07pJUqnEX1SOkkFfL
+            /PsTJiw63l+YoXg2s11fSONV+08PeiSJSD0Nus3DilEYUfwnI0Uvzg==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email)$
-    lastmodified: "2026-07-24T08:35:38Z"
-    mac: ENC[AES256_GCM,data:pdJkHuB0zUVKbccLA/M3o7daK20+Cj7iOuHRL1XD0wStMuwQzoMYmYLS5C4m1+L5kSfofQet2pe6WXmh1cbiNxiKkVaGtHnPErRphhhJqJVVjuv4ohtQncPb6u9KJF7ZP2zrUiTJMTdZGYzq0MRz9JW+3pv5usinNBhER00AKZo=,iv:oDBVzhK/szrrMj+YiBT1vEA8f+DiD2d3/+uKqJA2Ktc=,tag:1FVhVUBIDbA4m+FE5H9IVA==,type:str]
+    lastmodified: "2026-07-24T08:54:40Z"
+    mac: ENC[AES256_GCM,data:zf47j9evOt8fjS1AcASuEU9kPY7T0AStI9YoZXXXWPhrKfrtDhgrz9fIP8XYBWfey6+HBNinkqyMrS4BpAnccpqRb2Gw6vR25fDVzgFz0HQ0n9Ibd86fqgX/pLy7IYJg0XxJsCbzOfjfpME8FAxRqPfrAoYpjrV/OsTABQ7aX0I=,iv:2Wx3N8y1NGAIzIPcklYpakhDM8R02jvWE8oYWpwDIuA=,tag:LQ65QDdUlLgea6SlqIMe+Q==,type:str]
     version: 3.13.2
