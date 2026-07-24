@@ -134,6 +134,23 @@ jobs:
           cloudfleet auth add-profile token default ${{ secrets.CF_ORG_ID }} ${{ secrets.CF_ACCESS_TOKEN }} ${{ secrets.CF_ACCESS_TOKEN_SECRET }}
           cloudfleet clusters kubeconfig ${{ secrets.CF_CLUSTER_ID_STAGING }}
 
+      - name: Delete the Gateway before its namespace
+        # The Gateway auto-provisions a cloud LoadBalancer Service and carries
+        # a finalizer that only the gateway-controller pod can clear — and
+        # that pod lives inside `networking`, the same namespace the loop
+        # below deletes. Deleting the Gateway here first, while the
+        # controller is still running, gives it a chance to deprovision the
+        # LB and drop the finalizer before its own pod goes down with the
+        # namespace.
+        run: |
+          echo "Deleting Gateway cluster-gateway-staging..."
+          if ! kubectl delete gateway cluster-gateway-staging -n networking --ignore-not-found --timeout=180s; then
+            echo "::error::Gateway cluster-gateway-staging did not delete within 180s — status conditions:"
+            kubectl get gateway cluster-gateway-staging -n networking -o jsonpath='{.status.conditions}'
+            echo
+            exit 1
+          fi
+
       - name: Delete every staging resource
         # Namespace deletion natively cascades to everything inside it
         # (Deployments, Secrets, Argo CD's own install, its Application/
@@ -264,6 +281,23 @@ jobs:
         run: |
           cloudfleet auth add-profile token default ${{ secrets.CF_ORG_ID }} ${{ secrets.CF_ACCESS_TOKEN }} ${{ secrets.CF_ACCESS_TOKEN_SECRET }}
           cloudfleet clusters kubeconfig ${{ secrets.CF_CLUSTER_ID_PROD }}
+
+      - name: Delete the Gateway before its namespace
+        # The Gateway auto-provisions a cloud LoadBalancer Service and carries
+        # a finalizer that only the gateway-controller pod can clear — and
+        # that pod lives inside `networking`, the same namespace the loop
+        # below deletes. Deleting the Gateway here first, while the
+        # controller is still running, gives it a chance to deprovision the
+        # LB and drop the finalizer before its own pod goes down with the
+        # namespace.
+        run: |
+          echo "Deleting Gateway cluster-gateway-prod..."
+          if ! kubectl delete gateway cluster-gateway-prod -n networking --ignore-not-found --timeout=180s; then
+            echo "::error::Gateway cluster-gateway-prod did not delete within 180s — status conditions:"
+            kubectl get gateway cluster-gateway-prod -n networking -o jsonpath='{.status.conditions}'
+            echo
+            exit 1
+          fi
 
       - name: Delete every prod resource
         # Namespace deletion natively cascades to everything inside it
