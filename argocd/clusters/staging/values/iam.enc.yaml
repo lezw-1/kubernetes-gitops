@@ -40,7 +40,7 @@ hpa:
     # Maximum pod count.
     maxReplicas: 2
     # Target average CPU utilization percentage for scaling.
-    targetCPUUtilization: 70
+    targetCPUUtilization: 80
 # SecretsProvisioning: seeds realms, clients, and users on install/upgrade.
 secretsProvisioning:
     # Enabled in staging to seed the ai-system realm/clients/users, same as dev.
