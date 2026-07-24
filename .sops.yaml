@@ -24,12 +24,10 @@ creation_rules:
   - path_regex: argocd/clusters/staging/.*\.enc\.yaml$
     encrypted_regex: "^(username|password|domain|email)$"
 
-    # TODO: staging is a brand-new cluster — generate its age keypair
-    # (`age-keygen`) and replace this placeholder with the public key
-    # before encrypting any staging/*.enc.yaml file. The matching private
-    # key goes into the `sops-age-key` Secret in the staging cluster's
-    # argocd namespace (never committed to Git — see README).
-    age: age1REPLACE_WITH_STAGING_PUBLIC_KEY
+    # Staging age public key — the matching private key lives in the
+    # `sops-age-key` Secret in the staging cluster's argocd namespace
+    # (never committed to Git — see README).
+    age: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
 
 
   # Any *.enc.yaml file under argocd/clusters/dev/ holds real secret

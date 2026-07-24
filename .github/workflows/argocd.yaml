@@ -4,8 +4,8 @@
 #   - CF_ORG_ID:              Cloudfleet organization ID -> run 'cloudfleet organization describe'
 #   - CF_ACCESS_TOKEN:        Cloudfleet token ID -> create token via UI and use 'Access Token'
 #   - CF_ACCESS_TOKEN_SECRET: Cloudfleet token secret -> create token via UI and use 'Access Token Secret'
-#   - CF_CLUSTER_ID:          Cloudfleet cluster ID for prod -> get via UI 'https://console.cloudfleet.ai/clusters'
-#   - SOPS_AGE_KEY:           Age private key for prod's sops-age-key Secret -> contents of the prod keys.txt (never the dev or staging key)
+#   - CF_CLUSTER_ID_PROD:          Cloudfleet cluster ID for prod -> get via UI 'https://console.cloudfleet.ai/clusters'
+#   - SOPS_AGE_KEY_PROD:           Age private key for prod's sops-age-key Secret -> contents of the prod keys.txt (never the dev or staging key)
 #   - CF_CLUSTER_ID_STAGING:  Cloudfleet cluster ID for staging -> get via UI 'https://console.cloudfleet.ai/clusters'
 #   - SOPS_AGE_KEY_STAGING:   Age private key for staging's sops-age-key Secret -> contents of the staging keys.txt (never the dev or prod key)
 
