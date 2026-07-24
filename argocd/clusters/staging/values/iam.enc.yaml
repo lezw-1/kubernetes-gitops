@@ -38,7 +38,7 @@ hpa:
     # Minimum pod count.
     minReplicas: 1
     # Maximum pod count.
-    maxReplicas: 5
+    maxReplicas: 2
     # Target average CPU utilization percentage for scaling.
     targetCPUUtilization: 70
 # SecretsProvisioning: seeds realms, clients, and users on install/upgrade.
