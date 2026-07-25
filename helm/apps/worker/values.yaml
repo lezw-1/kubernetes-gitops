@@ -53,6 +53,15 @@ service:
 # dev overrides this to "threads".
 pool: "prefork"
 
+# Concurrency: number of Celery worker processes/threads, meant to be passed
+# as `--concurrency=<value>`. Currently inert — `main.py` doesn't read this
+# env var yet, so Celery still falls back to its own CPU-based default,
+# which scales with the CPU limit below rather than a fixed count. Wired up
+# ahead of that upstream change so the chart is ready once it ships.
+# Default: 2 — matches the process count observed stable under this chart's
+# default memory limit before CPU-based auto-scaling was in play.
+concurrency: 2
+
 # Secret: sensitive values injected as the worker-secrets Secret
 # (templates/secret.yaml). SOPS-encrypt on staging/prod and dev (see
 # argocd/clusters/*/values/).

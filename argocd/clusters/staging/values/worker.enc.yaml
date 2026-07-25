@@ -32,6 +32,7 @@ resources:
     limits:
         cpu: 500m
         memory: 256Mi
+concurrency: 2
 sops:
     age:
         - enc: |
@@ -44,6 +45,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
-    lastmodified: "2026-07-25T21:48:31Z"
-    mac: ENC[AES256_GCM,data:+QKnG3Baupcet9Tpv9YugY+hxxdob5qT5kboQuW+RymdhurDAjX2f891WAyPBpdU1IRGjZ+3uW04AoBXk/aEzkylDRuuprgavgQ6Zv/MOKE12wT3gjhWdnLJnpu758H1TAZkZzF425rRoD5mO9l+RQYCQR3aZ1O9KcO7uoZZ4gc=,iv:f8eC7+lNJvxXsyj3G39GPxOcZkC8ulb94Ytl69gg/00=,tag:VVXlkEmIQM5OhEWJQ/HY2g==,type:str]
+    lastmodified: "2026-07-25T21:57:27Z"
+    mac: ENC[AES256_GCM,data:Qkx6WhlWazk5JQd8T9H7pwU3bIC+m/ZADXthGnXk7rHiZD/+9+jsR5nHSEn2UG3XkyGqr8d3djjSBOU1f8wZ8ZR43Tgu/XXHgRcKaXCCEL4Zk35N63QgHVXHo+SBUo6n0ioaX32W3QzM8S7/AQugIo/4T9hGJ2vJeMzR+YFzPZw=,iv:tIXTv5YlSmWHQ/CJdya30tDbzCrf8WDrAT30T0F5/O8=,tag:SI5ppyD8xfTMjtwaaiitNA==,type:str]
     version: 3.13.2

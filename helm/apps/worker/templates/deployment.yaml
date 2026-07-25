@@ -64,6 +64,12 @@ spec:
             - name: CELERY_POOL
               value: {{ .Values.pool | quote }}
 
+            # Celery worker concurrency, sourced from values.concurrency.
+            # Inert until main.py reads this env var and passes it as
+            # `--concurrency=<value>` — see the comment on values.concurrency.
+            - name: CELERY_CONCURRENCY
+              value: {{ .Values.concurrency | quote }}
+
             # Anthropic API key, sourced from the worker-secrets Secret (templates/secret.yaml).
             - name: ANTHROPIC_API_KEY
               valueFrom:
