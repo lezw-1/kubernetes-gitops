@@ -87,6 +87,9 @@ spec:
               memory: {{ .Values.resources.limits.memory }}
 
           # Exec probes — no HTTP server to poll; matches the Celery process's own healthcheck.
+          # timeoutSeconds raised from the 1s default — spawning the Celery
+          # inspect CLI can exceed 1s under the CPU limit above, causing
+          # spurious probe failures even though the worker itself is healthy.
           readinessProbe:
             exec:
               command:
@@ -95,6 +98,7 @@ spec:
                 - celery -A main inspect ping -d celery@$(hostname)
             initialDelaySeconds: 60
             periodSeconds: 600
+            timeoutSeconds: 5
 
           livenessProbe:
             exec:
@@ -104,3 +108,4 @@ spec:
                 - celery -A main inspect ping -d celery@$(hostname)
             initialDelaySeconds: 10
             periodSeconds: 600
+            timeoutSeconds: 5
