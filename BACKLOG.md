@@ -58,6 +58,10 @@
   - [ ] **Step 2** — replace the kubectl `Deploy namespace` step in `cicd.yaml` with a `helmfile sync -l name=namespace` step using `helmfile/helmfile-action`
   - [ ] **Step 3** — delete the now-redundant `helm/charts/namespace/` chart directory
 
+## Networking
+
+- [ ] **Refactor per-app hostname config** — `gateway.hosts.domain` is duplicated in every app's values file (`helm/apps/frontend`, `helm/apps/iam`) instead of being derived from the shared `networking` gateway singleton, which already holds the real domain (`argocd/clusters/*/values/networking.enc.yaml`). Right now prod's `frontend.enc.yaml`/`iam.enc.yaml` and staging's `iam.enc.yaml` still have `domain: ""`, which disables hostname-based routing (`hostnames`/`sectionName: https` are skipped in `helm/apps/*/templates/httproute.yaml`), so those HTTPRoutes match any Host header instead of only their intended one. Staging's `frontend.enc.yaml` was fixed manually as a stopgap. Consider having app HTTPRoutes read the domain from one shared source instead of requiring every app+env combo to set it correctly.
+
 ## IAM
 
 - [ ] **Check if subpath for IAM is necessary** — `KC_HTTP_RELATIVE_PATH=/iam` is set in `helm/charts/iam/templates/deployment.yaml`; verify whether the gateway routes require this subpath or if it can be removed to simplify the setup
