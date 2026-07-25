@@ -290,6 +290,10 @@ jobs:
         # already be gone by the time this runs. On timeout, the namespace's
         # status conditions name exactly what's still blocking it.
         run: |
+          # Fail immediately if any delete below times out, so a stuck
+          # resource surfaces as a failed job instead of finishing silently.
+          set -euo pipefail
+
           echo "Deleting namespaces..."
           for ns in argocd ai-system-prod networking; do
             echo "Deleting namespace $ns..."
@@ -302,9 +306,11 @@ jobs:
             echo "Namespace $ns deleted."
           done
 
-          # Delete any remaining cluster-scoped resources that Argo CD doesn't own
-          kubectl delete clusterissuer selfsigned-prod letsencrypt-prod --ignore-not-found
-          kubectl delete gatewayclass eg --ignore-not-found
+          # Delete any remaining cluster-scoped resources that Argo CD doesn't
+          # own — each --timeout blocks until it's confirmed gone.
+          echo "Deleting cluster-scoped resources..."
+          kubectl delete clusterissuer selfsigned-prod letsencrypt-prod --ignore-not-found --timeout=60s
+          kubectl delete gatewayclass eg --ignore-not-found --timeout=60s
           kubectl delete clusterrole,clusterrolebinding \
             -l 'app.kubernetes.io/instance in (argocd,networking-certs-manager,networking-gateway-controller)' \
-            --ignore-not-found
+            --ignore-not-found --timeout=60s
