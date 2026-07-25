@@ -1,0 +1,35 @@
+{{- if .Values.hpa.enabled }}
+# Disabled by default — see values.yaml hpa.enabled.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  # HPA resource name.
+  name: platform-api
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  scaleTargetRef:
+    # Must match the Deployment's apiVersion/kind/name to be scaled.
+    apiVersion: apps/v1
+    kind: Deployment
+    name: platform-api
+
+  # Minimum pod count, sourced from values.hpa.minReplicas.
+  minReplicas: {{ .Values.hpa.minReplicas }}
+
+  # Maximum pod count, sourced from values.hpa.maxReplicas.
+  maxReplicas: {{ .Values.hpa.maxReplicas }}
+
+  metrics:
+    # Scale on average CPU utilization across pods.
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+
+          # Target % CPU utilization, sourced from values.hpa.targetCPUUtilization.
+          averageUtilization: {{ .Values.hpa.targetCPUUtilization }}
+{{- end }}

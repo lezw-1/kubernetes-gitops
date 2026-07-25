@@ -1,0 +1,77 @@
+# Default values — overridden per environment via argocd/clusters/<env>/values/platform-api.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name, used in hostnames and resource suffixes.
+  # Allowed values: dev, staging, prod
+  environment: dev
+
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+  hosts:
+    # Full domain for the HTTPRoute hostname.
+    # Default: empty disables hostname-based routing (route matches any host).
+    domain: ""
+
+  # Env suffix of the shared singleton Gateway (platform/networking/gateway)
+  # this HTTPRoute attaches to.
+  # Default: empty falls back to global.environment — correct whenever this
+  # app's own env IS the singleton gateway's env (e.g. dev, prod). Override
+  # when they differ, e.g. a staging deploy attaching to the shared
+  # cluster's "prod" gateway singleton.
+  targetEnvironment: ""
+
+# Image: container image settings (CI updates tag on each push).
+image:
+  # Container image repository.
+  repository: ""
+
+  # Container image tag.
+  tag: ""
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: Always
+
+# Service: ClusterIP configuration.
+service:
+  # FastAPI/uvicorn listen port.
+  port: 8000
+
+# HPA: horizontal pod autoscaler.
+hpa:
+  # Default: disabled — set true to enable autoscaling.
+  enabled: false
+
+  # Minimum pod count when HPA is enabled.
+  minReplicas: 1
+
+  # Maximum pod count when HPA is enabled.
+  maxReplicas: 5
+
+  # Target average CPU utilization percentage for scaling.
+  targetCPUUtilization: 70
+
+# MongoUrl: full MongoDB connection string.
+# Default: empty — MongoDB is not yet migrated into this repo. Point this at
+# an external or temporary MongoDB instance until it is. May carry
+# credentials — SOPS-encrypt on staging/prod (see argocd/clusters/*/values/).
+mongoUrl: ""
+
+# Iam: Keycloak connection settings this API authenticates requests against.
+iam:
+  # Keycloak API host. Default assumes the iam app (helm/apps/iam) is
+  # deployed in this same namespace — override if it lives elsewhere.
+  apiHost: "http://iam:8080"
+
+  # Keycloak subpath, must match the iam chart's values.subpath.
+  subpath: "/iam"
+
+# Multiagent: settings for the long-running multiagent job backend.
+multiagent:
+  # Multiagent service URL.
+  # Default: empty — multiagent is not yet migrated into this repo. Point
+  # this at an external or temporary instance until it is.
+  url: ""
+
+  # Request timeout when calling the multiagent service, in seconds.
+  timeout: 1200

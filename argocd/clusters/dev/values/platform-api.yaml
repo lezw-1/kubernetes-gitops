@@ -1,0 +1,61 @@
+# Platform API service overrides for the local cluster, layered onto
+# apps/platform-api/values.yaml via the $values ref in argocd/clusters/dev/platform-api.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name, used in hostnames and resource suffixes.
+  environment: dev
+
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+  hosts:
+    # Default: empty disables hostname-based routing (route matches any host) —
+    # matches iam's pattern, since this is a subpath API, not the root app.
+    domain: ""
+
+# Image: container image settings.
+image:
+  # Built locally via `nerdctl build -t platform-api:local ...`.
+  repository: platform-api
+
+  # Local image tag.
+  tag: local
+
+  # Allowed values: Always, IfNotPresent, Never
+  # Use the local nerdctl image, never pull from a registry.
+  pullPolicy: Never
+
+# Service: ClusterIP configuration.
+service:
+  # FastAPI/uvicorn listen port.
+  port: 8000
+
+# HPA: horizontal pod autoscaler.
+hpa:
+  # Enabled in dev to exercise autoscaling behavior.
+  enabled: true
+
+  # Minimum pod count.
+  minReplicas: 1
+
+  # Maximum pod count.
+  maxReplicas: 5
+
+  # Target average CPU utilization percentage for scaling.
+  targetCPUUtilization: 70
+
+# MongoUrl: MongoDB is not yet migrated into this repo — point this at a
+# local/dev MongoDB instance (e.g. one run alongside the cluster via nerdctl,
+# or the still-running kubernetes-ai-system dev deployment).
+mongoUrl: ""
+
+# Iam: matches the iam app's dev deployment, same namespace.
+iam:
+  apiHost: "http://iam:8080"
+  subpath: "/iam"
+
+# Multiagent: not yet migrated into this repo — point this at a local/dev
+# multiagent instance until it is.
+multiagent:
+  url: ""
+  timeout: 1200
