@@ -66,12 +66,21 @@ iam:
   # Keycloak subpath, must match the iam chart's values.subpath.
   subpath: "/iam"
 
-# Multiagent: settings for the long-running multiagent job backend.
-multiagent:
-  # Multiagent service URL.
-  # Default: empty — multiagent is not yet migrated into this repo. Point
-  # this at an external or temporary instance until it is.
-  url: ""
+# Broker: Redis connection settings this API's job queue uses.
+broker:
+  # Redis service port (helm/apps/broker), used by the wait-for-broker init
+  # container to gate startup until Redis is reachable.
+  port: 6379
 
-  # Request timeout when calling the multiagent service, in seconds.
+  # Full Redis connection string, sourced into REDIS_URL. Default assumes
+  # the broker app (helm/apps/broker) is deployed in this same namespace.
+  url: "redis://broker:6379/0"
+
+# Worker: settings for the Celery/LangGraph worker backend.
+worker:
+  # Worker service base URL. Default assumes the worker app
+  # (helm/apps/worker) is deployed in this same namespace.
+  url: "http://worker:8000"
+
+  # Request timeout when calling the worker service, in seconds.
   timeout: 1200

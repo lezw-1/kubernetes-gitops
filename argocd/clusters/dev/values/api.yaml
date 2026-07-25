@@ -52,8 +52,12 @@ iam:
   apiHost: "http://iam:8080"
   subpath: "/iam"
 
-# Multiagent: not yet migrated into this repo — point this at a local/dev
-# multiagent instance until it is.
-multiagent:
-  url: ""
+# Broker: in-cluster Redis, no authentication (see helm/apps/broker).
+broker:
+  port: 6379
+  url: "redis://broker:6379/0"
+
+# Worker: matches the worker app's dev deployment, same namespace.
+worker:
+  url: "http://worker:8000"
   timeout: 1200

@@ -46,6 +46,12 @@
 
 - [ ] **Check if subpath for IAM is necessary** — `KC_HTTP_RELATIVE_PATH=/iam` is set in `helm/charts/iam/templates/deployment.yaml`; verify whether the gateway routes require this subpath or if it can be removed to simplify the setup
 
+## Worker
+
+- [ ] **Add HTTP endpoint for `/chronsorting`** — `api`'s `WORKER_URL` env var points `POST /chronsorting` at the `worker` Service, but the worker image (per `kubernetes-ai-system`) only runs a Celery consumer process today, no HTTP server; the request will fail to connect until upstream adds one (see `kubernetes-ai-system` BACKLOG.md's "Deduplicate `routes.py`/`main.py` structure" item)
+- [ ] **Split `worker` into its own source repo and wire up CI** — like `kubernetes-api` was split from `kubernetes-ai-system`; until then, `helm/apps/worker`'s `image.repository`/`tag` are empty on staging/prod and must be set by hand to deploy a real image
+- [ ] **Supply a real `ANTHROPIC_API_KEY`** — `argocd/clusters/*/values/worker.enc.yaml`'s `secret.anthropicApiKey` is currently an empty SOPS-encrypted placeholder in every environment; the worker will fail to call Anthropic until a real key is set via `sops`
+
 ## Security
 
 ### Critical

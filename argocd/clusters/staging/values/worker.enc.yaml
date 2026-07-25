@@ -1,0 +1,44 @@
+# Worker service overrides for staging, layered onto helm/apps/worker/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/staging/worker.yaml).
+#
+# secret.anthropicApiKey below is SOPS-encrypted — only that leaf field; the
+# rest of this file stays plaintext so it's readable in Git diffs.
+global:
+    environment: staging
+image:
+    # Not yet migrated into this repo's CI — worker's source still lives
+    # only in kubernetes-ai-system. Point this at a real published image
+    # once it's split out and built, like kubernetes-api was.
+    repository: ""
+    tag: ""
+    pullPolicy: Always
+database:
+    port: 27017
+mongoUrl: mongodb://database:27017
+broker:
+    port: 6379
+    url: redis://broker:6379/0
+service:
+    port: 8000
+pool: prefork
+secret:
+    anthropicApiKey: ""
+resources:
+    requests:
+        cpu: 250m
+        memory: 512Mi
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWMkgrZkJHcCtlSjhTeDZr
+            aHZhU3ZGZnAzRjI1c1hjQmkxeEViS1NWcmtBCjljditPSk1wOVZnS1ZLazB4WUZo
+            TkhpdktORS9OUHpZOXpVZVZhdDVDS0kKLS0tIFNxMC93Yi9xWThhWndXRzF1elEw
+            WEdRZFdMR3JFVS9RRjNPb1diM2w5WHMK6pNVFjwwj908Up3QTTYQPKx81UhBaLaV
+            +qGLSdsX0fWbsnTZerCiBgK81AKInpJ6Hol8IdIbrPBuvszr2sG08w==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-25T19:35:00Z"
+    mac: ENC[AES256_GCM,data:TRfsbwk0XcugKs/PnOB+NZ4prxKUkkk4S+RkDKaU8B+A3BnW5031+7gkT+nAXx9AGFMXetk9o5+ayLEmkRMkb4s//4DpEkk0nlwdyJ+MSy0iZ2fj+dyfF6UAKqXChBQ+MM6ki7BV0528fOlqAjpLsy4ok0otmMvhjhiPwlNRU8g=,iv:mg2diKy7MjaBt1mxNtweuXP9RR74Et1LTsrnFDkq/MI=,tag:N064sBQlzfdTqBAxecfWxQ==,type:str]
+    version: 3.13.2

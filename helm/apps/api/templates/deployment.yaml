@@ -23,6 +23,16 @@ spec:
         app: api
 
     spec:
+      initContainers:
+        # Blocks pod startup until Redis is reachable — the app connects to
+        # it at import time and crashes if it isn't up yet.
+        - name: wait-for-broker
+          image: busybox
+          command:
+            - sh
+            - -c
+            - until nc -z broker {{ .Values.broker.port }}; do sleep 2; done
+
       containers:
         # Platform API container.
         - name: api
@@ -46,13 +56,17 @@ spec:
             - name: IAM_SUBPATH
               value: {{ .Values.iam.subpath | quote }}
 
-            # Multiagent service URL, sourced from values.multiagent.url.
-            - name: MULTIAGENT_URL
-              value: {{ .Values.multiagent.url | quote }}
+            # Redis connection string, sourced from values.broker.url.
+            - name: REDIS_URL
+              value: {{ .Values.broker.url | quote }}
 
-            # Multiagent request timeout in seconds, sourced from values.multiagent.timeout.
-            - name: MULTIAGENT_TIMEOUT
-              value: {{ .Values.multiagent.timeout | quote }}
+            # Worker service base URL, sourced from values.worker.url.
+            - name: WORKER_URL
+              value: {{ .Values.worker.url | quote }}
+
+            # Worker request timeout in seconds, sourced from values.worker.timeout.
+            - name: WORKER_TIMEOUT
+              value: {{ .Values.worker.timeout | quote }}
 
           resources:
             requests:

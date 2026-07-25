@@ -1,0 +1,32 @@
+# Broker service overrides for prod, layered onto helm/apps/broker/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/prod/broker.yaml).
+global:
+    environment: prod
+image:
+    # Public image — no registry secret needed.
+    repository: ENC[AES256_GCM,data:89oWWgs=,iv:9Q+Z5MZCHeBS1QEy1qtq4Gzz74o7ClsCFGXerqUFZUk=,tag:SL6RkRlxbZMnqszy2K2fJw==,type:str]
+    tag: "8"
+    pullPolicy: IfNotPresent
+service:
+    port: 6379
+storage: 5Gi
+storageClassName: ""
+resources:
+    requests:
+        cpu: 250m
+        memory: 256Mi
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBITXA1RVFEOFB0dzQwWi9l
+            YVk5VUw2MGZRRFA0cmJXK29GdlY1alRvbGdJCmxjcDA2MHhrcXorWUYzMHJIamJF
+            M3lnMlFwNDJkM1pkKy8rekZSc21lL0EKLS0tIEVkQ2Y3cVBzSXNjZUxIM2dYa3pl
+            OVFvcVZUSTFIYm5rWFlUaW1hYVBxMUUKTnnV3fNCJsrkYhFpns/eY8hZWNY0mGBl
+            8gnP+oTXggvmeyYekI7SDgbviJ/B3+2pAl4He5vEgJ8nuqUbsL53kg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-25T19:34:47Z"
+    mac: ENC[AES256_GCM,data:MRJtinevhUABwj69/vcVJxOETy5BU6zLYDMFbpNQbdikMgyNL7l+qSfGFcCFzvXy8C0W7n4ZRrzb96ED66U3JnzRanOi46r9qQj2s4FwErIho2fjyNn8CCrX7CPVlrEDTSsRMJ8KtFuvGVtc/MYFWMCalfknYXCOgJqgJ8s+4rw=,iv:OC+9AysckL0rIYxWwwzmOyOs5XETwL99uZQbW9uu5/I=,tag:94BulkjrTN898EPfPFoK6g==,type:str]
+    version: 3.13.2

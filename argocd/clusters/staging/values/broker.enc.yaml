@@ -1,0 +1,32 @@
+# Broker service overrides for staging, layered onto helm/apps/broker/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/staging/broker.yaml).
+global:
+    environment: staging
+image:
+    # Public image — no registry secret needed.
+    repository: ENC[AES256_GCM,data:y8dWQ/Q=,iv:7zTNkvTc4rV0++7qBc7uocI/SPpPlVGpOxLBBza3LzU=,tag:UY1vH810jEgyjAYa6mxKew==,type:str]
+    tag: "8"
+    pullPolicy: IfNotPresent
+service:
+    port: 6379
+storage: 5Gi
+storageClassName: ""
+resources:
+    requests:
+        cpu: 250m
+        memory: 256Mi
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA4cURoYk85R0RJWXJjNjZy
+            cTFzOWR5eTdBUzBVUkRDdEtPcE1OTjA2UDBrCndXVUhEdVFaemVyOWdhMFdWZHdI
+            SGxTa0JLMU1ZT0dDWUhHT1VNQVFEcTgKLS0tIDBWWWhXZVFLVFZUZkpOR0hhRzlD
+            NHo0ZTdRbStKQUNkbm1wWFJWaDZ3bmcK/SIPf3SJyrl4zsdjt1IOaHbtzDI9AmOZ
+            TKXm9ON1gnzwsOshHTkQJHjAfKMAUkFlwH0ad56uxhbaPZxHh5/s9A==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-25T19:34:47Z"
+    mac: ENC[AES256_GCM,data:bqTdNIKxk/wGsK8XuZ2rP9GlrHsLKe2dnoZE/Oh8QUJVoEfHkeDukEJ47Ln4GzXAxaPMMeOXGfG6qzWan6Rir92aJfLky7l//SkJk2TBrIV0XUZ4wZwePYorj8idgglbaRQnMKfkWSANc0dyoDj2U3AN9tXdpjwa7rWA4QPo63Q=,iv:XGQWLbplnneDIeTYUwS5TUDKE07BUAg7Ujr3z1Prz5c=,tag:mh9wWz533FRwZ5rdRjvKMw==,type:str]
+    version: 3.13.2

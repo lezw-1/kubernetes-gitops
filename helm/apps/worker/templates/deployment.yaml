@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Deployment resource name.
+  name: worker
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  # Single replica — no HA for this app.
+  replicas: 1
+
+  selector:
+    matchLabels:
+      # Must match template.metadata.labels below.
+      app: worker
+
+  template:
+    metadata:
+      labels:
+        # Pod label, matched by the selector above.
+        app: worker
+
+    spec:
+      initContainers:
+        # Blocks pod startup until MongoDB is reachable — the app connects
+        # at import time and crashes if it isn't up yet.
+        - name: wait-for-database
+          image: busybox
+          command:
+            - sh
+            - -c
+            - until nc -z database {{ .Values.database.port }}; do sleep 2; done
+
+        # Blocks pod startup until Redis is reachable — same reason as above.
+        - name: wait-for-broker
+          image: busybox
+          command:
+            - sh
+            - -c
+            - until nc -z broker {{ .Values.broker.port }}; do sleep 2; done
+
+      containers:
+        # LangGraph worker container — a Celery consumer process, not an HTTP server.
+        - name: worker
+
+          # Image repository:tag, sourced from values.image — CI updates the tag on each push.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          # Image pull policy, sourced from values.image.pullPolicy.
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          env:
+            # MongoDB connection string, sourced from values.mongoUrl.
+            - name: MONGO_URL
+              value: {{ .Values.mongoUrl | quote }}
+
+            # Redis connection string, sourced from values.broker.url.
+            - name: REDIS_URL
+              value: {{ .Values.broker.url | quote }}
+
+            # Celery worker pool implementation, sourced from values.pool.
+            - name: CELERY_POOL
+              value: {{ .Values.pool | quote }}
+
+            # Anthropic API key, sourced from the worker-secrets Secret (templates/secret.yaml).
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: worker-secrets
+                  key: ANTHROPIC_API_KEY
+
+          resources:
+            requests:
+              # Minimum CPU reserved for scheduling.
+              cpu: {{ .Values.resources.requests.cpu }}
+
+              # Minimum memory reserved for scheduling.
+              memory: {{ .Values.resources.requests.memory }}
+
+          # Exec probes — no HTTP server to poll; matches the Celery process's own healthcheck.
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - celery -A main inspect ping -d celery@$(hostname)
+            initialDelaySeconds: 60
+            periodSeconds: 600
+
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - celery -A main inspect ping -d celery@$(hostname)
+            initialDelaySeconds: 10
+            periodSeconds: 600

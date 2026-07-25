@@ -9,12 +9,12 @@ gateway:
     hosts:
         # Default: empty disables hostname-based routing (route matches any host) —
         # matches iam's pattern, since this is a subpath API, not the root app.
-        domain: ENC[AES256_GCM,data:yzJbog8Qaw==,iv:JNRCE0mbgEuNPDI3K+hKaLX/JcF/XTq91APzg4PEhCA=,tag:rlgp51W6ruz3TFiK9r/DPw==,type:str]
+        domain: ENC[AES256_GCM,data:CJN/CuO6cw==,iv:vbH8sroCrhb3X/ZjO4cx13uAy7iRwmpxFsRWj+T/EMc=,tag:u7e42G3brNL9Xe8CHEa0zQ==,type:str]
 # Image: container image settings.
 image:
     # Cloudfleet private registry path. SOPS-encrypted — real registry
     # host; decrypt/edit via `sops` rather than by hand.
-    repository: ENC[AES256_GCM,data:7RAzth2flTZ+POMNIMMaezJBEUUYRUQ2n8XvQIRhprjsW8GlZfL/4KY+Sqyfj266yl9MP6seIGb7rpjh8ggA0ue1N9fA6F4=,iv:WEVBl6PRg42hQ5OTAUYHd4ma4Zzjy6ay2+Saw1WhDm0=,tag:ZYGFolOj9DpFkNrlDSSpag==,type:str]
+    repository: ENC[AES256_GCM,data:YlDBRzjYYrACUCCVYTTrzlLVradNd1Cufg0yMrilLWOTK3xphMLsUsEvIJURMIpfmQlXEPy3EWCaYR1heGxfhANSFY9Wq2E=,iv:JpGEJowaCsQESE9h1o2oRfYG5hcFzRQpgwtreRywWtE=,tag:R5ViMki6FHW3i5xX3BeZzQ==,type:str]
     # Image tag — bumped by hand once the source repo publishes a new image (see README).
     tag: prod
     # Allowed values: Always, IfNotPresent, Never
@@ -40,23 +40,26 @@ mongoUrl: mongodb://database:27017
 iam:
     apiHost: http://iam:8080
     subpath: /iam
-# Multiagent: not yet migrated into this repo — point this at a reachable
-# prod multiagent instance once one exists.
-multiagent:
-    url: ""
+# Broker: in-cluster Redis, no authentication (see helm/apps/broker).
+broker:
+    port: 6379
+    url: redis://broker:6379/0
+# Worker: matches the worker app's prod deployment, same namespace.
+worker:
+    url: http://worker:8000
     timeout: 1200
 sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA0RjZhenEybHdqNTZhZmhM
-            SlBMc2w3eXVVcTF5c0lPY1RLYm85amxPY2xvCm4zeXVSUVdZRTRuREgySjk5YklX
-            aG1nMXNCK2hXaVR2MG9VcVUySmhxckkKLS0tIEd6YVdKRTJ6WnQyeHp0YTN0Wnpi
-            OWhBV1Q3V2sxM3k2UEkzdFI0cVloUFEKMjHdKjKV2xdYJJu/T0GfEYRKxl7xCZ+T
-            sqmBXkCe6BUDKgomZvQJRa51/LX0WNTAzKAo7ePVBpJZ0fCTCbTOag==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA3NmNwWFladUNweWkwZzYr
+            dlVBYjMyWlQrcmlOMitqeVN5TlR4Z055ZVVJCjl6UGkxSkkwMGJKYThiSnRUazdo
+            SlVMajhlUzg4WExNREs4M01lbnpsOGcKLS0tIE9takFKM1hpOU13Mnc3NXNGRlp1
+            VERWY3oxc1YxM1drVStCT2FEOW5PZmMKrSRLGsEYes4q+fVeK7eSOxEkbTLKGtLP
+            94oBWJyPzgFSSAP4kwFk4Q/1wmKyiwQriJJ8Dd1J7qPQIGr5wVwmaA==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
-    encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-25T19:13:21Z"
-    mac: ENC[AES256_GCM,data:5BKo5yaB01dtBP6rNhQDkkuEbarGNhy5pN/vJyAZgS3Rn1X07123Ml+28C3LYFn/h4nwlSfmG61OtgPBEGB+h7AyKj0hEKadHW6iw3rDrGeKcwUUInjyxoBGkQPOfAIhi45qe4K4rmpieK5NI+l52gpiVI7uxLGozwxXNoc70aY=,iv:Jf90xY/8RDNPG/yzuRtb8rGe4lRj7wIXy2jHaiCjeN4=,tag:WwturKRwBHRKLyRGmpVXdQ==,type:str]
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-25T19:36:25Z"
+    mac: ENC[AES256_GCM,data:EHL8vG5PRCszxdoMW+d5MAEyv+i1Jmd3Fn9ftm825NLZ3CNItPLYzZVczX/ZUJHIUhOI6TCsPx+Wnt9J/+gROhz1HxQ3diznUTyFnwIutIbyZKYB8mFfdrZLREdNat50vZCIlt+aS0e7v+lnxk+UuTl/KfMR9ZB+rVm155VVZao=,iv:ctcdK6ElQ5IIIpcYaUbGbiMzgGQs5+KPd2womsw34ac=,tag:F5wUwe8kIWRmGeeg8YTNtQ==,type:str]
     version: 3.13.2

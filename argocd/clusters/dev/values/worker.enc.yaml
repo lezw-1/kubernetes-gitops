@@ -1,0 +1,42 @@
+# Worker service overrides for the local cluster, layered onto
+# helm/apps/worker/values.yaml via the SECRETS_FILE env in the sops-helm
+# plugin source (argocd/clusters/dev/worker.yaml). Only the
+# secret.anthropicApiKey leaf field below is SOPS-encrypted — the rest of
+# this file stays plaintext so it's readable in Git diffs.
+global:
+    environment: dev
+image:
+    # Built locally via `nerdctl build -t worker:local ...`.
+    repository: worker
+    tag: local
+    pullPolicy: Never
+database:
+    port: 27017
+mongoUrl: mongodb://database:27017
+broker:
+    port: 6379
+    url: redis://broker:6379/0
+service:
+    port: 8000
+pool: prefork
+secret:
+    anthropicApiKey: ""
+resources:
+    requests:
+        cpu: 250m
+        memory: 512Mi
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBSbmw3b2hVUnlwa2UzNzNW
+            eTJQM2ZFMVJ6Mm1vWkRjK2w0bEQwWk5GeG4wCm56TnBZQzRLZzdYNmF4K0ZMc3hi
+            VGRrV1RyK2RGSVplOTRtMU91WVUzTTQKLS0tIEhxVWFocHYxZXdwYURSeHFFbngx
+            eXJXZHVtNG4yRk12VWFNTGF5NlhiOHMK7sI1kAMBrJo4dJwiGxjRKAMAr56YH3+0
+            33p7V5POI+k/mLqvAvMMK6RUlg/3JmQLs5ufKIbH8qQfGa22wPoSlA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1tnz3fux4w76dzm6swlf09zflxsku0haf0hl6f4g4a89sxs9y0cxs30eq4u
+    encrypted_regex: ^(username|password|anthropicApiKey)$
+    lastmodified: "2026-07-25T19:33:23Z"
+    mac: ENC[AES256_GCM,data:2eLi3D83khkYyX41IeTNuUf/gIfKvBSdlG6Y3bjUfcqEi6ngPAar7pgymV9+/PlxYpOaheWWRWhu76OqaJKM14jQMDena/mWXpYs1Bwetpsdnoeyp2vKTvpu+CKFBazxh1UoJlzm1VgFTgrqxwTtqOprDtlkN7dRXuOvHF/WqZs=,iv:MmQpn1dQEMV6Qr3+TZ+pielOIrj60aUYcjwW7rQa0bo=,tag:fBZh3BRGx6w8jhVKCSxQuQ==,type:str]
+    version: 3.13.2
