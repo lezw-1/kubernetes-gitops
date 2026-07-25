@@ -1,5 +1,6 @@
 # Backlog
 
+- [ ] **Migrate to Cloudfleet's GitHub Actions integration** — replace the manual `cloudfleet auth add-profile`/`cloudfleet clusters kubeconfig` steps in `argocd.yaml` with the native integration: https://cloudfleet.ai/docs/ci-cd-integration/github-actions/
 - [ ] Update `CERT_DOMAIN` in CI/CD to a general value
 - [ ] Unit tests
 - [ ] Regression testing

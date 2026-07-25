@@ -158,6 +158,17 @@ jobs:
           echo "Deleting GatewayClass eg..."
           kubectl delete gatewayclass eg --ignore-not-found
 
+          # cert-manager's admission webhooks gate writes to its own CRs,
+          # including the finalizer removal below. If cert-manager's pod is
+          # already unhealthy for any reason, these configs point at a dead
+          # Service and reject the delete outright. Removing them first
+          # makes the next step safe regardless of cert-manager's health —
+          # they're being torn down anyway once the networking namespace
+          # (where cert-manager runs) is deleted.
+          echo "Deleting cert-manager admission webhook configs..."
+          kubectl delete validatingwebhookconfiguration networking-certs-manager-cert-manager-webhook --ignore-not-found --timeout=60s
+          kubectl delete mutatingwebhookconfiguration networking-certs-manager-cert-manager-webhook --ignore-not-found --timeout=60s
+
           # cert-manager itself runs inside the networking namespace below.
           # Its ACME Challenge/Order CRs carry finalizer.acme.cert-manager.io,
           # which only cert-manager's own controller can clear — same trap
@@ -304,6 +315,17 @@ jobs:
           # Fail immediately if any delete below times out, so a stuck
           # resource surfaces as a failed job instead of finishing silently.
           set -euo pipefail
+
+          # cert-manager's admission webhooks gate writes to its own CRs,
+          # including the finalizer removal below. If cert-manager's pod is
+          # already unhealthy for any reason, these configs point at a dead
+          # Service and reject the delete outright. Removing them first
+          # makes the next step safe regardless of cert-manager's health —
+          # they're being torn down anyway once the networking namespace
+          # (where cert-manager runs) is deleted.
+          echo "Deleting cert-manager admission webhook configs..."
+          kubectl delete validatingwebhookconfiguration networking-certs-manager-cert-manager-webhook --ignore-not-found --timeout=60s
+          kubectl delete mutatingwebhookconfiguration networking-certs-manager-cert-manager-webhook --ignore-not-found --timeout=60s
 
           # cert-manager itself runs inside the networking namespace below.
           # Its ACME Challenge/Order CRs carry finalizer.acme.cert-manager.io,
