@@ -26,10 +26,10 @@ storageClassName: ""
 resources:
     requests:
         cpu: 250m
-        memory: 256Mi
+        memory: 512Mi
     limits:
         cpu: 250m
-        memory: 256Mi
+        memory: 512Mi
 # Migrate: the schema-migration Job's image settings.
 migrate:
     image:
@@ -53,6 +53,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-25T20:43:27Z"
-    mac: ENC[AES256_GCM,data:YlcsxCmTCf1Z5DMeTqh8ConxSJi2BUQyNTi7cBpZvHr3D5JWKOIyLNcRAOhASnYJ5yzttrfZr7yzmsWajvpU6Obi199zDLPu2fQ84EIPZFoBirUPYJI8XTzf+P0BiwPrStuU9j74PMSsCi2tF+wRkKA/KH6jyHbN1dyAydQg918=,iv:h8ySSEovMgz1WBxSOO6Cwwa4uBaHpstDOIHMwEs8C7s=,tag:vGvvglL7Rk73L09ZKODNiQ==,type:str]
+    lastmodified: "2026-07-25T21:18:55Z"
+    mac: ENC[AES256_GCM,data:2Z9RB7bzyLqsrPmh0r9VDYqK88IG5NZUGtrdvBuUctCkRuCTepkDQ2sx97xu0l5Zzt7YfrMD6JatCW6UlpSgL6yvs14/MwInKCxUgGjyvCJxSzYs+AsAciHHNutWv1cd9YTeeyDyZz4IiRiQxVIof+rRcded4Mkq4FcEYDx8p2Y=,iv:d0z4ciaCIauY13ncYlDf8GqRIdTsPEOsKJw8f+j1Lj4=,tag:Zc47GOavrXZg4+9fNH2rQg==,type:str]
     version: 3.13.2

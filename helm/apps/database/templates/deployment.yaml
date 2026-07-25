@@ -67,11 +67,15 @@ spec:
               memory: {{ .Values.resources.limits.memory }}
 
           # Readiness probe: pod removed from the Service until Mongo responds.
+          # timeoutSeconds raised from the 1s default — mongosh's own Node.js
+          # startup can exceed 1s under the CPU limit above, causing spurious
+          # readiness failures even though Mongo itself is healthy.
           readinessProbe:
             exec:
               command: ["mongosh", "--eval", "db.runCommand({ping:1})"]
             initialDelaySeconds: 5
             periodSeconds: 10
+            timeoutSeconds: 5
 
       volumes:
         # Data volume, bound to the PVC created by templates/pvc.yaml.
