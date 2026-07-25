@@ -268,10 +268,12 @@ jobs:
           cloudfleet clusters kubeconfig ${{ secrets.CF_CLUSTER_ID_PROD }}
 
       - name: Delete every prod resource
-        # Applications are deleted explicitly first so Argo CD's controller
-        # (still running at this point) processes each deletion — including
-        # any PreDelete/PostDelete resource hooks — before the argocd
-        # namespace removal below takes the controller down with it.
+        # argocd is deleted first, ahead of the other namespaces, so this
+        # doesn't depend on Argo CD's own controller staying up long enough
+        # to process every Application (including PreDelete/PostDelete
+        # hooks) — trading graceful hook execution for a deletion that can't
+        # get stuck waiting on a controller that's being torn down in the
+        # same operation.
         #
         # Namespace deletion natively cascades to everything inside it
         # (Deployments, Secrets, Argo CD's own install, its Application/
@@ -284,18 +286,21 @@ jobs:
         # Namespaces are deleted one at a time with --timeout, since a
         # namespace can hang in Terminating forever if a resource inside it
         # (e.g. an Application/AppProject CR) has a finalizer that only Argo
-        # CD's own controller can clear — and that controller's pod is being
-        # deleted in this same operation. On timeout, the namespace's status
-        # conditions name exactly what's still blocking it.
+        # CD's own controller can clear — and that controller's pod may
+        # already be gone by the time this runs. On timeout, the namespace's
+        # status conditions name exactly what's still blocking it.
         run: |
-          echo "Deleting all Argo CD Applications..."
-          kubectl delete application -n argocd --all --ignore-not-found
-
-          echo "Waiting for Applications to disappear..."
-          kubectl wait \
-            --for=delete application --all \
-            -n argocd \
-            --timeout=300s || true
+          echo "Deleting namespaces..."
+          for ns in argocd ai-system-prod networking; do
+            echo "Deleting namespace $ns..."
+            if ! kubectl delete namespace "$ns" --ignore-not-found --timeout=300s; then
+              echo "::error::Namespace $ns did not terminate within 300s — status conditions:"
+              kubectl get namespace "$ns" -o jsonpath='{.status.conditions}'
+              echo
+              exit 1
+            fi
+            echo "Namespace $ns deleted."
+          done
 
           # Delete any remaining cluster-scoped resources that Argo CD doesn't own
           kubectl delete clusterissuer selfsigned-prod letsencrypt-prod --ignore-not-found
@@ -303,19 +308,3 @@ jobs:
           kubectl delete clusterrole,clusterrolebinding \
             -l 'app.kubernetes.io/instance in (argocd,networking-certs-manager,networking-gateway-controller)' \
             --ignore-not-found
-
-          echo "Deleting namespaces..."
-          for ns in ai-system-prod networking argocd; do
-            kubectl delete namespace "$ns" --ignore-not-found
-          done
-
-          echo "Waiting for namespaces to terminate..."
-          for ns in ai-system-prod networking argocd; do
-            kubectl wait \
-              --for=delete namespace/"$ns" \
-              --timeout=300s || {
-                echo "::error::Namespace $ns failed to terminate"
-                kubectl get namespace "$ns" -o yaml
-                exit 1
-              }
-          done
