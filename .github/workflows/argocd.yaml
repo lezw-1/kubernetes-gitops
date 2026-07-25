@@ -271,10 +271,18 @@ jobs:
         # Namespace deletion natively cascades to everything inside it
         # (Deployments, Secrets, Argo CD's own install, its Application/
         # AppProject CRs) — no dependency on Argo CD's own cascade/finalizer
-        # mechanism, which none of these Applications opt into. ClusterIssuer
-        # and GatewayClass are cluster-scoped (outside any namespace), so
-        # they're deleted explicitly. --ignore-not-found makes this safe to
-        # rerun and safe on a cluster that was never installed.
+        # mechanism, which none of these Applications opt into.
+        #
+        # ClusterIssuer, GatewayClass, ClusterRole and ClusterRoleBinding are
+        # cluster-scoped (outside any namespace), so namespace deletion never
+        # touches them — they're deleted explicitly. cert-manager and the
+        # gateway controller each register a dozen-plus ClusterRoles/
+        # ClusterRoleBindings that change with every chart bump, so rather
+        # than naming each one (guaranteed to go stale) they're deleted by
+        # the app.kubernetes.io/instance label Helm stamps on every resource
+        # it creates, scoped to exactly the prod Argo CD Application names
+        # known to own cluster-scoped RBAC. --ignore-not-found makes all of
+        # this safe to rerun and safe on a cluster that was never installed.
         #
         # Namespaces are deleted one at a time with --timeout, since a
         # namespace can hang in Terminating forever if a resource inside it
@@ -292,6 +300,11 @@ jobs:
 
           echo "Deleting GatewayClass eg..."
           kubectl delete gatewayclass eg --ignore-not-found
+
+          echo "Deleting cluster-scoped RBAC owned by argocd, networking-certs-manager, networking-gateway-controller..."
+          kubectl delete clusterrole,clusterrolebinding \
+            -l 'app.kubernetes.io/instance in (argocd,networking-certs-manager,networking-gateway-controller)' \
+            --ignore-not-found
 
           for ns in ai-system-prod networking argocd; do
             echo "Deleting namespace $ns..."
