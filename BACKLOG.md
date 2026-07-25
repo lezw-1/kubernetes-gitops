@@ -46,6 +46,10 @@
 
 - [ ] **Check if subpath for IAM is necessary** — `KC_HTTP_RELATIVE_PATH=/iam` is set in `helm/charts/iam/templates/deployment.yaml`; verify whether the gateway routes require this subpath or if it can be removed to simplify the setup
 
+## LLM
+
+- [ ] **`replicas: 0` still provisions a 20Gi PVC** on staging/prod even though no pod runs — `helm/apps/llm/templates/pvc.yaml` (and the guarded `pv.yaml` on clusters without a real StorageClass) isn't gated on `replicas`; consider skipping the PV/PVC entirely when self-hosted inference is disabled, to avoid the idle storage cost.
+
 ## Worker
 
 - [ ] **Add HTTP endpoint for `/chronsorting`** — `api`'s `WORKER_URL` env var points `POST /chronsorting` at the `worker` Service, but the worker image (per `kubernetes-ai-system`) only runs a Celery consumer process today, no HTTP server; the request will fail to connect until upstream adds one (see `kubernetes-ai-system` BACKLOG.md's "Deduplicate `routes.py`/`main.py` structure" item)

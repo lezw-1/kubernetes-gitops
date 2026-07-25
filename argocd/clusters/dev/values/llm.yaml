@@ -1,0 +1,45 @@
+# LLM service overrides for the local cluster, layered onto
+# helm/apps/llm/values.yaml via the $values ref in argocd/clusters/dev/llm.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name, used in resource suffixes.
+  environment: dev
+
+# Replicas: self-hosted inference is enabled on dev.
+replicas: 1
+
+# Image: Ollama server container image settings.
+image:
+  # Public image — no registry secret needed.
+  repository: ollama/ollama
+
+  # Upgrade intentionally by changing this value.
+  tag: latest
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: IfNotPresent
+
+# Model: Ollama model pulled by the init container on startup.
+model: "qwen2.5:7b"
+
+# Service: ClusterIP configuration.
+service:
+  # Ollama listen port.
+  port: 11434
+
+# Storage: dev cluster PVC request size.
+storage: 20Gi
+
+# StorageClassName: no CSI StorageClass wired up for local dev — renders a
+# guarded hostPath PV instead (see helm/apps/llm/templates/pv.yaml).
+storageClassName: ""
+
+# Resources: compute reserved for the Ollama container.
+resources:
+  requests:
+    cpu: "2"
+    memory: 6Gi
+
+# Debug: Ollama server log verbosity.
+debug: "0"

@@ -1,0 +1,71 @@
+# LLM service — self-hosted Ollama, staging environment. Disabled by
+# default (values/llm.enc.yaml sets replicas: 0) — staging calls the
+# Anthropic API directly instead, same as prod.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Application resource name, shown in the Argo CD UI.
+  name: llm-staging
+
+  # Namespace the Application resource itself lives in.
+  namespace: argocd
+
+spec:
+  # Bound to AppProject "default" and its guardrails.
+  project: default
+
+  # Single source, rendered by the sops-helm Config Management Plugin
+  # (argocd/clusters/staging/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
+  # instead of native Helm, since its values file is SOPS-encrypted and
+  # native Helm value files can't decrypt it. Checked out at repo root so
+  # the plugin can read both the chart (helm/apps/llm) and the
+  # values file (argocd/clusters/staging/values/) from one source.
+  sources:
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+      # Branch tracked for this source.
+      targetRevision: staging
+
+      # Repo root — see comment above for why.
+      path: .
+
+      plugin:
+        # Must match a key under configs.cmp.plugins in argocd-cmp.yaml.
+        name: sops-helm
+
+        env:
+          # Path to the llm Helm chart, relative to repo root.
+          - name: CHART_PATH
+            value: helm/apps/llm
+
+          # Env-specific overrides, relative to repo root (SOPS-encrypted —
+          # no leaf fields currently match this file's encrypted_regex, so
+          # the whole file stays plaintext; kept as .enc.yaml for
+          # consistency with every other app on this cluster).
+          - name: SECRETS_FILE
+            value: argocd/clusters/staging/values/llm.enc.yaml
+
+  destination:
+    # Target cluster API server — in-cluster.
+    server: https://kubernetes.default.svc
+
+    # Namespace the llm app is deployed into.
+    namespace: ai-system-staging
+
+  # Fully automated GitOps sync — no manual apply needed.
+  syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
+    syncOptions:
+      # Auto-create the destination namespace.
+      - CreateNamespace=true
+
+    managedNamespaceMetadata:
+      labels:
+        # Required for HTTPRoutes to attach to the shared gateway.
+        team: gateway-1

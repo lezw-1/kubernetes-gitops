@@ -1,0 +1,37 @@
+# LLM service overrides for prod, layered onto helm/apps/llm/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/prod/llm.yaml).
+global:
+    environment: prod
+# Replicas: disabled — prod calls the Anthropic API directly instead of
+# self-hosting Ollama (see helm/apps/worker's secret.anthropicApiKey).
+replicas: 0
+image:
+    # Public image — no registry secret needed.
+    repository: ENC[AES256_GCM,data:iLNCC0O6kOMHOhz2fQ==,iv:zPiCmLdWxrDp/T0WBBasXBfpzFMir/IkrrZe+c4AcQE=,tag:Ij+NcKTtIkPAYjThu28zOQ==,type:str]
+    tag: latest
+    pullPolicy: IfNotPresent
+model: qwen2.5:7b
+service:
+    port: 11434
+storage: 20Gi
+storageClassName: ""
+resources:
+    requests:
+        cpu: "1"
+        memory: 2Gi
+debug: "0"
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBENTVsVGYrY0djU3lGWXJi
+            K05aUjBWL0lxcUV2bnV3eXl2TXBVN1JJdEE0CjBIQ05kQjYrdHVXcGxPQW44cWJo
+            QXAvZ1RwaFcwK3hRMElzbVZWZlpBM2MKLS0tIG1TL0lvWWZOb0ZrMXQxemxSYjho
+            RkxoN3RhVVRXWUJiT0hsRFJyZ0pTVmcKstKmS1pzy6jbj77hewL0XxTUSoJqMRTF
+            YGhVb2OR70kC6IZSb49ScSF0UuFaJtmqSbhH6xHX+5V0WxupWQ4jug==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-25T19:54:17Z"
+    mac: ENC[AES256_GCM,data:CLLvoqy4iSUT/wE8S7H5kNLOuqP+pNymiXqDh2Pmj5UBiwHcu2SnRjJqKt62v/sQwwvhOos2MhzPeYH3oxZB5HvDUtfX9A9MzVjTvZbT0aDLcEoxguS2nzCBMD7ABQOtpLCHv8ifLfe2/DESg+e2ET/Z3HwI/AlMo6bmGl9mEaM=,iv:WKzS9poQALbdeMEbTN67dM0YkM+WSSvnd3ccDg5O2uc=,tag:8N9WQyecYEuuRcdHqKHGfA==,type:str]
+    version: 3.13.2
