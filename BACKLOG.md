@@ -1,25 +1,5 @@
 # Backlog
 
-- [ ] **Migrate to Cloudfleet's GitHub Actions integration** — replace the manual `cloudfleet auth add-profile`/`cloudfleet clusters kubeconfig` steps in `argocd.yaml` with the native integration: https://cloudfleet.ai/docs/ci-cd-integration/github-actions/
-- [ ] Update `CERT_DOMAIN` in CI/CD to a general value
-- [ ] Unit tests
-- [ ] Regression testing
-- [ ] Split project (e.g. agent, monitoring, iam, gateway). gateway deployment is namespace relevant.
-- [ ] Split project (e.g. agent, monitoring, iam, gateway). gateway deployment is namespace relevant.
-- [ ] Name the project to "ai-agent" and create project "agentic ai" with langgraph.
-- [ ] Simple Reflex Agent, Model-Based Reflex Agent, Goal-Based Agent, Utility-Based Agent, Learning Agent, Multi Agent
-- [ ] Reflection Agents: Basic, Reflexion, Language (LATS)
-- [ ] Self-improvement agent: Refelection, Reflexion, ReAct
-- [ ] Build multi-agent-system
-
-## LangGraph Multiagent
-
-- [ ] **Streaming results**: replace polling with SSE or WebSocket for real-time result streaming from `multiagent/` to the frontend
-- [ ] **SerpAPI support**: add SerpAPI as an alternative to DuckDuckGo (currently hard-coded to DDGS); toggle via env var
-- [ ] **Multiagent HPA**: add HorizontalPodAutoscaler to `helm/charts/multiagent/` for auto-scaling under load
-- [ ] **Run history page**: add a dashboard view listing past multiagent runs with prompt, status, result preview
-- [ ] **Prompt injection hardening**: add server-side sanitisation to strip prompt injection patterns before passing to LLM agents
-
 ## Persistent Volumes & Claims
 
 - [ ] **Find a consistent PV/PVC pattern** across `database` and `llm` charts — currently inconsistent:
