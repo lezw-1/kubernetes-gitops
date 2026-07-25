@@ -12,7 +12,7 @@ global:
 gateway:
     hosts:
         # Default: empty disables hostname-based routing (route matches any host).
-        domain: ""
+        domain: ENC[AES256_GCM,data:hlRN1kwRCQ==,iv:8XOGqHaW8vkQTWRXiDwBA01YE/x/hO2wfwlmxO/51lw=,tag:+aht7+VjjqCvt7y11PWxNw==,type:str]
 # Image: container image settings.
 image:
     # Cloudfleet private registry path. SOPS-encrypted — real registry
@@ -49,6 +49,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-24T07:46:33Z"
-    mac: ENC[AES256_GCM,data:cq+xql4F+B1xz+Vap6xICE5AVzc9XgInRnmZOU0LgbwFyvf5b/xBro9wTFHg/wkQPV12/5Jwfyyc4DVC6Dc6TvilaaRdX5dqFhzGJT4jZPxOReFzc8g92vTcy+w6AMQ1n8jgHLN09v4yxwVeJsuw+bFUpHyQrNsXLQBSnTbvV/o=,iv:YTyHmQKKpWm9INfaa2lLyKGiMs3JZV8RYHacpOQmttE=,tag:8u03qEf1F3VhX8FlpuOhTw==,type:str]
+    lastmodified: "2026-07-25T08:50:52Z"
+    mac: ENC[AES256_GCM,data:eEgk0gTpMweN2sropZuvK6BfaMTF6lGxmuuXTpCWnukIeoku+GZL9BuTxEgzTE3bxGvpBjB6Kz2YdluAZ36cF3JnJhif6o3kO5wv8BGVIi126ZK6W1tEEIRazWmgvYEHJObFRQMNZetVy1Qsi4dwDPwiWYm5lBHRSD4KqCVBavk=,iv:i3lwvs3mRNCstCXGPV2I4MjwCCkQb1SNN8B8j3+1Fn0=,tag:op/vpJnQAL4+glhBmFJcEA==,type:str]
     version: 3.13.2
