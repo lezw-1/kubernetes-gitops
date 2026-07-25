@@ -3,7 +3,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Application resource name, shown in the Argo CD UI.
-  name: database-staging
+  name: database
 
   # Namespace the Application resource itself lives in.
   namespace: argocd

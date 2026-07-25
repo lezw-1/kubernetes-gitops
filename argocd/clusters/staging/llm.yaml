@@ -5,7 +5,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Application resource name, shown in the Argo CD UI.
-  name: llm-staging
+  name: llm
 
   # Namespace the Application resource itself lives in.
   namespace: argocd
