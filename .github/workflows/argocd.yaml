@@ -158,6 +158,17 @@ jobs:
           echo "Deleting GatewayClass eg..."
           kubectl delete gatewayclass eg --ignore-not-found
 
+          # cert-manager itself runs inside the networking namespace below.
+          # Its ACME Challenge/Order CRs carry finalizer.acme.cert-manager.io,
+          # which only cert-manager's own controller can clear — same trap
+          # documented below for Argo CD's Application/AppProject finalizers.
+          # Deleting them now, while that controller is still running, lets
+          # it process the finalizer normally instead of leaving the
+          # networking namespace stuck in Terminating forever.
+          echo "Deleting cert-manager ACME Challenge/Order resources..."
+          kubectl delete challenges.acme.cert-manager.io,orders.acme.cert-manager.io \
+            --all -n networking --ignore-not-found --timeout=60s
+
           for ns in ai-system-staging networking argocd; do
             echo "Deleting namespace $ns..."
             if ! kubectl delete namespace "$ns" --ignore-not-found --timeout=180s; then
@@ -293,6 +304,17 @@ jobs:
           # Fail immediately if any delete below times out, so a stuck
           # resource surfaces as a failed job instead of finishing silently.
           set -euo pipefail
+
+          # cert-manager itself runs inside the networking namespace below.
+          # Its ACME Challenge/Order CRs carry finalizer.acme.cert-manager.io,
+          # which only cert-manager's own controller can clear — same trap
+          # documented below for Argo CD's Application/AppProject finalizers.
+          # Deleting them now, while that controller is still running, lets
+          # it process the finalizer normally instead of leaving the
+          # networking namespace stuck in Terminating forever.
+          echo "Deleting cert-manager ACME Challenge/Order resources..."
+          kubectl delete challenges.acme.cert-manager.io,orders.acme.cert-manager.io \
+            --all -n networking --ignore-not-found --timeout=60s
 
           echo "Deleting namespaces..."
           for ns in argocd ai-system-prod networking; do
