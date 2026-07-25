@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   # Deployment resource name.
-  name: platform-api
+  name: api
 
   # Namespace set by the Argo CD Application's destination.
   namespace: {{ .Release.Namespace }}
@@ -14,18 +14,18 @@ spec:
   selector:
     matchLabels:
       # Must match template.metadata.labels below.
-      app: platform-api
+      app: api
 
   template:
     metadata:
       labels:
         # Pod label, matched by the selector above and the Service.
-        app: platform-api
+        app: api
 
     spec:
       containers:
         # Platform API container.
-        - name: platform-api
+        - name: api
 
           # Image repository:tag, sourced from values.image — CI updates the tag on each push.
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

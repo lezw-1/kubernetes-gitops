@@ -3,7 +3,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Application resource name, shown in the Argo CD UI.
-  name: platform-api
+  name: api
 
   # Namespace the Application resource itself lives in.
   namespace: argocd
@@ -12,7 +12,7 @@ spec:
   # Bound to AppProject "default" and its guardrails.
   project: default
 
-  # Multi-source config: the platform-api Helm chart plus a values-only Git source.
+  # Multi-source config: the api Helm chart plus a values-only Git source.
   sources:
     # Platform API Helm chart source.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
@@ -20,13 +20,13 @@ spec:
       # Branch tracked for the chart source.
       targetRevision: dev
 
-      # Path to the platform-api Helm chart.
-      path: helm/apps/platform-api
+      # Path to the api Helm chart.
+      path: helm/apps/api
 
       helm:
         valueFiles:
           # Local-cluster overrides, supplied by the $values Git source referenced below.
-          - $values/argocd/clusters/dev/values/platform-api.yaml
+          - $values/argocd/clusters/dev/values/api.yaml
 
     # Git source providing only values files, referenced via the `values` alias.
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
@@ -41,7 +41,7 @@ spec:
     # Target cluster API server — in-cluster.
     server: https://kubernetes.default.svc
 
-    # Namespace the platform-api app is deployed into.
+    # Namespace the api app is deployed into.
     namespace: ai-system-dev
 
   # Fully automated GitOps sync — no manual apply needed.

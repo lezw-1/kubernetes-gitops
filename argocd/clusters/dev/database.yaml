@@ -41,7 +41,7 @@ spec:
     # Target cluster API server — in-cluster.
     server: https://kubernetes.default.svc
 
-    # Namespace the database app is deployed into — shared with platform-api/iam.
+    # Namespace the database app is deployed into — shared with api/iam.
     namespace: ai-system-dev
 
   # Fully automated GitOps sync — no manual apply needed.

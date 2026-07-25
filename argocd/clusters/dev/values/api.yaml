@@ -1,5 +1,5 @@
 # Platform API service overrides for the local cluster, layered onto
-# apps/platform-api/values.yaml via the $values ref in argocd/clusters/dev/platform-api.yaml.
+# apps/api/values.yaml via the $values ref in argocd/clusters/dev/api.yaml.
 
 # Global: shared across templates.
 global:
@@ -15,8 +15,8 @@ gateway:
 
 # Image: container image settings.
 image:
-  # Built locally via `nerdctl build -t platform-api:local ...`.
-  repository: platform-api
+  # Built locally via `nerdctl build -t api:local ...`.
+  repository: api
 
   # Local image tag.
   tag: local

@@ -2,7 +2,7 @@
 apiVersion: v2
 
 # Chart name.
-name: platform-api
+name: api
 
 # One-line description shown by `helm search`/`helm show chart`.
 description: FastAPI platform gateway — Kubernetes manifests deployed by Argo CD

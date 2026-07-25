@@ -49,18 +49,18 @@
 ## Security
 
 ### Critical
-- [ ] **Disable audience bypass** — `verify_aud: False` in `platform-api/src/auth.py:29` means any Keycloak-issued token (for any client) is accepted; set the correct `audience` value and remove the override
+- [ ] **Disable audience bypass** — `verify_aud: False` in `api/src/auth.py:29` means any Keycloak-issued token (for any client) is accepted; set the correct `audience` value and remove the override
 - [ ] **Replace `admin-cli` + password grant** — `Login.tsx:21-22` uses the Keycloak admin client with the deprecated ROPC flow; create a dedicated app client in Keycloak and switch to Authorization Code + PKCE
 - [ ] **Keycloak `start-dev` in production** — `helm/charts/iam/templates/deployment.yaml:20` runs `start-dev` in all envs; this disables TLS and uses an in-memory H2 DB (state lost on pod restart); switch to `start` with an external DB for prod
 
 ### High
-- [ ] **JWKS cache TTL** — `platform-api/src/auth.py:9` caches JWKS keys forever; add a TTL (e.g. 5 min) and retry on decode failure to handle Keycloak key rotation gracefully
+- [ ] **JWKS cache TTL** — `api/src/auth.py:9` caches JWKS keys forever; add a TTL (e.g. 5 min) and retry on decode failure to handle Keycloak key rotation gracefully
 - [ ] **Keycloak admin credentials in Helm values** — `helm/charts/iam/templates/deployment.yaml:29-31` injects the admin password from plain values (visible in `helm history`); move to a Kubernetes `Secret` and use `valueFrom.secretKeyRef`
-- [ ] **Distinguish auth vs infra errors** — `platform-api/src/auth.py:30` catches all exceptions and returns 401; a Keycloak outage should return 503, not 401
+- [ ] **Distinguish auth vs infra errors** — `api/src/auth.py:30` catches all exceptions and returns 401; a Keycloak outage should return 503, not 401
 
 ### Medium
-- [ ] **Server-side MIME detection for uploads** — `platform-api/src/routes.py:33` checks `file.content_type` from the client header, which is attacker-controlled; use `python-magic` to inspect actual file bytes
-- [ ] **Paginate `/promises`** — `platform-api/src/routes.py:24-27` returns the entire collection unbounded; add `limit`/`skip` parameters with a max page size to prevent memory exhaustion
+- [ ] **Server-side MIME detection for uploads** — `api/src/routes.py:33` checks `file.content_type` from the client header, which is attacker-controlled; use `python-magic` to inspect actual file bytes
+- [ ] **Paginate `/promises`** — `api/src/routes.py:24-27` returns the entire collection unbounded; add `limit`/`skip` parameters with a max page size to prevent memory exhaustion
 - [ ] **CSP headers for token in sessionStorage** — the JWT is stored in `sessionStorage`, accessible to any JS on the page; add strict `Content-Security-Policy: script-src 'self'` headers at the gateway/ingress level
 
 ## Frontend Local Development

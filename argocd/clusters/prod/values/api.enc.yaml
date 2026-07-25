@@ -1,5 +1,5 @@
-# Platform API service overrides for prod, layered onto helm/apps/platform-api/values.yaml
-# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/prod/platform-api.yaml).
+# Platform API service overrides for prod, layered onto helm/apps/api/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/prod/api.yaml).
 # Global: shared across templates.
 global:
     # Deployment environment name, used in hostnames and resource suffixes.
@@ -9,12 +9,12 @@ gateway:
     hosts:
         # Default: empty disables hostname-based routing (route matches any host) —
         # matches iam's pattern, since this is a subpath API, not the root app.
-        domain: ENC[AES256_GCM,data:fPeCv0lOkQ==,iv:9QHZKJbK2EmwldzNUXUDGJc/W8JcVcvJ9ghaK104HBQ=,tag:CYfHLfgWHjmR1F7ij1klFA==,type:str]
+        domain: ENC[AES256_GCM,data:yzJbog8Qaw==,iv:JNRCE0mbgEuNPDI3K+hKaLX/JcF/XTq91APzg4PEhCA=,tag:rlgp51W6ruz3TFiK9r/DPw==,type:str]
 # Image: container image settings.
 image:
     # Cloudfleet private registry path. SOPS-encrypted — real registry
     # host; decrypt/edit via `sops` rather than by hand.
-    repository: ENC[AES256_GCM,data:NA9ZBF/3U1sxfLwZunHkohTFbk57tqPWxF2nIG6LLTZIM7Fo/E38AQ8VnaYK/6+dvz8+UIam+jLpHpQi7uEfHPDumoCe13yxeJDImbksekc=,iv:yYniY9zjgdqnAkFfhRXJjLR9P22kc/29YYLVgidsQuw=,tag:sxVRq8xksVtQD/r/ADJ2xQ==,type:str]
+    repository: ENC[AES256_GCM,data:7RAzth2flTZ+POMNIMMaezJBEUUYRUQ2n8XvQIRhprjsW8GlZfL/4KY+Sqyfj266yl9MP6seIGb7rpjh8ggA0ue1N9fA6F4=,iv:WEVBl6PRg42hQ5OTAUYHd4ma4Zzjy6ay2+Saw1WhDm0=,tag:ZYGFolOj9DpFkNrlDSSpag==,type:str]
     # Image tag — bumped by hand once the source repo publishes a new image (see README).
     tag: prod
     # Allowed values: Always, IfNotPresent, Never
@@ -49,14 +49,14 @@ sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBpVW9XNWhVYWZQZVpIeUU1
-            R21vT1crSXlUeEprRjV4ZWVhRDVpMld0NHg0Clpkd2l3d1RNZzhSRHZmaEc2OUFZ
-            UWMxbm1NZFljQUUyZndmL0lSQlR6aDAKLS0tIGlpU0VBUEFUMnIzQjVVT0Z4N1hU
-            L2RqSVA1eFpPMk0wU0dNVmVSMytleUkKqJv4iBgoAe1vd2QC1hTAbAwq3+fSHRBL
-            sEUce8x9X+atjIeXTdgru/wHeNo9C3JYOAaStxTB/PMYmZzQZMKXkw==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA0RjZhenEybHdqNTZhZmhM
+            SlBMc2w3eXVVcTF5c0lPY1RLYm85amxPY2xvCm4zeXVSUVdZRTRuREgySjk5YklX
+            aG1nMXNCK2hXaVR2MG9VcVUySmhxckkKLS0tIEd6YVdKRTJ6WnQyeHp0YTN0Wnpi
+            OWhBV1Q3V2sxM3k2UEkzdFI0cVloUFEKMjHdKjKV2xdYJJu/T0GfEYRKxl7xCZ+T
+            sqmBXkCe6BUDKgomZvQJRa51/LX0WNTAzKAo7ePVBpJZ0fCTCbTOag==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
     encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-25T12:08:02Z"
-    mac: ENC[AES256_GCM,data:tmDTCvp0MZu2/4WuwhbCmKPfOgompnHKlhrjeoqtfpwi29Si5iPl+qORv69UqXceRGcvd8GAhwWYw6jDt8W8/Maaa4xf8zn/Je9g5htjaCY7FFmS2TcNLm26cHDrPFhIAX9iPsrI4HU8xkk8k2HQjzuq9muZO7Y01kAv2+ASJNM=,iv:A1tmkC4f+KwK9ZKWrrHEiqwj+VrauLVaFYYgfVkcR+o=,tag:MdDCS5xKS0pC99SlSJr/Pg==,type:str]
+    lastmodified: "2026-07-25T19:13:21Z"
+    mac: ENC[AES256_GCM,data:5BKo5yaB01dtBP6rNhQDkkuEbarGNhy5pN/vJyAZgS3Rn1X07123Ml+28C3LYFn/h4nwlSfmG61OtgPBEGB+h7AyKj0hEKadHW6iw3rDrGeKcwUUInjyxoBGkQPOfAIhi45qe4K4rmpieK5NI+l52gpiVI7uxLGozwxXNoc70aY=,iv:Jf90xY/8RDNPG/yzuRtb8rGe4lRj7wIXy2jHaiCjeN4=,tag:WwturKRwBHRKLyRGmpVXdQ==,type:str]
     version: 3.13.2

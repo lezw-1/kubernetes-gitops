@@ -4,7 +4,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   # HPA resource name.
-  name: platform-api
+  name: api
 
   # Namespace set by the Argo CD Application's destination.
   namespace: {{ .Release.Namespace }}
@@ -14,7 +14,7 @@ spec:
     # Must match the Deployment's apiVersion/kind/name to be scaled.
     apiVersion: apps/v1
     kind: Deployment
-    name: platform-api
+    name: api
 
   # Minimum pod count, sourced from values.hpa.minReplicas.
   minReplicas: {{ .Values.hpa.minReplicas }}

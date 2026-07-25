@@ -23,7 +23,7 @@ Three independent clusters, each with its own Argo CD install:
 - **Frontend (`helm/apps/frontend`)** — React dashboard Helm chart: Deployment, Service, HPA, HTTPRoute.
 - **IAM (`helm/apps/iam`)** — Keycloak-based authentication and token issuance: Deployment, Service, HPA, HTTPRoute, plus realm/client/user Secrets and a provisioning Job, gated by `secretsProvisioning.enabled` (on for dev, off for staging/prod). On dev, rendered via the `sops-helm` CMP so credentials stay SOPS-encrypted in Git.
 - **Networking platform (`helm/platform/networking`)** — shared namespace, cert-manager, Envoy Gateway controller/class, and the cluster Gateway (TLS Certificate/ClusterIssuer, health-check HTTPRoute).
-- **Platform API (`helm/apps/platform-api`)** — FastAPI gateway Helm chart: Deployment, Service, HPA, HTTPRoute (routes `/api`, backed by MongoDB and the `iam`/multiagent services). Source lives in `kubernetes-platform-api`. The multiagent service isn't migrated into this repo yet, so `multiagent.url` must be pointed at wherever it currently runs.
+- **Platform API (`helm/apps/api`)** — FastAPI gateway Helm chart: Deployment, Service, HPA, HTTPRoute (routes `/api`, backed by MongoDB and the `iam`/multiagent services). Source lives in `kubernetes-api`. The multiagent service isn't migrated into this repo yet, so `multiagent.url` must be pointed at wherever it currently runs.
 
 ## Prerequisites
 

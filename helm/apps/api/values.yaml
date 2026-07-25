@@ -1,4 +1,4 @@
-# Default values — overridden per environment via argocd/clusters/<env>/values/platform-api.yaml.
+# Default values — overridden per environment via argocd/clusters/<env>/values/api.yaml.
 
 # Global: shared across templates.
 global:

@@ -1,9 +1,9 @@
-# Platform API service — FastAPI gateway backed by MongoDB and Keycloak, staging environment.
+# Platform API service — FastAPI gateway backed by MongoDB and Keycloak, prod environment.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   # Application resource name, shown in the Argo CD UI.
-  name: platform-api-staging
+  name: api-prod
 
   # Namespace the Application resource itself lives in.
   namespace: argocd
@@ -13,16 +13,16 @@ spec:
   project: default
 
   # Single source, rendered by the sops-helm Config Management Plugin
-  # (argocd/clusters/staging/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
+  # (argocd/clusters/prod/values/argocd-cmp.yaml: configs.cmp.plugins.sops-helm)
   # instead of native Helm, since its values file is SOPS-encrypted and
   # native Helm value files can't decrypt it. Checked out at repo root so
-  # the plugin can read both the chart (helm/apps/platform-api) and the
-  # values file (argocd/clusters/staging/values/) from one source.
+  # the plugin can read both the chart (helm/apps/api) and the
+  # values file (argocd/clusters/prod/values/) from one source.
   sources:
     - repoURL: https://github.com/lezw-1/kubernetes-gitops
 
       # Branch tracked for this source.
-      targetRevision: staging
+      targetRevision: prod
 
       # Repo root — see comment above for why.
       path: .
@@ -32,22 +32,22 @@ spec:
         name: sops-helm
 
         env:
-          # Path to the platform-api Helm chart, relative to repo root.
+          # Path to the api Helm chart, relative to repo root.
           - name: CHART_PATH
-            value: helm/apps/platform-api
+            value: helm/apps/api
 
-          # Env-specific overrides, relative to repo root (SOPS-encrypted —
+          # Prod-cluster overrides, relative to repo root (SOPS-encrypted —
           # only the repository leaf field; the rest stays plaintext —
           # decrypted by the plugin before rendering).
           - name: SECRETS_FILE
-            value: argocd/clusters/staging/values/platform-api.enc.yaml
+            value: argocd/clusters/prod/values/api.enc.yaml
 
   destination:
     # Target cluster API server — in-cluster.
     server: https://kubernetes.default.svc
 
-    # Namespace the platform-api app is deployed into.
-    namespace: ai-system-staging
+    # Namespace the api app is deployed into.
+    namespace: ai-system-prod
 
   # Fully automated GitOps sync — no manual apply needed.
   syncPolicy:
