@@ -60,7 +60,7 @@
 
 ## Networking
 
-- [ ] **Refactor per-app hostname config** — `gateway.hosts.domain` is duplicated in every app's values file (`helm/apps/frontend`, `helm/apps/iam`) instead of being derived from the shared `networking` gateway singleton, which already holds the real domain (`argocd/clusters/*/values/networking.enc.yaml`). Right now prod's `frontend.enc.yaml`/`iam.enc.yaml` and staging's `iam.enc.yaml` still have `domain: ""`, which disables hostname-based routing (`hostnames`/`sectionName: https` are skipped in `helm/apps/*/templates/httproute.yaml`), so those HTTPRoutes match any Host header instead of only their intended one. Staging's `frontend.enc.yaml` was fixed manually as a stopgap. Consider having app HTTPRoutes read the domain from one shared source instead of requiring every app+env combo to set it correctly.
+- [ ] **Refactor per-app hostname config** — `gateway.hosts.domain` is duplicated in every app's values file (`helm/apps/frontend`, `helm/apps/iam`) instead of being derived from the shared `networking` gateway singleton, which already holds the real domain (`argocd/clusters/*/values/networking.enc.yaml`). Right now prod's `iam.enc.yaml` and staging's `iam.enc.yaml` still have `domain: ""`, which disables hostname-based routing (`hostnames`/`sectionName: https` are skipped in `helm/apps/*/templates/httproute.yaml`), so those HTTPRoutes match any Host header instead of only their intended one. Both envs' `frontend.enc.yaml` were fixed manually as a stopgap. Consider having app HTTPRoutes read the domain from one shared source instead of requiring every app+env combo to set it correctly.
 
 ## IAM
 
