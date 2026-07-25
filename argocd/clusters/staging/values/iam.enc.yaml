@@ -11,7 +11,7 @@ global:
 gateway:
     hosts:
         # Default: empty disables hostname-based routing (route matches any host).
-        domain: ""
+        domain: ENC[AES256_GCM,data:SI9XQn9lQQ==,iv:idIYD1YIXLVPF/cz8dxAjcwbxOijqytHmXwwcnxZ718=,tag:sHfus9zFIaQCYgiNFgNxwA==,type:str]
 # Image: container image settings.
 image:
     # Upgrade intentionally by changing this value — third-party image, not built by this repo's CI.
@@ -131,6 +131,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email)$
-    lastmodified: "2026-07-24T08:57:18Z"
-    mac: ENC[AES256_GCM,data:sEHTjfJ8ZFvGe4kw1ZuFX+LPD+nZvwsQQ7bsSZohoweHCjulmYSkqVujF3kd29xMi99p4gOFh0Gn9CVu80AT7zcXv+ICBB/Ii8QAOoFpQdUDGaTAcAIwKqAnJk/4GioE8WKYEZFs2kFvbrOXzhccNnQMHkNU1TWoCdLpdycy63c=,iv:l1fKjqsAGdhSBJblF8f2VM5iJnHa0UZ2MmDMcCObWuE=,tag:3THPx1aQ8TeO9k2bqebDCw==,type:str]
+    lastmodified: "2026-07-25T09:26:56Z"
+    mac: ENC[AES256_GCM,data:QuQsOxNkqOzg/V+R3UAo2jawnYML9HAuciu8HVHlqEYe57vlFaNpMkSXrlAADE//X8OxkadwsiT9RIqaTtsXSWsUDJd+zaK41o34+UGGeK0db9OmnR1/YZmVxj3Owxe9xgXP9TBq3xRD9BEiinrvAwgkk+NzHiOOxB5ErHmhNFQ=,iv:go3JFAfWVhuGhVoxWPzGkWj2rvhLIMbCZa+te1YyCho=,tag:fxHq3UowS0NxVu3EH0Gisw==,type:str]
     version: 3.13.2
