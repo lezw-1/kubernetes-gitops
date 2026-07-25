@@ -1,0 +1,64 @@
+# Platform API service overrides for prod, layered onto helm/apps/platform-api/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/prod/platform-api.yaml).
+# Global: shared across templates.
+global:
+    # Deployment environment name, used in hostnames and resource suffixes.
+    environment: prod
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+    hosts:
+        # Default: empty disables hostname-based routing (route matches any host) —
+        # matches iam's pattern, since this is a subpath API, not the root app.
+        domain: ""
+# Image: container image settings.
+image:
+    # Cloudfleet private registry path. SOPS-encrypted — real registry
+    # host; decrypt/edit via `sops` rather than by hand.
+    repository: ENC[AES256_GCM,data:Mh+ocgvf+ydM/COVnzfxuRLs2iX4buSAXPamf+JnNUWOokXAi+0vQvsfGQoZjW9G+GlaVJqTsdKeMxSoetOKkOi4Fx68GByRNw/UpLOb0jw=,iv:o6klbozWrcuS5udQhQ3Ix/DJ2SCdqXeFProsa09hjXg=,tag:uTCKExl9tzywYWSkALFoJQ==,type:str]
+    # Image tag — bumped by hand once the source repo publishes a new image (see README).
+    tag: prod
+    # Allowed values: Always, IfNotPresent, Never
+    # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
+    pullPolicy: Always
+# Service: ClusterIP configuration.
+service:
+    # FastAPI/uvicorn listen port.
+    port: 8000
+# HPA: horizontal pod autoscaler.
+hpa:
+    # Enabled in prod to exercise autoscaling behavior.
+    enabled: true
+    # Minimum pod count.
+    minReplicas: 1
+    # Maximum pod count.
+    maxReplicas: 5
+    # Target average CPU utilization percentage for scaling.
+    targetCPUUtilization: 70
+# MongoUrl: MongoDB is not yet migrated into this repo — point this at a
+# reachable prod MongoDB instance once one exists. SOPS-encrypt if it
+# carries credentials.
+mongoUrl: ""
+# Iam: matches the iam app's prod deployment, same namespace.
+iam:
+    apiHost: http://iam:8080
+    subpath: /iam
+# Multiagent: not yet migrated into this repo — point this at a reachable
+# prod multiagent instance once one exists.
+multiagent:
+    url: ""
+    timeout: 1200
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWUjFaWHdsbG9BS01WL2Yw
+            cWdoWVdZQlNPNExxNDV3cEhuUEZSMGZPbUYwCk9yeGhsR0tmMnZEMjVBUWY2S3VN
+            VVRoSzFUN3YwVHpBbkhEcS9DYnVrL1UKLS0tIGM4bzI5U1dBOWdiZXVYY2NEZnZx
+            WHFaaldwTGVuS2hJejRuV3Btd2NIV3MKid0m6nq84Q7wY+ka9yRmyZZMPoLfLNi0
+            ZuDOg0v1hBoLZ+V5b8/ZfyrAfIEqjSRv3vHxgN2/S3I838J3ie7qgw==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
+    encrypted_regex: ^(username|password|domain|email|repository)$
+    lastmodified: "2026-07-25T11:06:53Z"
+    mac: ENC[AES256_GCM,data:3omCibPqIh9s8LJbIuK5RSrqhnFXknlDRjwiVWa1xOqW2+7S9cypSF5sXTMuGXMnrfBkR05Wgn9YNoWUPPBtN1IBx08Q4G1RtympOYtyhyjlwWEY/O7lh2wQ4BZ+vl5je6jr7K+LJM6QMOcVsf/iS7EksCMaUq5RmZ/gsaCDwsM=,iv:mM3mu7aO2Gd9flkgdbqSKAciksMPBU4dloTvv0GhdR8=,tag:SRHWBzglBiSO+BaMzUPNeA==,type:str]
+    version: 3.13.2
