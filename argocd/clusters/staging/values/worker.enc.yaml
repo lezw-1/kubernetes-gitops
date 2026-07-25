@@ -6,11 +6,13 @@
 global:
     environment: staging
 image:
-    # Not yet migrated into this repo's CI — worker's source still lives
-    # only in kubernetes-ai-system. Point this at a real published image
-    # once it's split out and built, like kubernetes-api was.
-    repository: ""
-    tag: ""
+    # Cloudfleet private registry path. SOPS-encrypted — real registry
+    # host; decrypt/edit via `sops` rather than by hand.
+    repository: ENC[AES256_GCM,data:cKhDYpjl6uz+JrRHsAKnR68eMkIe2RYhvHpS39cfzcMtd0nGLDgRFndS/jr+2qpWGt8qY0wwFAblLGiVnzonAobRKygFn6ZFd+0=,iv:lIZxlBU+TKnEbaAMmYnGXoxJqHhCceHORyoheETOAkM=,tag:amGN9CZDjXHcO/gAIx91eQ==,type:str]
+    # Image tag — bumped by hand once the source repo publishes a new image (see README).
+    tag: staging
+    # Allowed values: Always, IfNotPresent, Never
+    # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
     pullPolicy: Always
 database:
     port: 27017
@@ -31,14 +33,14 @@ sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBWMkgrZkJHcCtlSjhTeDZr
-            aHZhU3ZGZnAzRjI1c1hjQmkxeEViS1NWcmtBCjljditPSk1wOVZnS1ZLazB4WUZo
-            TkhpdktORS9OUHpZOXpVZVZhdDVDS0kKLS0tIFNxMC93Yi9xWThhWndXRzF1elEw
-            WEdRZFdMR3JFVS9RRjNPb1diM2w5WHMK6pNVFjwwj908Up3QTTYQPKx81UhBaLaV
-            +qGLSdsX0fWbsnTZerCiBgK81AKInpJ6Hol8IdIbrPBuvszr2sG08w==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB0Z20yajRoRnoyWWNOb3ha
+            L1R1S1hESGxzVy90b20xL3FGMjlyWVlGSmhNCmFXcE9majdXZFRiTnEyYm93UGRa
+            OFJSdW5wNFNFOVQzTVJxN2p4NXFBbWcKLS0tIFJKanpVUGdYU3RHWW5FUmVXZ1VD
+            bFZ6bzYvczB0VTFVcWFLT254cFRXaXMKdmSlgYoMirw+VLA2tMG6P7xzfJK0kUZx
+            xbdNXPiz2gi0KP3phEjRMo4M3HRPNYkyyW9yASdkwUbzp5GccA2hrg==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
-    lastmodified: "2026-07-25T19:35:00Z"
-    mac: ENC[AES256_GCM,data:TRfsbwk0XcugKs/PnOB+NZ4prxKUkkk4S+RkDKaU8B+A3BnW5031+7gkT+nAXx9AGFMXetk9o5+ayLEmkRMkb4s//4DpEkk0nlwdyJ+MSy0iZ2fj+dyfF6UAKqXChBQ+MM6ki7BV0528fOlqAjpLsy4ok0otmMvhjhiPwlNRU8g=,iv:mg2diKy7MjaBt1mxNtweuXP9RR74Et1LTsrnFDkq/MI=,tag:N064sBQlzfdTqBAxecfWxQ==,type:str]
+    lastmodified: "2026-07-25T20:07:14Z"
+    mac: ENC[AES256_GCM,data:V/gF9+OFRztmL80bZhI7fffUWH9UJhgdd4vytPreB6y5LxZPsp+QxHEkOYBrRtfXd/S3DAWgXKnn48gNAZ4K4pJ1WBlTcXf7lnola1pnHQ/N6xJLtvKCA/swfMI24EEykGND3aufPclQ2jH/aBprA3kspGLF347BIBxSB6XcjH4=,iv:wY+AoKneWMBWwYYt6SIMZYOJBN+jvAWGpy3mBEc54cE=,tag:LVfWm6pmkP/krem8SEDeuQ==,type:str]
     version: 3.13.2
