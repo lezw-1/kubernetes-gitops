@@ -1,0 +1,55 @@
+# Database overrides for staging, layered onto helm/apps/database/values.yaml
+# via the SECRETS_FILE env in the sops-helm plugin source (argocd/clusters/staging/database.yaml).
+#
+# repository (migrate job image) below is SOPS-encrypted (real Cloudfleet
+# registry host) — only that leaf field; the rest of this file stays
+# plaintext so it's readable in Git diffs.
+# Global: shared across templates.
+global:
+    environment: staging
+# Image: MongoDB server container image settings.
+image:
+    # Public image — no registry secret needed.
+    repository: ENC[AES256_GCM,data:HaO3yb4=,iv:7BDBIAIWg4Uv0cJ2xLh6xlifqd9m2FbF6AKaukxO7oM=,tag:qrsxA5qQOUJb/ux637WOLw==,type:str]
+    tag: "8"
+    # Allowed values: Always, IfNotPresent, Never
+    pullPolicy: IfNotPresent
+# Service: ClusterIP configuration.
+service:
+    port: 27017
+# Storage: staging cluster PVC request size.
+storage: 10Gi
+# StorageClassName: no CSI StorageClass wired up yet for staging — renders a
+# guarded hostPath PV instead (see helm/apps/database/templates/pv.yaml).
+storageClassName: ""
+# Resources: compute reserved for the MongoDB container.
+resources:
+    requests:
+        cpu: 500m
+        memory: 512Mi
+# Migrate: the schema-migration Job's image settings.
+migrate:
+    image:
+        # Cloudfleet private registry path. SOPS-encrypted — real registry
+        # host; decrypt/edit via `sops` rather than by hand.
+        repository: ENC[AES256_GCM,data:boXADs2BzpvvnCSmGlrjpo4x/JowXQbZRZ+8/YIzD+J8l+oSWA76kK+VpRHICCKP5Iw/16rzybIrDRScWHR19muX5nRqUEMcv8T8TDu6vFlTrAcj,iv:GzEDdIw1dGOKlxf6NRi950FDEHXiENKMIv4PLekNNko=,tag:t97+SFr6eGsK0LTZA+Flww==,type:str]
+        # Image tag — bumped by hand once the source repo publishes an image (see README).
+        tag: staging
+        # Allowed values: Always, IfNotPresent, Never
+        # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
+        pullPolicy: Always
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBJQnFHNGpWRGZtRm9ldjAw
+            YUhmRHRwbjJmeVc2eTNCcjcxRjFWRmtyYUJvCmM4Ym1ob3dVWkhieFNiREc2bThy
+            ankwUEhxMXlmM0hYVWJLN1dVKzVrR2sKLS0tIGltSEp3Q0hqR1Vnb04ySkdLL1Jq
+            UXBlbEFieGZEdTRyQWVORENOenNJUkkK9nAJQcLkDBoov5+lB1l4ieHMjuOsAr6q
+            LkgTVrxSdd/OZ9jkgYeQ15IHiJ/gyVuEWKQZc0SIWKswcQmejuUhMQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository)$
+    lastmodified: "2026-07-25T11:54:08Z"
+    mac: ENC[AES256_GCM,data:2RfSsRTLV5TEOKRXi1lCnDOXqaRV64/+aDZlojcDTRnGEsqNsbAKYGn3zRpa8JJm7+96B2tUIHSIaLLR7QkQOCLBfKPkY74gJN53RGSq7vyDZYCTK4UpFaEoHavJS0epWl/cDvygQ3BzaeL/gWh7IW3EoV1y3aKwQU1b28x9ndg=,iv:IDifhUSG4rH5B0n4pcJdRvX1GU+tdsgEmpNcOMR9qoI=,tag:pRTsAe4fmCtDVq8HmH+u+w==,type:str]
+    version: 3.13.2

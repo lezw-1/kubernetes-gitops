@@ -19,10 +19,11 @@ Three independent clusters, each with its own Argo CD install:
 - **App-of-apps, staging (`argocd/clusters/staging/`)** — one file per Application for the staging cluster, plus `values/` for this cluster's Helm values overrides.
 - **App-of-apps, prod (`argocd/clusters/prod/`)** — one file per Application for the prod cluster, plus `values/` for this cluster's Helm values overrides.
 - **Bootstrap (`argocd/bootstrap/`)** — `root.yaml`, `install.yaml`: the one-time install manifests shared by all three clusters, applied with `__ENV__`/`__DIR__` substituted by `argocd/clusters/dev/bootstrap.sh` (dev) or `.github/workflows/argocd.yaml` (staging, prod).
+- **Database (`helm/apps/database`)** — self-hosted MongoDB 8, no authentication: Deployment, Service, PV/PVC, and a post-install/post-upgrade migration Job. Migration job source lives in `kubernetes-database-migrate`.
 - **Frontend (`helm/apps/frontend`)** — React dashboard Helm chart: Deployment, Service, HPA, HTTPRoute.
 - **IAM (`helm/apps/iam`)** — Keycloak-based authentication and token issuance: Deployment, Service, HPA, HTTPRoute, plus realm/client/user Secrets and a provisioning Job, gated by `secretsProvisioning.enabled` (on for dev, off for staging/prod). On dev, rendered via the `sops-helm` CMP so credentials stay SOPS-encrypted in Git.
 - **Networking platform (`helm/platform/networking`)** — shared namespace, cert-manager, Envoy Gateway controller/class, and the cluster Gateway (TLS Certificate/ClusterIssuer, health-check HTTPRoute).
-- **Platform API (`helm/apps/platform-api`)** — FastAPI gateway Helm chart: Deployment, Service, HPA, HTTPRoute (routes `/api`, backed by MongoDB and the `iam`/multiagent services). Source lives in `kubernetes-platform-api`. MongoDB and the multiagent service aren't migrated into this repo yet, so `mongoUrl`/`multiagent.url` must be pointed at wherever those currently run.
+- **Platform API (`helm/apps/platform-api`)** — FastAPI gateway Helm chart: Deployment, Service, HPA, HTTPRoute (routes `/api`, backed by MongoDB and the `iam`/multiagent services). Source lives in `kubernetes-platform-api`. The multiagent service isn't migrated into this repo yet, so `multiagent.url` must be pointed at wherever it currently runs.
 
 ## Prerequisites
 

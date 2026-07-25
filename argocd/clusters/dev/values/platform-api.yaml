@@ -44,10 +44,8 @@ hpa:
   # Target average CPU utilization percentage for scaling.
   targetCPUUtilization: 70
 
-# MongoUrl: MongoDB is not yet migrated into this repo — point this at a
-# local/dev MongoDB instance (e.g. one run alongside the cluster via nerdctl,
-# or the still-running kubernetes-ai-system dev deployment).
-mongoUrl: ""
+# MongoUrl: in-cluster MongoDB, no authentication (see helm/apps/database).
+mongoUrl: "mongodb://database:27017"
 
 # Iam: matches the iam app's dev deployment, same namespace.
 iam:

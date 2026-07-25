@@ -18,7 +18,7 @@ gateway:
 image:
     # Cloudfleet private registry path. SOPS-encrypted — real registry
     # host; decrypt/edit via `sops` rather than by hand.
-    repository: ENC[AES256_GCM,data:vFSd33YvZnxY+vnyqQ7lqQNPPn+na2k0hNdr2iOxoKDSCnesWZlcCuL+D+kbBB/O0+LS+PHyWEIzZvcfyFa+xpVyIde/OVZNUAU2nxXfvvI=,iv:ZdYW0QMgk1dbughuKFRL7C2uE30aZarKiOgR9qkBsEc=,tag:xuPOanIV8Q0yqbRxYC1Clw==,type:str]
+    repository: ENC[AES256_GCM,data:INesx9ZXMdoBctXvTC2y0xk1404ohoDSd5P1829nwuz146JpvfCRUcYPvPGMe4Etou1xh40eu6U4osZIONeiwYSQVlfEfKCtjOs7snVw7cw=,iv:TxfBx2Pwfesd5qyjp8+kexgha8AEFIf/SWUrmlA+OAU=,tag:FotftUnWhY3WIgNOx2miJg==,type:str]
     # Image tag — bumped by hand once the source repo publishes a new image (see README).
     tag: staging
     # Allowed values: Always, IfNotPresent, Never
@@ -38,10 +38,8 @@ hpa:
     maxReplicas: 5
     # Target average CPU utilization percentage for scaling.
     targetCPUUtilization: 70
-# MongoUrl: MongoDB is not yet migrated into this repo — point this at a
-# reachable staging MongoDB instance once one exists. SOPS-encrypt if it
-# carries credentials.
-mongoUrl: ""
+# MongoUrl: in-cluster MongoDB, no authentication (see helm/apps/database).
+mongoUrl: mongodb://database:27017
 # Iam: matches the iam app's staging deployment, same namespace.
 iam:
     apiHost: http://iam:8080
@@ -55,14 +53,14 @@ sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBKZVA2b2NWcmkxVEVRNmtP
-            QmljRGNJZzd0OU8xUVlkRnJldkhnNHJ6TmtFCk45WFJpQW9ZU3FRUnF3Z2NnOWp0
-            WEQyWUpsVXV3NGJNVnVWZzYzTE1NQlkKLS0tIFJZSWZVMUIzUm91MUZ1eTlBeEVF
-            OFZzY3ZRam1KTlFJN01jeVlXZU05aDgKlj5qqpi05f7Jg8+c2Snksuc0XsD6Pbon
-            mvltsc5HQb01SOIQpS9G4HRBdtoToLGW0HuRB5aC/6FNoqknz24eLA==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBkYTN5anFHdVNlNzFHODRU
+            WVlYWE1YS3NBbVVzM0ExMGlraGVVR2Z0alhFCmthME85TFRhUnNoWHJnQVZqTWFK
+            S0M5anRBdW4yYUxHODJDcXpEWW9MYVkKLS0tIFZaNmdNZnlwZ29WMFpZSnRSOW5l
+            K2UyZU5KZ0dwSE96R0xiUGRDNG9meGcKveGUB9DnhvzLYYHRbB49CIz/Z2f7xQ50
+            nwoLwqgUS9PA6wZHcglqDLuF5okW89itKFocqjGB9+L6KCbqoEVmHA==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-25T11:06:53Z"
-    mac: ENC[AES256_GCM,data:4hiYdnJ306hid0hLt7r1F0DpQpqroKtXSPyyl6mh5Iaynxi7YP4KTKBzNRPaWtL2qfOxobmupxAgQaYaUz6kU88xHTecoZO91FP5dTfqapJy5wBL7nTZHqMK4ge8JVX6rE0+kH7uZnWZ53nHwh1H8UsMNIzAhs8T16hx07vMyws=,iv:aZbi9rwh2vb5O5bRuFmkegSSlhKxFTRVP6GXbPtbwpw=,tag:zcQNTEcfGs7jH/kcSjaQyg==,type:str]
+    lastmodified: "2026-07-25T11:54:08Z"
+    mac: ENC[AES256_GCM,data:MggiMUlHWYhBPLdqHbn9a43lAhqrkoxbm+QrnlTE+0gM6hRrwBR0jqB1sjy9xZ/bgcbyNsCSDorTY+GmdocIznKDiyL3qu/C/1tckQCB6evv1AXugFNDQHe5KXcich3N+oVPtt01yvUKALyTBLC3i2Y19LOjU+qMkSUygYO6AJM=,iv:o+Y45uOralaGaiy+gpVn6Zr+phsKZvTeYPu7xe4IP5U=,tag:4M8H2TGj8I28JMDETp/WLQ==,type:str]
     version: 3.13.2

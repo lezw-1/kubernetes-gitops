@@ -1,0 +1,46 @@
+# One-shot migration Job — applies pymongo schema/index migrations to the
+# agent/multiagent databases on every install/upgrade. Source lives in
+# kubernetes-database-migrate.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: database-migrate
+  namespace: {{ .Release.Namespace }}
+
+  annotations:
+    # Runs after the database Deployment/Service are created or updated.
+    helm.sh/hook: post-install,post-upgrade
+
+    # Replaces any previous run's Job before creating the new one — Jobs are immutable.
+    helm.sh/hook-delete-policy: before-hook-creation
+
+spec:
+  # Job resource cleans itself up 5 minutes after finishing.
+  ttlSecondsAfterFinished: 300
+
+  template:
+    spec:
+      restartPolicy: OnFailure
+
+      initContainers:
+        # Blocks until the database Service is accepting connections.
+        - name: wait-for-database
+          image: busybox
+          command:
+            - sh
+            - -c
+            - until nc -z database {{ .Values.service.port }}; do sleep 2; done
+
+      containers:
+        - name: migrate
+
+          # Image repository:tag, sourced from values.migrate.image.
+          image: "{{ .Values.migrate.image.repository }}:{{ .Values.migrate.image.tag }}"
+
+          # Image pull policy, sourced from values.migrate.image.pullPolicy.
+          imagePullPolicy: {{ .Values.migrate.image.pullPolicy }}
+
+          env:
+            # MongoDB connection string — in-cluster Service DNS, no credentials (auth-free).
+            - name: MONGO_URL
+              value: "mongodb://database:{{ .Values.service.port }}"
