@@ -79,6 +79,13 @@ spec:
               # Minimum memory reserved for scheduling.
               memory: {{ .Values.resources.requests.memory }}
 
+            limits:
+              # CPU hard cap — matches requests (Guaranteed QoS).
+              cpu: {{ .Values.resources.limits.cpu }}
+
+              # Memory hard cap — matches requests (Guaranteed QoS).
+              memory: {{ .Values.resources.limits.memory }}
+
           # Exec probes — no HTTP server to poll; matches the Celery process's own healthcheck.
           readinessProbe:
             exec:

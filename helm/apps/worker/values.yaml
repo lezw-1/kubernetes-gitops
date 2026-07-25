@@ -66,7 +66,14 @@ secret:
 resources:
   requests:
     # Minimum CPU reserved for scheduling.
-    cpu: 250m
+    cpu: 100m
 
     # Minimum memory reserved for scheduling.
-    memory: 512Mi
+    memory: 256Mi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: 100m
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
+    memory: 256Mi

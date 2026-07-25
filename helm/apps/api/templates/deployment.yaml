@@ -70,11 +70,18 @@ spec:
 
           resources:
             requests:
-              # Minimum CPU reserved for scheduling.
-              cpu: 100m
+              # Minimum CPU reserved for scheduling, sourced from values.resources.
+              cpu: {{ .Values.resources.requests.cpu }}
 
-              # Minimum memory reserved for scheduling.
-              memory: 128Mi
+              # Minimum memory reserved for scheduling, sourced from values.resources.
+              memory: {{ .Values.resources.requests.memory }}
+
+            limits:
+              # CPU hard cap — matches requests (Guaranteed QoS).
+              cpu: {{ .Values.resources.limits.cpu }}
+
+              # Memory hard cap — matches requests (Guaranteed QoS).
+              memory: {{ .Values.resources.limits.memory }}
 
           ports:
             # Container port the app listens on.

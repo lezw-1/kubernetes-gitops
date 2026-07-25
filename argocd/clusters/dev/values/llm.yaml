@@ -38,7 +38,10 @@ storageClassName: ""
 # Resources: compute reserved for the Ollama container.
 resources:
   requests:
-    cpu: "2"
+    cpu: "1"
+    memory: 6Gi
+  limits:
+    cpu: "1"
     memory: 6Gi
 
 # Debug: Ollama server log verbosity.

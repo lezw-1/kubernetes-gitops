@@ -35,14 +35,22 @@ storage: 10Gi
 storageClassName: ""
 
 # Resources: compute reserved for the MongoDB container.
-# No limits are set here — unbounded, matching the source deployment's behavior.
+# Memory floor matches WiredTiger's minimum viable cache size — going lower
+# risks startup failure.
 resources:
   requests:
     # Minimum CPU reserved for scheduling.
-    cpu: 500m
+    cpu: 250m
 
     # Minimum memory reserved for scheduling.
-    memory: 512Mi
+    memory: 256Mi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: 250m
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
+    memory: 256Mi
 
 # Migrate: the post-install/post-upgrade Job that applies pymongo schema
 # migrations (templates/migrate-job.yaml) to the agent/multiagent

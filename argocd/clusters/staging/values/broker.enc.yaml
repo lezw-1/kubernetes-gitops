@@ -13,8 +13,11 @@ storage: 5Gi
 storageClassName: ""
 resources:
     requests:
-        cpu: 250m
-        memory: 256Mi
+        cpu: 50m
+        memory: 64Mi
+    limits:
+        cpu: 50m
+        memory: 64Mi
 sops:
     age:
         - enc: |
@@ -27,6 +30,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
-    lastmodified: "2026-07-25T19:34:47Z"
-    mac: ENC[AES256_GCM,data:bqTdNIKxk/wGsK8XuZ2rP9GlrHsLKe2dnoZE/Oh8QUJVoEfHkeDukEJ47Ln4GzXAxaPMMeOXGfG6qzWan6Rir92aJfLky7l//SkJk2TBrIV0XUZ4wZwePYorj8idgglbaRQnMKfkWSANc0dyoDj2U3AN9tXdpjwa7rWA4QPo63Q=,iv:XGQWLbplnneDIeTYUwS5TUDKE07BUAg7Ujr3z1Prz5c=,tag:mh9wWz533FRwZ5rdRjvKMw==,type:str]
+    lastmodified: "2026-07-25T20:43:27Z"
+    mac: ENC[AES256_GCM,data:VE/NQDPrItpuw+ZG3GdLd7AnH01UFsvsY4W7En0q3z085ARUVp/iWhOX18FjVnBKEwM8aMRYCVxi0yJh7Co8CNzcND1vZzyKgGHcGXewiP6XUoAsQiiiOBJ6t/vUGmcVxtYP8VpgCaJllskMCH2CjBAfNxkhwHryzPkaHkBwtB0=,iv:1SAcfvDwayswscrEfjI1Q4kFlSUGCG4HUs9RUw0hlfU=,tag:9BvIhkZPhe3n0uvhcWJm9Q==,type:str]
     version: 3.13.2

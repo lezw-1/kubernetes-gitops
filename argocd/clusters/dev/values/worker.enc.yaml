@@ -23,8 +23,11 @@ secret:
     anthropicApiKey: ""
 resources:
     requests:
-        cpu: 250m
-        memory: 512Mi
+        cpu: 100m
+        memory: 256Mi
+    limits:
+        cpu: 100m
+        memory: 256Mi
 sops:
     age:
         - enc: |
@@ -37,6 +40,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1tnz3fux4w76dzm6swlf09zflxsku0haf0hl6f4g4a89sxs9y0cxs30eq4u
     encrypted_regex: ^(username|password|anthropicApiKey)$
-    lastmodified: "2026-07-25T19:33:23Z"
-    mac: ENC[AES256_GCM,data:2eLi3D83khkYyX41IeTNuUf/gIfKvBSdlG6Y3bjUfcqEi6ngPAar7pgymV9+/PlxYpOaheWWRWhu76OqaJKM14jQMDena/mWXpYs1Bwetpsdnoeyp2vKTvpu+CKFBazxh1UoJlzm1VgFTgrqxwTtqOprDtlkN7dRXuOvHF/WqZs=,iv:MmQpn1dQEMV6Qr3+TZ+pielOIrj60aUYcjwW7rQa0bo=,tag:fBZh3BRGx6w8jhVKCSxQuQ==,type:str]
+    lastmodified: "2026-07-25T20:35:20Z"
+    mac: ENC[AES256_GCM,data:8Kv7e4fb0Pnk6iH4PlgDIkrDedpZoGzAIKsAsQnQPb3GmuM9gWDfpCRJh4GKjuYju5AN7JDUnhjdxTfc8BjHamvCjZ1fmbrl4hlfwJTi/nvR6uI5k53gWmCxV/KJajZ5SvSOL2cnbSyHJo2zociH/x0zzdFqjt1uuW6qBsX3Bjk=,iv:hPlcQ/m9/MF3LhMLJI0NS3a6NSGbwpi3rkQtc8lrLfU=,tag:BwZTbXrDPgBV0TSAM6dZsQ==,type:str]
     version: 3.13.2

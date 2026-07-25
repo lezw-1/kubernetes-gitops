@@ -27,6 +27,14 @@ image:
 service:
     # nginx listen port.
     port: 80
+# Resources: compute reserved for the frontend container.
+resources:
+    requests:
+        cpu: 25m
+        memory: 32Mi
+    limits:
+        cpu: 25m
+        memory: 32Mi
 # HPA: horizontal pod autoscaler.
 hpa:
     # Enabled in staging to exercise autoscaling behavior.
@@ -49,6 +57,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-25T08:50:52Z"
-    mac: ENC[AES256_GCM,data:eEgk0gTpMweN2sropZuvK6BfaMTF6lGxmuuXTpCWnukIeoku+GZL9BuTxEgzTE3bxGvpBjB6Kz2YdluAZ36cF3JnJhif6o3kO5wv8BGVIi126ZK6W1tEEIRazWmgvYEHJObFRQMNZetVy1Qsi4dwDPwiWYm5lBHRSD4KqCVBavk=,iv:i3lwvs3mRNCstCXGPV2I4MjwCCkQb1SNN8B8j3+1Fn0=,tag:op/vpJnQAL4+glhBmFJcEA==,type:str]
+    lastmodified: "2026-07-25T20:43:27Z"
+    mac: ENC[AES256_GCM,data:wFll/fIhAzJPSRZHSvycsHscyleG2cC4nodfX21O/ltlFagmg0xRk6GMiAiIcAsgqaJIK0c/STXsQ6I346AZhExL/neJ2AIj9nZQL+3DxFq+GqSAYVoWQStjabAtrogMovVsOkmSBovNv+HZzn/yNBXrUwQJqCqkCZhV76kktEU=,iv:llCVVoEVu1h+y2DYHyYSg3dD7hCuB1Rk1OeSP8EzXOc=,tag:DfMhB9Foe5XXJDfYUhKrhQ==,type:str]
     version: 3.13.2

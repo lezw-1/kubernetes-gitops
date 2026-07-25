@@ -37,6 +37,22 @@ service:
   # FastAPI/uvicorn listen port.
   port: 8000
 
+# Resources: compute reserved for the API container.
+resources:
+  requests:
+    # Minimum CPU reserved for scheduling.
+    cpu: 50m
+
+    # Minimum memory reserved for scheduling.
+    memory: 128Mi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: 50m
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
+    memory: 128Mi
+
 # HPA: horizontal pod autoscaler.
 hpa:
   # Default: disabled — set true to enable autoscaling.

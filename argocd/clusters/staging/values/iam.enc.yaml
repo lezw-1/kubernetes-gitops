@@ -31,6 +31,14 @@ tokenExpire: 3600
 # Debug: Keycloak log level.
 # Allowed values: DEBUG, INFO, WARN, ERROR
 debug: INFO
+# Resources: compute reserved for the Keycloak container.
+resources:
+    requests:
+        cpu: 100m
+        memory: 512Mi
+    limits:
+        cpu: 100m
+        memory: 512Mi
 # HPA: horizontal pod autoscaler.
 hpa:
     # Enabled in staging for load-based scaling.
@@ -131,6 +139,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email)$
-    lastmodified: "2026-07-25T09:26:56Z"
-    mac: ENC[AES256_GCM,data:QuQsOxNkqOzg/V+R3UAo2jawnYML9HAuciu8HVHlqEYe57vlFaNpMkSXrlAADE//X8OxkadwsiT9RIqaTtsXSWsUDJd+zaK41o34+UGGeK0db9OmnR1/YZmVxj3Owxe9xgXP9TBq3xRD9BEiinrvAwgkk+NzHiOOxB5ErHmhNFQ=,iv:go3JFAfWVhuGhVoxWPzGkWj2rvhLIMbCZa+te1YyCho=,tag:fxHq3UowS0NxVu3EH0Gisw==,type:str]
+    lastmodified: "2026-07-25T20:43:27Z"
+    mac: ENC[AES256_GCM,data:XizXQrYXhonJt773ZpUbAucYirfgDkX94wao5HdyBekivDTVR+wa0GHviW+HB9rnuY1Om/iDi4TDxAQxWwyifSqGztBLBDgb3OHMR9NDGtEgTsLpPus+MnPUvrIlMjpDOzZfd8L+wP8cLpZV9/eU3p/8aNPC9XWlYj/eGW5O0ok=,iv:/kDmm5WgamIfZluuuP0UYKKxHsrVivV5sAv9X5y1vhU=,tag:W2mCzB6tE0CbQvwu3afSEg==,type:str]
     version: 3.13.2

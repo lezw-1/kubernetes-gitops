@@ -25,8 +25,11 @@ storageClassName: ""
 # Resources: compute reserved for the MongoDB container.
 resources:
     requests:
-        cpu: 500m
-        memory: 512Mi
+        cpu: 250m
+        memory: 256Mi
+    limits:
+        cpu: 250m
+        memory: 256Mi
 # Migrate: the schema-migration Job's image settings.
 migrate:
     image:
@@ -50,6 +53,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-25T11:54:08Z"
-    mac: ENC[AES256_GCM,data:2RfSsRTLV5TEOKRXi1lCnDOXqaRV64/+aDZlojcDTRnGEsqNsbAKYGn3zRpa8JJm7+96B2tUIHSIaLLR7QkQOCLBfKPkY74gJN53RGSq7vyDZYCTK4UpFaEoHavJS0epWl/cDvygQ3BzaeL/gWh7IW3EoV1y3aKwQU1b28x9ndg=,iv:IDifhUSG4rH5B0n4pcJdRvX1GU+tdsgEmpNcOMR9qoI=,tag:pRTsAe4fmCtDVq8HmH+u+w==,type:str]
+    lastmodified: "2026-07-25T20:43:27Z"
+    mac: ENC[AES256_GCM,data:YlcsxCmTCf1Z5DMeTqh8ConxSJi2BUQyNTi7cBpZvHr3D5JWKOIyLNcRAOhASnYJ5yzttrfZr7yzmsWajvpU6Obi199zDLPu2fQ84EIPZFoBirUPYJI8XTzf+P0BiwPrStuU9j74PMSsCi2tF+wRkKA/KH6jyHbN1dyAydQg918=,iv:h8ySSEovMgz1WBxSOO6Cwwa4uBaHpstDOIHMwEs8C7s=,tag:vGvvglL7Rk73L09ZKODNiQ==,type:str]
     version: 3.13.2

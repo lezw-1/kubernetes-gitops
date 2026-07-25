@@ -30,6 +30,15 @@ service:
   # FastAPI/uvicorn listen port.
   port: 8000
 
+# Resources: compute reserved for the API container.
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 50m
+    memory: 128Mi
+
 # HPA: horizontal pod autoscaler.
 hpa:
   # Enabled in dev to exercise autoscaling behavior.

@@ -29,8 +29,11 @@ storageClassName: "local-path"
 # Resources: compute reserved for the MongoDB container.
 resources:
   requests:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
 
 # Migrate: the schema-migration Job's image settings.
 migrate:

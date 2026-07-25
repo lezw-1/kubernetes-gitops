@@ -44,12 +44,21 @@ storage: 20Gi
 storageClassName: ""
 
 # Resources: compute reserved for the Ollama container.
+# Memory is not reduced below what the configured model needs to load —
+# qwen2.5:7b needs roughly this much just for weights + context.
 resources:
   requests:
     # Minimum CPU reserved for scheduling.
-    cpu: "2"
+    cpu: "1"
 
     # Minimum memory reserved for scheduling.
+    memory: 6Gi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: "1"
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
     memory: 6Gi
 
 # Debug: Ollama server log verbosity.
