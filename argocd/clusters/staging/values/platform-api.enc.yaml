@@ -13,7 +13,7 @@ gateway:
     hosts:
         # Default: empty disables hostname-based routing (route matches any host) —
         # matches iam's pattern, since this is a subpath API, not the root app.
-        domain: ""
+        domain: ENC[AES256_GCM,data:K/d4j8Ykjg==,iv:MIKywjvOpCTmn+eYWlTKLUKZ6/+poDu4hzPxA86M2gA=,tag:KMBZzNQICRULzJxNNJVxCg==,type:str]
 # Image: container image settings.
 image:
     # Cloudfleet private registry path. SOPS-encrypted — real registry
@@ -61,6 +61,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-25T11:54:08Z"
-    mac: ENC[AES256_GCM,data:MggiMUlHWYhBPLdqHbn9a43lAhqrkoxbm+QrnlTE+0gM6hRrwBR0jqB1sjy9xZ/bgcbyNsCSDorTY+GmdocIznKDiyL3qu/C/1tckQCB6evv1AXugFNDQHe5KXcich3N+oVPtt01yvUKALyTBLC3i2Y19LOjU+qMkSUygYO6AJM=,iv:o+Y45uOralaGaiy+gpVn6Zr+phsKZvTeYPu7xe4IP5U=,tag:4M8H2TGj8I28JMDETp/WLQ==,type:str]
+    lastmodified: "2026-07-25T12:04:05Z"
+    mac: ENC[AES256_GCM,data:AoJynlNFyRe4upvhVU5vGcVGnDgpINbeKAuRnJsqCcr346TNDlQbfSR7vr4tJWSRcDVMUkI6/AxZwQCotULsyrP/6MvOoBQSdOyufG7NhtcRvjQ+cbMlEYkz3dnYPrkpRYzIsbKNYgABx22KpyRtQAwr+5XugZjmZGuqJq/EIrc=,iv:vntyJeCVEm0sHakNWwt11NEFPisrxniocDF86ffNkhE=,tag:EcpCAKHSDZpPyywEcdtI3w==,type:str]
     version: 3.13.2
