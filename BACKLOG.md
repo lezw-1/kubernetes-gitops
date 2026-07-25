@@ -48,7 +48,7 @@
 
 ## LLM
 
-- [ ] **`replicas: 0` still provisions a 20Gi PVC** on staging/prod even though no pod runs — `helm/apps/llm/templates/pvc.yaml` (and the guarded `pv.yaml` on clusters without a real StorageClass) isn't gated on `replicas`; consider skipping the PV/PVC entirely when self-hosted inference is disabled, to avoid the idle storage cost.
+- [ ] **`replicas: 0` still provisions a 20Gi PVC** on prod even though no pod runs — `helm/apps/llm/templates/pvc.yaml` (and the guarded `pv.yaml` on clusters without a real StorageClass) isn't gated on `replicas`; consider skipping the PV/PVC entirely when self-hosted inference is disabled, to avoid the idle storage cost.
 
 ## Worker
 

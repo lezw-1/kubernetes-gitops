@@ -1,6 +1,6 @@
-# LLM service — self-hosted Ollama, staging environment. Disabled by
-# default (values/llm.enc.yaml sets replicas: 0) — staging calls the
-# Anthropic API directly instead, same as prod.
+# LLM service — self-hosted Ollama, staging environment. Enabled, same
+# as dev (values/llm.enc.yaml sets replicas: 1) — unlike prod, which
+# still calls the Anthropic API directly instead of self-hosting a model.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
