@@ -80,6 +80,34 @@ spec:
             - name: config
               mountPath: /config
 
+        # Links the Telegram bot to this workspace on every pod start,
+        # replacing the old manual `kubectl exec ... openclaw channels add`
+        # step. Skipped when no token is set yet (e.g. before first deploy).
+        # `channels add` isn't confirmed idempotent, so `|| true` stops a
+        # re-run against an already-linked channel from crash-looping the
+        # pod — if linking silently fails, `openclaw channels list` inside
+        # the pod shows the real state.
+        - name: link-telegram
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            # Telegram bot token, sourced from the assistant-secrets Secret (templates/secret.yaml).
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: assistant-secrets
+                  key: TELEGRAM_BOT_TOKEN
+          command:
+            - sh
+            - -c
+            - |
+              if [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+                openclaw channels add --channel telegram --token "$TELEGRAM_BOT_TOKEN" || true
+              fi
+          volumeMounts:
+            - name: workspace
+              mountPath: /home/node/.openclaw
+
       containers:
         # OpenClaw gateway — runs the agent loop and the Telegram channel.
         - name: assistant
@@ -98,11 +126,11 @@ spec:
                   name: assistant-secrets
                   key: ANTHROPIC_API_KEY
 
-            # Telegram bot token, sourced from the assistant-secrets Secret (templates/secret.yaml).
-            # Not consumed automatically by OpenClaw at startup — read manually
-            # during the one-time `openclaw channels add --channel telegram`
-            # linking step (values.yaml) so the token never has to be
-            # retyped/pasted by hand.
+            # Telegram bot token, sourced from the assistant-secrets Secret
+            # (templates/secret.yaml). Not consumed by the gateway process
+            # itself — this copy exists only in case a channel needs
+            # re-linking by hand (link-telegram init container above does it
+            # automatically on every pod start).
             - name: TELEGRAM_BOT_TOKEN
               valueFrom:
                 secretKeyRef:

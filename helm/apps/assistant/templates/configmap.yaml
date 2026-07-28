@@ -28,12 +28,13 @@ data:
           }
         }
       },
-      // Telegram channel policy — declared here (not left to the manual
-      // linking step below) so a destroy+redeploy always re-converges to a
-      // deny-by-default DM policy, even though channels.telegram.botToken
-      // is written separately by the interactive
-      // `openclaw channels add --channel telegram` step (values.yaml) and
-      // is left out of this patch so it doesn't get clobbered.
+      // Telegram channel policy — declared here (not left to the
+      // link-telegram init container) so a destroy+redeploy always
+      // re-converges to a deny-by-default DM policy, even though
+      // channels.telegram.botToken is written separately by that init
+      // container's `openclaw channels add --channel telegram`
+      // (templates/deployment.yaml) and is left out of this patch so it
+      // doesn't get clobbered.
       "channels": {
         "telegram": {
           // Allowed values: pairing | allowlist | open | disabled. Default:

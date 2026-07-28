@@ -37,13 +37,11 @@ agent:
 # Telegram: bot identity. Linking needs no QR/SMS step — the bot token from
 # @BotFather is the only credential (stored in secret.telegramBotToken
 # below, threaded to the pod as TELEGRAM_BOT_TOKEN), so there's no
-# non-secret field to declare here. Setup is a single non-interactive
-# command, but it's still a manual one-time step (Helm/Argo CD can't run
-# it): from a real terminal after first deploy, exec into the pod and run
-# (reads the token from the pod's own env so it's never retyped/pasted by
-# hand):
-# `kubectl exec deploy/assistant -- sh -c 'openclaw channels add --channel telegram --token "$TELEGRAM_BOT_TOKEN"'`
-# The @openclaw/telegram plugin ships stock in the image (confirmed via
+# non-secret field to declare here. Linked automatically by the
+# link-telegram init container (templates/deployment.yaml) on every pod
+# start via `openclaw channels add --channel telegram`, reading the token
+# from the pod's own env — no manual `kubectl exec` step needed. The
+# @openclaw/telegram plugin ships stock in the image (confirmed via
 # `openclaw plugins list` — listed as "disabled" until a channel is added),
 # so no separate `plugins install` step is needed.
 
