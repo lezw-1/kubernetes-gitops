@@ -1,20 +1,21 @@
 # Assistant service overrides for staging, layered onto helm/apps/assistant/values.yaml
 # via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/staging/assistant.yaml).
 #
-# image.repository, secret.anthropicApiKey, and secret.telegramBotToken
-# below are SOPS-encrypted — only those leaf fields; the rest of this file
-# stays plaintext so it's readable in Git diffs.
+# image.repository, secret.anthropicApiKey, secret.telegramBotToken, and
+# secret.githubToken below are SOPS-encrypted — only those leaf fields; the
+# rest of this file stays plaintext so it's readable in Git diffs.
 global:
     environment: staging
 image:
-    repository: ENC[AES256_GCM,data:zuC+ap7jm/BSlSmnjCx++7J3+nGJL2beBA==,iv:NceFFNE+04ZQSctPGi5hu8EwOhX+8Q2PC8fY4eQnfLg=,tag:X/cdJ7TCnxmwQRVLKvZmtg==,type:str]
+    repository: ENC[AES256_GCM,data:lZEXY5Uwb4PgaiHIzr7Dom3uP0Gt5+J+Rg==,iv:x0yxycT7iBnTUXtaQpzsks1GfRnHQfKH3ePceMuvXh8=,tag:x8680AeQncw/PAg5khgc1A==,type:str]
     tag: 2026.7.1
     pullPolicy: Always
 storage: 1Gi
 storageClassName: ""
 secret:
-    anthropicApiKey: ENC[AES256_GCM,data:5Z0/RzJ4Oud/VYbRGM3bWwPyzv80YQBUtbWC39csyg1fyzmSxQ/nNjXsW6wlWZhF7AXCdAGz+dGnrsKRlridFwW+hkV8H/jBFlyA3o6b72cM9dEbG131Oy7j0t6AZLSb3ysSEfIblNJiSNC3,iv:HdAej4eqSw7mp29o/O7nJUhnpjQ5eQECdOdB1fOwKWo=,tag:5gXC+HnwFStnVjZsdfFyVQ==,type:str]
-    telegramBotToken: ENC[AES256_GCM,data:XOox7WD4Ibt8mB060woHS4YBe+NvZuU64wC72KhSy61AwbFYzBsUeOIHKR38nA==,iv:XQ4w/uHIfE3jbu1fmLmFUZAtQwUvk2eH6bu1NSKNS4E=,tag:iMtdpZH8a8fz3NxTEjg3Sg==,type:str]
+    anthropicApiKey: ENC[AES256_GCM,data:oxjnev/T9imGSpSXSh5gohYz8qnYWLl/UtgdbK6N2AttJGV680h0EDJ6DJpgqnTJmNCFDbwsqIl4jtUBgyz7pJgVAWut3vTcPiLApvW5iDvvYab+NsLVPn1qn1NlzuntxEK7EXfateSQSrhy,iv:6ToOc5LnoQ/dOLNr5GnbvVCgSjI4/vxi43EP19dU8HQ=,tag:ikf5tiMIzTWOFxtWvquAVA==,type:str]
+    telegramBotToken: ENC[AES256_GCM,data:jJDNo16DXrBu5PvCuMHXYgFyRbTcpKYGYFFPwERp091hz6bvy8kx3e3cuYJ1OQ==,iv:n2nsxg1v42hNBkxSKucGGxpEAoRdU3aCVO3XKPt5u0w=,tag:GkZilGj1iPXITcpCPQoBtA==,type:str]
+    githubToken: ENC[AES256_GCM,data:/cp2OE0T9uAkqXxt1v/Ccc8ucJeUeB78BUhPBAZpHqpiDkGdZG4FRRtPMcFgapN81uUClHwa0IlcdfnK7KLfPz679uIH4qMkfbAjRZhEzlDzU19IrAhD7r5EAzNj,iv:2Q/SEHeiHGjg/a9Z1TepG1dfUnoBR4uccsj+65mm100=,tag:bEFdQxj4usjVPb5hJBwaZg==,type:str]
 resources:
     requests:
         cpu: "1"
@@ -26,14 +27,14 @@ sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBGUEpYMTRQL0pTWTM0WWpD
-            czFrQlNHbkllQ1ZVbWRmQXVoYXFQaVhiWmhZCnJqUE5rWXo2UXpLbjcyV0NLSjF0
-            K08zeWYvK1lFY3NZbjltWVJRQlJXSUkKLS0tIFJGMHhQbjhzSnNDbnd3NERGcUJT
-            KzcvRUVYUmZEWmJ2Qk5lV3V2S2orQVkK7L05bpx0/Di07PG777nRGvEiPi6PagQK
-            nGJsF6xS4FPld0BYc231CimXhLhFxT2XJcmkRhXeDcpSVHAnXyTqvg==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAzVnBkeStWQnhQZXZKRk83
+            N0N6K3lYQTEyR3QvZ0NuYk1id2Z4WkFlQVJZCmYzMjBNNDlnSVI0ZHhEajJLZWIr
+            d3RHaVVTdm1XcjhDTEJHcVg0YS82UGMKLS0tIE5VTElScVRNUVJFeWkrVHJBUkx6
+            RHJQU1J1R1RwRmRoSFpoV3hSMjdVUlkKNEa5sUEHVzXPD4wX084yC5EoLgjwKXWN
+            sRcWeDPzZTDc4x80yPIR5mMERDzEdnMXtMrxqVuEB1xcIg9NnF3sFA==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
-    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken)$
-    lastmodified: "2026-07-28T05:48:37Z"
-    mac: ENC[AES256_GCM,data:vxD6OKv7zkoTaThRZq2cBM7QPICtoXVawjfehBsXd9VOvf+9mpbnt3sEZGxQks9kYkGKvpVOb52zmnLg8M2hSwgMtga5JQgbdz8vJyHdBE8HZT4oXF5IIj/jzl1QpzPlCnC8rQ0JwDvJdm4PdrjLXgDs4oO3di0fyM/LCNOpMQY=,iv:nL7yBph3lGZZbxyhcOet8sws09p33mrt3z2yx8SN23Q=,tag:49VykPW3Y/HAPcnAQ5c+ww==,type:str]
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken|githubToken)$
+    lastmodified: "2026-07-28T06:40:25Z"
+    mac: ENC[AES256_GCM,data:SePXmPk8oEKvQC59CS8jdKt5plbeVFufn+XiLHcQwoo1RkAKWdaYyLZbCSacEhtolsQhsiylwHLTc9sATqQpdDuMeA05AahajBMfyj8LxFWzCTH3Qslv6fp9cro+tbv3KyZvne2jsZPDThyFheQQWvPYiB3dtFtxCfUex/CIIJc=,iv:y2SgnFc+oT25gEcUc3wLv1Re9Xqrcsyt15fQ9odhDXI=,tag:wMUGx9J2dGPMyzAZZVlK3g==,type:str]
     version: 3.13.2

@@ -8,7 +8,7 @@ creation_rules:
   # each file stays readable in Git diffs. The .enc.yaml suffix is the
   # hard marker that a file is (or must be) SOPS-encrypted.
   - path_regex: argocd/clusters/prod/.*\.enc\.yaml$
-    encrypted_regex: "^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken)$"
+    encrypted_regex: "^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken|githubToken)$"
 
     # Prod age public key — the matching private key lives in the
     # `sops-age-key` Secret in the prod cluster's argocd namespace
@@ -22,7 +22,7 @@ creation_rules:
   # each file stays readable in Git diffs. The .enc.yaml suffix is the
   # hard marker that a file is (or must be) SOPS-encrypted.
   - path_regex: argocd/clusters/staging/.*\.enc\.yaml$
-    encrypted_regex: "^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken)$"
+    encrypted_regex: "^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken|githubToken)$"
 
     # Staging age public key — the matching private key lives in the
     # `sops-age-key` Secret in the staging cluster's argocd namespace
@@ -36,7 +36,7 @@ creation_rules:
   # readable in Git diffs. The .enc.yaml suffix is the hard marker that a
   # file is (or must be) SOPS-encrypted.
   - path_regex: argocd/clusters/dev/.*\.enc\.yaml$
-    encrypted_regex: "^(username|password|anthropicApiKey|telegramBotToken)$"
+    encrypted_regex: "^(username|password|anthropicApiKey|telegramBotToken|githubToken)$"
 
     # Dev age public key — the matching private key lives in the
     # `sops-age-key` Secret in the dev cluster's argocd namespace

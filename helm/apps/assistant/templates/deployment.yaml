@@ -126,6 +126,16 @@ spec:
                   name: assistant-secrets
                   key: ANTHROPIC_API_KEY
 
+            # GitHub PAT, sourced from the assistant-secrets Secret
+            # (templates/secret.yaml). Consumed automatically at startup by
+            # the github-copilot provider plugin, same as ANTHROPIC_API_KEY
+            # above.
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: assistant-secrets
+                  key: GITHUB_TOKEN
+
             # Telegram bot token, sourced from the assistant-secrets Secret
             # (templates/secret.yaml). Not consumed by the gateway process
             # itself — this copy exists only in case a channel needs

@@ -73,6 +73,16 @@ secret:
   # SOPS-encrypted environment override at deploy time.
   telegramBotToken: ""
 
+  # GitHub PAT, used by the stock @openclaw/github-copilot-provider plugin
+  # (enabled by default) as its GITHUB_TOKEN credential — confirmed by
+  # inspecting /app/dist/extensions/github-copilot/index.js in a running
+  # pod, which reads GITHUB_TOKEN, GH_TOKEN, or COPILOT_GITHUB_TOKEN.
+  # Consumed automatically at startup like anthropicApiKey above — no
+  # channel-link step needed.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  githubToken: ""
+
 # Resources: compute reserved for the assistant container.
 # Memory raised from an initial 256Mi after that limit OOMKilled the
 # gateway on startup during local testing (Rancher Desktop) — 1Gi is the
