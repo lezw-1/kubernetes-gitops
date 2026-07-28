@@ -80,6 +80,26 @@ spec:
             - name: config
               mountPath: /config
 
+        # Writes a global git config into the persistent workspace so git
+        # commands the agent runs (e.g. clone/push against github.com)
+        # authenticate automatically. Scoped to github.com only (least
+        # privilege — this token must not be offered to other git hosts).
+        # The credential helper reads GITHUB_TOKEN from the calling
+        # process's own env at lookup time, so the plaintext PAT itself is
+        # never written to this file or persisted on the workspace PVC.
+        - name: configure-git
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              git config -f /home/node/.openclaw/gitconfig credential.https://github.com.helper \
+                '!f() { echo username=x-access-token; echo "password=$GITHUB_TOKEN"; }; f'
+          volumeMounts:
+            - name: workspace
+              mountPath: /home/node/.openclaw
+
         # Links the Telegram bot to this workspace on every pod start,
         # replacing the old manual `kubectl exec ... openclaw channels add`
         # step. Skipped when no token is set yet (e.g. before first deploy).
@@ -129,12 +149,20 @@ spec:
             # GitHub PAT, sourced from the assistant-secrets Secret
             # (templates/secret.yaml). Consumed automatically at startup by
             # the github-copilot provider plugin, same as ANTHROPIC_API_KEY
-            # above.
+            # above — and read by the git credential helper below at lookup
+            # time.
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: assistant-secrets
                   key: GITHUB_TOKEN
+
+            # Points git at the config written by the configure-git init
+            # container above. Needed because $HOME (/home/node) isn't on
+            # the persistent workspace volume — only $HOME/.openclaw is —
+            # so git wouldn't otherwise find it at the default ~/.gitconfig.
+            - name: GIT_CONFIG_GLOBAL
+              value: /home/node/.openclaw/gitconfig
 
             # Telegram bot token, sourced from the assistant-secrets Secret
             # (templates/secret.yaml). Not consumed by the gateway process
