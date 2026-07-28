@@ -4,21 +4,17 @@
 # image.repository, secret.anthropicApiKey, and secret.telegramBotToken
 # below are SOPS-encrypted — only those leaf fields; the rest of this file
 # stays plaintext so it's readable in Git diffs.
-#
-# TODO before first deploy: fill in secret.telegramBotToken (from
-# @BotFather), then re-run
-# `sops -e -i argocd/clusters/staging/values/assistant.enc.yaml` to encrypt
-# it (same for secret.anthropicApiKey if that's set to a real value too).
 global:
     environment: staging
 image:
-    repository: ENC[AES256_GCM,data:oTfMhjeuZYkLkYEr9RYRsV8i8wKEOnal+w==,iv:qko84xRZ/C6Y4upDHV7HOpZI9AAm6G4EQp3DKU44c1g=,tag:kMUEmyrrWNzsfKcz8XvxcQ==,type:str]
+    repository: ENC[AES256_GCM,data:zuC+ap7jm/BSlSmnjCx++7J3+nGJL2beBA==,iv:NceFFNE+04ZQSctPGi5hu8EwOhX+8Q2PC8fY4eQnfLg=,tag:X/cdJ7TCnxmwQRVLKvZmtg==,type:str]
     tag: 2026.7.1
     pullPolicy: Always
 storage: 1Gi
 storageClassName: ""
 secret:
-    anthropicApiKey: ENC[AES256_GCM,data:J86RMrU8a4N3k281mmAkbs+ROY6571o8YhkPUEPsxqTWAmRt2Uc3U8LdcARREubmxEx9P3mpYqd8Wj+cMy+Sve0MJVpFmr7Ql/Pn0v9EQK2xeQoPvvCNEECs7OzLY5vbY6UZMFKvq2bzQRLg,iv:K++CW+59vPeI7DQh63uWyCuO7JOh47X3LiZHfN//KsU=,tag:AKoXWNF7IIkze9EuHcIvGw==,type:str]
+    anthropicApiKey: ENC[AES256_GCM,data:5Z0/RzJ4Oud/VYbRGM3bWwPyzv80YQBUtbWC39csyg1fyzmSxQ/nNjXsW6wlWZhF7AXCdAGz+dGnrsKRlridFwW+hkV8H/jBFlyA3o6b72cM9dEbG131Oy7j0t6AZLSb3ysSEfIblNJiSNC3,iv:HdAej4eqSw7mp29o/O7nJUhnpjQ5eQECdOdB1fOwKWo=,tag:5gXC+HnwFStnVjZsdfFyVQ==,type:str]
+    telegramBotToken: ENC[AES256_GCM,data:XOox7WD4Ibt8mB060woHS4YBe+NvZuU64wC72KhSy61AwbFYzBsUeOIHKR38nA==,iv:XQ4w/uHIfE3jbu1fmLmFUZAtQwUvk2eH6bu1NSKNS4E=,tag:iMtdpZH8a8fz3NxTEjg3Sg==,type:str]
 resources:
     requests:
         cpu: "1"
@@ -30,14 +26,14 @@ sops:
     age:
         - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBtNWVKWXRVVmJnYjkzRzVu
-            MS9DdEVTelp4TlUrRUNjMEZjb0RUd1ZRWkU4ClFCcE5POXg5QlZBelFZTk9XUjRi
-            RFZidTVDcTNPd1NuZlIrNE13UkpLcFkKLS0tIDZQdkZBZWtIOWt4L1RiQlA5THpC
-            d2Q2a09ZL2xpUkVlZW9YZnlGQnQyOE0KP5nQuqldKFUAfJTiFRQXfMUszyiYnysv
-            Uh403g0WBCq2dWf+ktFLCAp2IfX3AAbPG3Exe6OMhBY68n5b+nUHqg==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBGUEpYMTRQL0pTWTM0WWpD
+            czFrQlNHbkllQ1ZVbWRmQXVoYXFQaVhiWmhZCnJqUE5rWXo2UXpLbjcyV0NLSjF0
+            K08zeWYvK1lFY3NZbjltWVJRQlJXSUkKLS0tIFJGMHhQbjhzSnNDbnd3NERGcUJT
+            KzcvRUVYUmZEWmJ2Qk5lV3V2S2orQVkK7L05bpx0/Di07PG777nRGvEiPi6PagQK
+            nGJsF6xS4FPld0BYc231CimXhLhFxT2XJcmkRhXeDcpSVHAnXyTqvg==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken)$
-    lastmodified: "2026-07-28T05:34:04Z"
-    mac: ENC[AES256_GCM,data:W1K12Nbu5SuAdPeJQZY5cw+hn7mFBiK+THc4WRyvqvchg8232Nnf58nw56PxqEjZHUr3D6X78HSMLTdLwspQkoAiQTEdQRrGb0ZdV6gY/LnV5o7u20urDWKzvjdYGEQuLhRgvWqt1qC9dlL2988/Qxh9KW8+ywNfJQXrxXSsfxc=,iv:9Uo15WYWEFdOGXGU+kyXcSthY0UxUDhNUe8kMFzBP7g=,tag:b0T7Z5kzjVXeXTwcdmAtnA==,type:str]
+    lastmodified: "2026-07-28T05:48:37Z"
+    mac: ENC[AES256_GCM,data:vxD6OKv7zkoTaThRZq2cBM7QPICtoXVawjfehBsXd9VOvf+9mpbnt3sEZGxQks9kYkGKvpVOb52zmnLg8M2hSwgMtga5JQgbdz8vJyHdBE8HZT4oXF5IIj/jzl1QpzPlCnC8rQ0JwDvJdm4PdrjLXgDs4oO3di0fyM/LCNOpMQY=,iv:nL7yBph3lGZZbxyhcOet8sws09p33mrt3z2yx8SN23Q=,tag:49VykPW3Y/HAPcnAQ5c+ww==,type:str]
     version: 3.13.2
