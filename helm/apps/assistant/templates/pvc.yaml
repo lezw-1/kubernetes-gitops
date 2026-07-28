@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  # PVC name — referenced by the Deployment's volumes.persistentVolumeClaim.claimName.
+  name: {{ .Release.Namespace }}-assistant-workspace
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  accessModes:
+    - ReadWriteOnce
+
+  # Empty string matches the static hostPath PV above (templates/pv.yaml).
+  # Set to a real StorageClass name to dynamically provision instead.
+  storageClassName: {{ .Values.storageClassName | quote }}
+
+  resources:
+    requests:
+      # Storage request — must match (or be covered by) the bound PV's capacity.
+      storage: {{ .Values.storage }}

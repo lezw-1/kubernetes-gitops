@@ -1,0 +1,96 @@
+# Default values — overridden per environment via argocd/clusters/<env>/values/assistant.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name.
+  # Allowed values: dev, staging, prod
+  environment: dev
+
+# Image: container image settings.
+image:
+  # Container image repository — official OpenClaw image, GHCR-hosted
+  # (Docker Hub mirror also published as openclaw/openclaw).
+  # Third-party image, not built by this repo's CI.
+  repository: ghcr.io/openclaw/openclaw
+
+  # Container image tag.
+  # Upgrade intentionally by changing this value — pinned to a specific
+  # release rather than "latest" because OpenClaw ships frequent breaking
+  # changes (plugin API, provider, and storage-schema migrations most
+  # months). Check https://github.com/openclaw/openclaw/releases before
+  # bumping.
+  tag: "2026.7.1"
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: Always
+
+# Agent: the gateway's own baseline settings. Applied declaratively at pod
+# startup by the apply-config init container (templates/configmap.yaml +
+# `openclaw config patch`), so a full destroy+redeploy always converges back
+# to this state — no manual `openclaw config`/`openclaw models set` needed.
+agent:
+  # Default LLM used for agent turns, as "<provider>/<model>".
+  # Must have a matching secret configured (see secret.anthropicApiKey
+  # below for the anthropic/* models).
+  model: anthropic/claude-haiku-4-5
+
+# Telegram: bot identity. Linking needs no QR/SMS step — the bot token from
+# @BotFather is the only credential (stored in secret.telegramBotToken
+# below, threaded to the pod as TELEGRAM_BOT_TOKEN), so there's no
+# non-secret field to declare here. Setup is a single non-interactive
+# command, but it's still a manual one-time step (Helm/Argo CD can't run
+# it): from a real terminal after first deploy, exec into the pod and run
+# (reads the token from the pod's own env so it's never retyped/pasted by
+# hand):
+# `kubectl exec deploy/assistant -- sh -c 'openclaw channels add --channel telegram --token "$TELEGRAM_BOT_TOKEN"'`
+# The @openclaw/telegram plugin ships stock in the image (confirmed via
+# `openclaw plugins list` — listed as "disabled" until a channel is added),
+# so no separate `plugins install` step is needed.
+
+# Storage: persistent workspace — holds the linked Telegram channel's state
+# plus conversation memory. Without this, every pod restart loses that state
+# and the channel must be re-registered by hand.
+storage: 1Gi
+
+# StorageClassName: PVC storage class.
+# Default: "" — matches helm/apps/llm's convention; templates/pv.yaml
+# provisions a static hostPath PV when empty (single-node clusters only).
+# Set to a real StorageClass name to dynamically provision instead.
+storageClassName: ""
+
+# Secret: sensitive values injected as the assistant-secrets Secret
+# (templates/secret.yaml). SOPS-encrypt on staging/prod and dev (see
+# argocd/clusters/*/values/).
+secret:
+  # Anthropic API key used as the agent's LLM backend.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  anthropicApiKey: ""
+
+  # Telegram bot token, issued by @BotFather. Threaded through to the
+  # container as TELEGRAM_BOT_TOKEN (templates/deployment.yaml) so the
+  # manual linking step (see the telegram comment above) can read it from
+  # the pod's own env instead of it being retyped/pasted by hand.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  telegramBotToken: ""
+
+# Resources: compute reserved for the assistant container.
+# Memory raised from an initial 256Mi after that limit OOMKilled the
+# gateway on startup during local testing (Rancher Desktop) — 1Gi is the
+# smallest value observed stable; revisit with real usage data once the
+# agent has run under load.
+resources:
+  requests:
+    # Minimum CPU reserved for scheduling.
+    cpu: "1"
+
+    # Minimum memory reserved for scheduling.
+    memory: 1Gi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: "1"
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
+    memory: 1Gi

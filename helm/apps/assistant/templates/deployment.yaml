@@ -1,0 +1,170 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Deployment resource name.
+  name: assistant
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  # Single replica — no HA for this app.
+  replicas: 1
+
+  # Recreate (not RollingUpdate) — the workspace PVC below is ReadWriteOnce,
+  # so a second pod can't be scheduled to mount it during a rolling update.
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      # Must match template.metadata.labels below.
+      app: assistant
+
+  template:
+    metadata:
+      labels:
+        # Pod label, matched by the selector above.
+        app: assistant
+
+      annotations:
+        # Forces a pod restart whenever configmap.yaml's rendered content
+        # changes. The apply-config init container only runs once at pod
+        # start, so without this, config-patch.json edits (e.g. the
+        # channels.telegram.dmPolicy default) would silently stop applying
+        # to already-running pods until someone manually ran a rollout
+        # restart.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+
+    spec:
+      # fsGroup 1000 — the image runs as uid/gid 1000 ("node"), but the
+      # hostPath-backed workspace volume is created root-owned by default.
+      # Without this, the app gets EACCES writing its state dir on startup.
+      securityContext:
+        fsGroup: 1000
+
+      initContainers:
+        # Fixes ownership of the hostPath-backed workspace volume, which is
+        # created root-owned regardless of fsGroup above (hostPath doesn't
+        # support Kubernetes' automatic fsGroup ownership management) — the
+        # main container runs as uid/gid 1000 and needs write access to it.
+        - name: fix-workspace-permissions
+          image: busybox
+          command:
+            - sh
+            - -c
+            - chown -R 1000:1000 /home/node/.openclaw
+          volumeMounts:
+            - name: workspace
+              mountPath: /home/node/.openclaw
+
+        # Declaratively applies templates/configmap.yaml's baseline config
+        # (gateway.mode, default model) into openclaw.json on every pod
+        # start — a recursive merge (via `openclaw config patch`), so it
+        # doesn't clobber state written by a completed Telegram channel link.
+        # Uses the app image itself since the `openclaw` CLI isn't available
+        # in busybox.
+        - name: apply-config
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - openclaw
+            - config
+            - patch
+            - --file
+            - /config/config-patch.json
+          volumeMounts:
+            - name: workspace
+              mountPath: /home/node/.openclaw
+
+            - name: config
+              mountPath: /config
+
+      containers:
+        # OpenClaw gateway — runs the agent loop and the Telegram channel.
+        - name: assistant
+
+          # Image repository:tag, sourced from values.image.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          # Image pull policy, sourced from values.image.pullPolicy.
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          env:
+            # Anthropic API key, sourced from the assistant-secrets Secret (templates/secret.yaml).
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: assistant-secrets
+                  key: ANTHROPIC_API_KEY
+
+            # Telegram bot token, sourced from the assistant-secrets Secret (templates/secret.yaml).
+            # Not consumed automatically by OpenClaw at startup — read manually
+            # during the one-time `openclaw channels add --channel telegram`
+            # linking step (values.yaml) so the token never has to be
+            # retyped/pasted by hand.
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: assistant-secrets
+                  key: TELEGRAM_BOT_TOKEN
+
+          volumeMounts:
+            # Persistent workspace — holds the linked Telegram channel's
+            # state plus conversation memory. The image
+            # runs as a non-root "node" user (uid 1000) whose $HOME is
+            # /home/node, not /root — confirmed by exec'ing into the image
+            # (`id` / `echo $HOME`), since the docs describe the root-user
+            # docker-compose path which doesn't apply here.
+            - name: workspace
+              mountPath: /home/node/.openclaw
+
+          resources:
+            requests:
+              # Minimum CPU reserved for scheduling.
+              cpu: {{ .Values.resources.requests.cpu }}
+
+              # Minimum memory reserved for scheduling.
+              memory: {{ .Values.resources.requests.memory }}
+
+            limits:
+              # CPU hard cap — matches requests (Guaranteed QoS).
+              cpu: {{ .Values.resources.limits.cpu }}
+
+              # Memory hard cap — matches requests (Guaranteed QoS).
+              memory: {{ .Values.resources.limits.memory }}
+
+          # Placeholder exec probes — no confirmed HTTP health endpoint yet.
+          # TODO: replace with the real health-check mechanism once the
+          # OpenClaw image/version is chosen (see docs.openclaw.ai/gateway).
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pgrep -f openclaw
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 5
+
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pgrep -f openclaw
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 5
+
+      volumes:
+        # Backs the workspace mount above with the PVC from templates/pvc.yaml.
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: {{ .Release.Namespace }}-assistant-workspace
+
+        # Backs the apply-config init container's mount with
+        # templates/configmap.yaml's config-patch.json.
+        - name: config
+          configMap:
+            name: assistant-config

@@ -1,0 +1,43 @@
+# Assistant service overrides for staging, layered onto helm/apps/assistant/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/staging/assistant.yaml).
+#
+# image.repository, secret.anthropicApiKey, and secret.telegramBotToken
+# below are SOPS-encrypted — only those leaf fields; the rest of this file
+# stays plaintext so it's readable in Git diffs.
+#
+# TODO before first deploy: fill in secret.telegramBotToken (from
+# @BotFather), then re-run
+# `sops -e -i argocd/clusters/staging/values/assistant.enc.yaml` to encrypt
+# it (same for secret.anthropicApiKey if that's set to a real value too).
+global:
+    environment: staging
+image:
+    repository: ENC[AES256_GCM,data:oTfMhjeuZYkLkYEr9RYRsV8i8wKEOnal+w==,iv:qko84xRZ/C6Y4upDHV7HOpZI9AAm6G4EQp3DKU44c1g=,tag:kMUEmyrrWNzsfKcz8XvxcQ==,type:str]
+    tag: 2026.7.1
+    pullPolicy: Always
+storage: 1Gi
+storageClassName: ""
+secret:
+    anthropicApiKey: ENC[AES256_GCM,data:J86RMrU8a4N3k281mmAkbs+ROY6571o8YhkPUEPsxqTWAmRt2Uc3U8LdcARREubmxEx9P3mpYqd8Wj+cMy+Sve0MJVpFmr7Ql/Pn0v9EQK2xeQoPvvCNEECs7OzLY5vbY6UZMFKvq2bzQRLg,iv:K++CW+59vPeI7DQh63uWyCuO7JOh47X3LiZHfN//KsU=,tag:AKoXWNF7IIkze9EuHcIvGw==,type:str]
+resources:
+    requests:
+        cpu: "1"
+        memory: 1Gi
+    limits:
+        cpu: "1"
+        memory: 1Gi
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBtNWVKWXRVVmJnYjkzRzVu
+            MS9DdEVTelp4TlUrRUNjMEZjb0RUd1ZRWkU4ClFCcE5POXg5QlZBelFZTk9XUjRi
+            RFZidTVDcTNPd1NuZlIrNE13UkpLcFkKLS0tIDZQdkZBZWtIOWt4L1RiQlA5THpC
+            d2Q2a09ZL2xpUkVlZW9YZnlGQnQyOE0KP5nQuqldKFUAfJTiFRQXfMUszyiYnysv
+            Uh403g0WBCq2dWf+ktFLCAp2IfX3AAbPG3Exe6OMhBY68n5b+nUHqg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken)$
+    lastmodified: "2026-07-28T05:34:04Z"
+    mac: ENC[AES256_GCM,data:W1K12Nbu5SuAdPeJQZY5cw+hn7mFBiK+THc4WRyvqvchg8232Nnf58nw56PxqEjZHUr3D6X78HSMLTdLwspQkoAiQTEdQRrGb0ZdV6gY/LnV5o7u20urDWKzvjdYGEQuLhRgvWqt1qC9dlL2988/Qxh9KW8+ywNfJQXrxXSsfxc=,iv:9Uo15WYWEFdOGXGU+kyXcSthY0UxUDhNUe8kMFzBP7g=,tag:b0T7Z5kzjVXeXTwcdmAtnA==,type:str]
+    version: 3.13.2

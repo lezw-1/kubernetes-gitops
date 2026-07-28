@@ -1,0 +1,47 @@
+# Baseline OpenClaw config, applied into the persistent workspace by the
+# apply-config init container (templates/deployment.yaml) via
+# `openclaw config patch`, which merges these keys into openclaw.json
+# without touching anything else already there (e.g. a linked Telegram
+# channel's own state). This is what makes config reproducible across a
+# full destroy+redeploy, instead of relying on one-off `openclaw config
+# set`/`openclaw models set` commands run by hand against a live pod.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  # ConfigMap name — mounted by the Deployment's apply-config init container.
+  name: assistant-config
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+data:
+  # JSON5 patch document — see `openclaw config patch --help`.
+  config-patch.json: |
+    {
+      "gateway": {
+        "mode": "local"
+      },
+      "agents": {
+        "defaults": {
+          "model": {
+            "primary": {{ .Values.agent.model | quote }}
+          }
+        }
+      },
+      // Telegram channel policy — declared here (not left to the manual
+      // linking step below) so a destroy+redeploy always re-converges to a
+      // deny-by-default DM policy, even though channels.telegram.botToken
+      // is written separately by the interactive
+      // `openclaw channels add --channel telegram` step (values.yaml) and
+      // is left out of this patch so it doesn't get clobbered.
+      "channels": {
+        "telegram": {
+          // Allowed values: pairing | allowlist | open | disabled. Default:
+          // pairing (unknown senders get a pairing code, ignored until
+          // approved) — declared explicitly rather than relying on the
+          // plugin's own default, so it's still enforced even if that
+          // default ever changes upstream.
+          "dmPolicy": "pairing"
+        }
+      }
+    }
