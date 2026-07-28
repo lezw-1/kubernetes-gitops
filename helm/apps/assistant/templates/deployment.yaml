@@ -80,26 +80,6 @@ spec:
             - name: config
               mountPath: /config
 
-        # Writes a global git config into the persistent workspace so git
-        # commands the agent runs (e.g. clone/push against github.com)
-        # authenticate automatically. Scoped to github.com only (least
-        # privilege — this token must not be offered to other git hosts).
-        # The credential helper reads GITHUB_TOKEN from the calling
-        # process's own env at lookup time, so the plaintext PAT itself is
-        # never written to this file or persisted on the workspace PVC.
-        - name: configure-git
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - sh
-            - -c
-            - |
-              git config -f /home/node/.openclaw/gitconfig credential.https://github.com.helper \
-                '!f() { echo username=x-access-token; echo "password=$GITHUB_TOKEN"; }; f'
-          volumeMounts:
-            - name: workspace
-              mountPath: /home/node/.openclaw
-
         # Links the Telegram bot to this workspace on every pod start,
         # replacing the old manual `kubectl exec ... openclaw channels add`
         # step. Skipped when no token is set yet (e.g. before first deploy).
@@ -184,6 +164,20 @@ spec:
             # docker-compose path which doesn't apply here.
             - name: workspace
               mountPath: /home/node/.openclaw
+
+          lifecycle:
+            # Appends GITHUB_TOKEN to ~/.bashrc right after this container
+            # starts, so exec sessions that load it via shell rc (rather
+            # than inheriting this process's env directly) still pick up
+            # the credential. $HOME isn't on the persistent workspace
+            # volume, so this is recreated fresh from the image on every
+            # container start — never persisted to the PVC.
+            postStart:
+              exec:
+                command:
+                  - sh
+                  - -c
+                  - echo "export GITHUB_TOKEN=\"$GITHUB_TOKEN\"" >> /home/node/.bashrc
 
           resources:
             requests:
