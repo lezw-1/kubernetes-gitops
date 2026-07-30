@@ -16,6 +16,8 @@ secret:
     anthropicApiKey: ENC[AES256_GCM,data:oxjnev/T9imGSpSXSh5gohYz8qnYWLl/UtgdbK6N2AttJGV680h0EDJ6DJpgqnTJmNCFDbwsqIl4jtUBgyz7pJgVAWut3vTcPiLApvW5iDvvYab+NsLVPn1qn1NlzuntxEK7EXfateSQSrhy,iv:6ToOc5LnoQ/dOLNr5GnbvVCgSjI4/vxi43EP19dU8HQ=,tag:ikf5tiMIzTWOFxtWvquAVA==,type:str]
     telegramBotToken: ENC[AES256_GCM,data:jJDNo16DXrBu5PvCuMHXYgFyRbTcpKYGYFFPwERp091hz6bvy8kx3e3cuYJ1OQ==,iv:n2nsxg1v42hNBkxSKucGGxpEAoRdU3aCVO3XKPt5u0w=,tag:GkZilGj1iPXITcpCPQoBtA==,type:str]
     githubToken: ENC[AES256_GCM,data:pEraXzx0iZflLiRCwL75nSPqiHKikArXWSzYZgtTmM1GWiaC2qUafXrAXAbAoIu0BRJ11TBmMk6P9dUnfcoPf4rAPFyKrU/KJ6URiAaZxQ0op9FtYcCYJdOzCs0L,iv:jHaLXyIO6oRyDtfeJk1k3jfVkQ47vwMHItYoK85+ufA=,tag:imAErSJkMQfWJcNI7SLxvQ==,type:str]
+    freelancermapEmail: ENC[AES256_GCM,data:PI0b9BGZ9Emvops/jZ12rbw/Ar1ieJctLQ==,iv:cQd2mejdT+z22YWxswYN/K1bl93aXhGsU9+X+x0DiYU=,tag:aeoY3FLtIZRJy3H6CX0x6w==,type:str]
+    freelancermapPassword: ENC[AES256_GCM,data:vDpVAOb9ELvGyxvnj4RmV9Aa,iv:4GT6DEizjTStLwkRCxLkrQgteoG1xd6hmfg36QtyrW0=,tag:iZ5Fn+kKtstkhgAe+fnkFw==,type:str]
 resources:
     requests:
         cpu: "1"
@@ -34,7 +36,7 @@ sops:
             sRcWeDPzZTDc4x80yPIR5mMERDzEdnMXtMrxqVuEB1xcIg9NnF3sFA==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
-    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken|githubToken)$
-    lastmodified: "2026-07-28T07:45:04Z"
-    mac: ENC[AES256_GCM,data:sPv8n2+ux/1VDTSnYxFnF+V5G100mcdqVNJRFqKysP7JxC8EPE4FJa5xn7zyXyYSgTE8GwRFksaVMDTy+TbaLJ6TeRgm0OpOhXUoYnuyHW22IynUwvis94CbYLD9L2UBsecXCT4A3DTmxdHF6qT09hsfW1zUSkFFUC24BHFDSko=,iv:nQjPHFZWWxiMbJKcY0/qqcSwCf2LpZ0Q6f3apPgwQXo=,tag:8qkgqLQRRGo/gwLagjr3Gw==,type:str]
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken|githubToken|githubToken|freelancermapEmail|freelancermapPassword)$
+    lastmodified: "2026-07-30T06:54:07Z"
+    mac: ENC[AES256_GCM,data:A3jv+syZD6bUKrc3mRx9NsZQgSZpE6VqRg68QEi029DnWfLQsakyAjca8bHpsWWdtMgT2yI0ZzzIeZxiS4dlb/8QHiJF2j9Qtz64f3PT8eH3zVAjkXX+BSmfQOFBFdWAi+jWSrl3hy1akMDOXCv3Q/sjlyxVhs056oDaj1Y7RKA=,iv:eqHsUzfWMtYNH11wP8SMQ1mwiZU/PV0olCojGNxF1FY=,tag:rojM06W3beIMsfCRcsPTOA==,type:str]
     version: 3.13.2

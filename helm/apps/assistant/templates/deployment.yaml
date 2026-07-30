@@ -129,20 +129,12 @@ spec:
             # GitHub PAT, sourced from the assistant-secrets Secret
             # (templates/secret.yaml). Consumed automatically at startup by
             # the github-copilot provider plugin, same as ANTHROPIC_API_KEY
-            # above — and read by the git credential helper below at lookup
-            # time.
+            # above.
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: assistant-secrets
                   key: GITHUB_TOKEN
-
-            # Points git at the config written by the configure-git init
-            # container above. Needed because $HOME (/home/node) isn't on
-            # the persistent workspace volume — only $HOME/.openclaw is —
-            # so git wouldn't otherwise find it at the default ~/.gitconfig.
-            - name: GIT_CONFIG_GLOBAL
-              value: /home/node/.openclaw/gitconfig
 
             # Telegram bot token, sourced from the assistant-secrets Secret
             # (templates/secret.yaml). Not consumed by the gateway process
@@ -155,6 +147,22 @@ spec:
                   name: assistant-secrets
                   key: TELEGRAM_BOT_TOKEN
 
+            # Freelancermap account email, sourced from the assistant-secrets
+            # Secret (templates/secret.yaml).
+            - name: FREELANCERMAP_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: assistant-secrets
+                  key: FREELANCERMAP_EMAIL
+
+            # Freelancermap account password, sourced from the
+            # assistant-secrets Secret (templates/secret.yaml).
+            - name: FREELANCERMAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: assistant-secrets
+                  key: FREELANCERMAP_PASSWORD
+
           volumeMounts:
             # Persistent workspace — holds the linked Telegram channel's
             # state plus conversation memory. The image
@@ -166,18 +174,25 @@ spec:
               mountPath: /home/node/.openclaw
 
           lifecycle:
-            # Appends GITHUB_TOKEN to ~/.bashrc right after this container
-            # starts, so exec sessions that load it via shell rc (rather
-            # than inheriting this process's env directly) still pick up
-            # the credential. $HOME isn't on the persistent workspace
-            # volume, so this is recreated fresh from the image on every
-            # container start — never persisted to the PVC.
+            # Writes GITHUB_TOKEN and the Freelancermap credentials to a
+            # dotenv file on the persistent workspace volume right after
+            # this container starts, so they're readable there by anything
+            # that expects a .env file on disk rather than process env.
+            # Overwrites (not appends) on every container start so restarts
+            # don't pile up duplicate lines on the PVC. Plaintext secrets at
+            # rest on the volume — accepted tradeoff for having them
+            # available as a file in the workspace.
             postStart:
               exec:
                 command:
                   - sh
                   - -c
-                  - echo "export GITHUB_TOKEN=\"$GITHUB_TOKEN\"" >> /home/node/.bashrc
+                  - |
+                    cat > /home/node/.openclaw/workspace/.env <<EOF
+                    GITHUB_TOKEN=$GITHUB_TOKEN
+                    FREELANCERMAP_EMAIL=$FREELANCERMAP_EMAIL
+                    FREELANCERMAP_PASSWORD=$FREELANCERMAP_PASSWORD
+                    EOF
 
           resources:
             requests:

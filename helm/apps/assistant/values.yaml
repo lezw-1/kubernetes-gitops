@@ -83,6 +83,16 @@ secret:
   # SOPS-encrypted environment override at deploy time.
   githubToken: ""
 
+  # Freelancermap account email, used to log in on the assistant's behalf.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  freelancermapEmail: ""
+
+  # Freelancermap account password, paired with freelancermapEmail above.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  freelancermapPassword: ""
+
 # Resources: compute reserved for the assistant container.
 # Memory raised from an initial 256Mi after that limit OOMKilled the
 # gateway on startup during local testing (Rancher Desktop) — 1Gi is the
