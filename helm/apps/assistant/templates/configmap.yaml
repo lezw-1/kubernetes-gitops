@@ -44,5 +44,19 @@ data:
           // default ever changes upstream.
           "dmPolicy": "pairing"
         }
+      },
+
+      // Points OpenClaw's browser tool at the headless Chromium service
+      // (templates/browser-deployment.yaml, templates/browser-service.yaml)
+      // over CDP, instead of launching a browser inside the assistant pod
+      // itself. In-cluster DNS name — only resolvable from this namespace.
+      "browser": {
+        "enabled": true,
+        "defaultProfile": "assistant-browser",
+        "profiles": {
+          "assistant-browser": {
+            "cdpUrl": "ws://assistant-browser:3000"
+          }
+        }
       }
     }

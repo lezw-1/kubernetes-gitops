@@ -22,7 +22,7 @@ image:
   tag: "2026.7.1"
 
   # Allowed values: Always, IfNotPresent, Never
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 # Agent: the gateway's own baseline settings. Applied declaratively at pod
 # startup by the apply-config init container (templates/configmap.yaml +
@@ -33,6 +33,62 @@ agent:
   # Must have a matching secret configured (see secret.anthropicApiKey
   # below for the anthropic/* models).
   model: anthropic/claude-haiku-4-5
+
+# Browser: headless Chromium service (Browserless), giving OpenClaw's
+# bundled browser tool something to drive over CDP. Deployed as its own
+# Deployment + ClusterIP Service (templates/browser-deployment.yaml,
+# templates/browser-service.yaml) rather than installed into the assistant
+# image itself — Chromium's system-library dependencies can't be installed
+# at container runtime (an init container's `apt-get install` writes to its
+# own filesystem, invisible to the main container; see git history), and
+# this repo doesn't build a custom assistant image to bake it in at build
+# time. Only reachable inside this namespace — no Ingress/HTTPRoute — and
+# has no token auth of its own (a Kubernetes httpGet probe can't source a
+# header/query value from a Secret without baking the token into the
+# rendered manifest, which is worse); the ClusterIP-only network boundary
+# is the accepted tradeoff. Wired into the agent via config-patch.json's
+# `browser.profiles` (templates/configmap.yaml).
+browser:
+  image:
+    # Container image repository for the headless browser service.
+    repository: ghcr.io/browserless/chromium
+
+    # Container image tag.
+    # Upgrade intentionally by changing this value — check
+    # https://github.com/browserless/browserless/pkgs/container/chromium
+    # before bumping.
+    tag: "v2.55.1"
+
+    # Allowed values: Always, IfNotPresent, Never
+    pullPolicy: IfNotPresent
+
+  # Max concurrent browser sessions Browserless allows before queuing.
+  # Default: 5 — single agent, single Telegram user driving it, so this
+  # only needs to cover a couple of overlapping tool calls.
+  concurrent: 5
+
+  # Compute reserved for the headless browser container. Sized separately
+  # from `resources` below (main gateway) so bumping one doesn't silently
+  # resize the other — Chromium is far heavier than the gateway process.
+  # Starting point only; revisit with real usage data once the browser
+  # tool has run under load.
+  resources:
+    requests:
+      # Minimum CPU reserved for scheduling.
+      cpu: "1"
+
+      # Minimum memory reserved for scheduling.
+      memory: 1Gi
+
+    limits:
+      # CPU hard cap.
+      cpu: "2"
+
+      # Memory hard cap — Chromium is prone to OOM under memory pressure
+      # from multiple pages/tabs; kept above requests (Burstable QoS)
+      # rather than matching them (Guaranteed) so it isn't permanently
+      # reserving its ceiling.
+      memory: 2Gi
 
 # Telegram: bot identity. Linking needs no QR/SMS step — the bot token from
 # @BotFather is the only credential (stored in secret.telegramBotToken

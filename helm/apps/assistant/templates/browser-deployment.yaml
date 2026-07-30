@@ -1,0 +1,100 @@
+# Headless Chromium service (Browserless) — gives OpenClaw's browser tool
+# something to drive over CDP. See the `browser:` comment in values.yaml
+# for why this runs as its own service instead of being installed into the
+# assistant image.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Deployment resource name — matches the Service name below.
+  name: assistant-browser
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  # Single replica — stateless, but only the assistant pod ever calls it.
+  replicas: 1
+
+  # Recreate (not RollingUpdate) — nothing to conflict over, but matches
+  # the assistant Deployment's strategy and avoids briefly running two
+  # Chromium instances at double the resource footprint.
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      # Must match template.metadata.labels below.
+      app: assistant-browser
+
+  template:
+    metadata:
+      labels:
+        # Pod label, matched by the selector above.
+        app: assistant-browser
+
+    spec:
+      containers:
+        - name: chromium
+
+          # Image repository:tag, sourced from values.browser.image.
+          image: "{{ .Values.browser.image.repository }}:{{ .Values.browser.image.tag }}"
+
+          # Image pull policy, sourced from values.browser.image.pullPolicy.
+          imagePullPolicy: {{ .Values.browser.image.pullPolicy }}
+
+          ports:
+            # CDP/WebSocket + REST API port, matched by the Service below.
+            - containerPort: 3000
+
+          env:
+            # Max concurrent browser sessions, sourced from values.browser.concurrent.
+            - name: CONCURRENT
+              value: {{ .Values.browser.concurrent | quote }}
+
+          volumeMounts:
+            # Chromium's shared-memory segment. Kubernetes mirrors Docker's
+            # tiny default /dev/shm (64Mi), which causes Chrome to crash or
+            # become unstable under load — backed by an in-memory emptyDir
+            # sized above Browserless's own documented --shm-size=2g
+            # recommendation.
+            - name: dshm
+              mountPath: /dev/shm
+
+          resources:
+            requests:
+              # Minimum CPU reserved for scheduling.
+              cpu: {{ .Values.browser.resources.requests.cpu }}
+
+              # Minimum memory reserved for scheduling.
+              memory: {{ .Values.browser.resources.requests.memory }}
+
+            limits:
+              # CPU hard cap.
+              cpu: {{ .Values.browser.resources.limits.cpu }}
+
+              # Memory hard cap.
+              memory: {{ .Values.browser.resources.limits.memory }}
+
+          # /pressure is Browserless's documented health-check endpoint.
+          readinessProbe:
+            httpGet:
+              path: /pressure
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /pressure
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+
+      volumes:
+        # Backs the /dev/shm mount above.
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi
