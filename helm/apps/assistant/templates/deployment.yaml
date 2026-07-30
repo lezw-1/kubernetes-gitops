@@ -119,6 +119,17 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
 
           env:
+            # Forces OpenClaw's browser tool headless. Currently a no-op:
+            # this deployment's only profile is the remote CDP one
+            # (templates/configmap.yaml's browser.profiles.assistant-browser),
+            # and OpenClaw docs confirm this setting only affects
+            # locally-managed profiles it launches itself, not remote CDP
+            # connections — Browserless's own container is what actually
+            # runs headless. Declared here so it takes effect automatically
+            # if a locally-managed profile is ever added alongside it.
+            - name: OPENCLAW_BROWSER_HEADLESS
+              value: "1"
+
             # Anthropic API key, sourced from the assistant-secrets Secret (templates/secret.yaml).
             - name: ANTHROPIC_API_KEY
               valueFrom:
