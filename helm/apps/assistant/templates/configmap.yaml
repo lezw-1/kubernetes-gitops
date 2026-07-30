@@ -55,7 +55,11 @@ data:
         "defaultProfile": "assistant-browser",
         "profiles": {
           "assistant-browser": {
-            "cdpUrl": "ws://assistant-browser:3000"
+            "cdpUrl": "ws://assistant-browser:3000",
+
+            // Required by config schema validation — cosmetic only (UI
+            // display color for this profile), no functional effect.
+            "color": "#4285F4"
           }
         }
       }
