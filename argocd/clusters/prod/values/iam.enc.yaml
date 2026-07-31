@@ -11,7 +11,7 @@ global:
 gateway:
     hosts:
         # Default: empty disables hostname-based routing (route matches any host).
-        domain: ""
+        domain: ENC[AES256_GCM,data:y4dvSMWe8Q==,iv:dDWJ4Bw+Vo5IlQird5z3OVszjxYycmRL2knURU16fJw=,tag:gULzofMVyFJel17ZdLEZdA==,type:str]
 # Image: container image settings.
 image:
     # Upgrade intentionally by changing this value — third-party image, not built by this repo's CI.
@@ -82,6 +82,14 @@ secrets:
             directAccessGrantsEnabled: true
             roles:
                 - viewer
+        promises:
+            clientId: promises
+            enabled: true
+            publicClient: false
+            directAccessGrantsEnabled: false
+            roles:
+                - viewer
+                - admin
     # User definitions, keyed by a values-safe name.
     users:
         user1:
@@ -104,6 +112,10 @@ secrets:
             roles:
                 - client: chronsorting
                   role: viewer
+                - client: promises
+                  role: viewer
+                - client: promises
+                  role: admin
                 - client: frontend
                   role: viewer
         user2:
@@ -131,6 +143,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
     encrypted_regex: ^(username|password|domain|email)$
-    lastmodified: "2026-07-24T11:37:21Z"
-    mac: ENC[AES256_GCM,data:oYB9Q7/84WnQDQc5XDZoKcaWyoOa5kD183jCKG7CB1OODa7ry2xl/g379ha3mkGWRkMkgmL0D+zTvvmQsgVflLJhxVY34GW9rFTxvzb+qTfkwUj/tF2N/A33BtWDCHBQfQ1B4bov7044P0iy3FQsPTTImkYRsXqV/OjSow6rvXQ=,iv:1eDyvLmkFhLSKD98LxhDw4NwlNw3Qo7Pv3feOmQ/6BQ=,tag:9EZMPCf8xOEv+mrMg+HstA==,type:str]
-    version: 3.13.2
+    lastmodified: "2026-07-31T10:45:31Z"
+    mac: ENC[AES256_GCM,data:ThEgQIPRZHJb/G6kQ7G776QyAdDe5ORH5tzF+Gdm1ZDr3d0qSqU5P9hATwNPxPmgf3lKGasqgH8ob3yR4tEUc+C2J3UJlq773VDyNoNg8oODtiOtF3JidAhQWLYc1ZbbYEB7fdf4jv+BP5TdEhXwCWQJBfmHwvvWPyeMxKfESkU=,iv:j110mANjcVTo2/0a7YTqwAceJHIrJKYB9Bq0pPgKSWQ=,tag:sMTtFkiFGkqw4j+vAWLpFg==,type:str]
+    version: 3.13.3

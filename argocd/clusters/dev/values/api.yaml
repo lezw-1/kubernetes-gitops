@@ -1,0 +1,72 @@
+# Platform API service overrides for the local cluster, layered onto
+# apps/api/values.yaml via the $values ref in argocd/clusters/dev/api.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name, used in hostnames and resource suffixes.
+  environment: dev
+
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+  hosts:
+    # Default: empty disables hostname-based routing (route matches any host) —
+    # matches iam's pattern, since this is a subpath API, not the root app.
+    domain: ""
+
+# Image: container image settings.
+image:
+  # Built locally via `nerdctl build -t api:local ...`.
+  repository: api
+
+  # Local image tag.
+  tag: local
+
+  # Allowed values: Always, IfNotPresent, Never
+  # Use the local nerdctl image, never pull from a registry.
+  pullPolicy: Never
+
+# Service: ClusterIP configuration.
+service:
+  # FastAPI/uvicorn listen port.
+  port: 8000
+
+# Resources: compute reserved for the API container.
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 50m
+    memory: 128Mi
+
+# HPA: horizontal pod autoscaler.
+hpa:
+  # Enabled in dev to exercise autoscaling behavior.
+  enabled: true
+
+  # Minimum pod count.
+  minReplicas: 1
+
+  # Maximum pod count.
+  maxReplicas: 5
+
+  # Target average CPU utilization percentage for scaling.
+  targetCPUUtilization: 70
+
+# MongoUrl: in-cluster MongoDB, no authentication (see helm/apps/database).
+mongoUrl: "mongodb://database:27017"
+
+# Iam: matches the iam app's dev deployment, same namespace.
+iam:
+  apiHost: "http://iam:8080"
+  subpath: "/iam"
+
+# Broker: in-cluster Redis, no authentication (see helm/apps/broker).
+broker:
+  port: 6379
+  url: "redis://broker:6379/0"
+
+# Worker: matches the worker app's dev deployment, same namespace.
+worker:
+  url: "http://worker:8000"
+  timeout: 1200

@@ -1,0 +1,49 @@
+# Database overrides for the local cluster, layered onto
+# apps/database/values.yaml via the $values ref in argocd/clusters/dev/database.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name.
+  environment: dev
+
+# Image: MongoDB server container image settings.
+image:
+  # Public image — no registry secret needed.
+  repository: mongo
+
+  tag: "8"
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: IfNotPresent
+
+# Service: ClusterIP configuration.
+service:
+  port: 27017
+
+# Storage: local single-node cluster — small volume is enough.
+storage: 5Gi
+
+# StorageClassName: local dev cluster provisions via local-path, not hostPath.
+storageClassName: "local-path"
+
+# Resources: compute reserved for the MongoDB container.
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 250m
+    memory: 512Mi
+
+# Migrate: the schema-migration Job's image settings.
+migrate:
+  image:
+    # Built locally via `nerdctl build -t database-migrate:local ...`.
+    repository: database-migrate
+
+    # Local image tag.
+    tag: local
+
+    # Allowed values: Always, IfNotPresent, Never
+    # Use the local nerdctl image, never pull from a registry.
+    pullPolicy: Never

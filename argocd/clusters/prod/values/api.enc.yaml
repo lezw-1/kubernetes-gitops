@@ -1,0 +1,65 @@
+# Platform API service overrides for prod, layered onto helm/apps/api/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/prod/api.yaml).
+# Global: shared across templates.
+global:
+    # Deployment environment name, used in hostnames and resource suffixes.
+    environment: prod
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+    hosts:
+        # Default: empty disables hostname-based routing (route matches any host) —
+        # matches iam's pattern, since this is a subpath API, not the root app.
+        domain: ENC[AES256_GCM,data:CJN/CuO6cw==,iv:vbH8sroCrhb3X/ZjO4cx13uAy7iRwmpxFsRWj+T/EMc=,tag:u7e42G3brNL9Xe8CHEa0zQ==,type:str]
+# Image: container image settings.
+image:
+    # Cloudfleet private registry path. SOPS-encrypted — real registry
+    # host; decrypt/edit via `sops` rather than by hand.
+    repository: ENC[AES256_GCM,data:YlDBRzjYYrACUCCVYTTrzlLVradNd1Cufg0yMrilLWOTK3xphMLsUsEvIJURMIpfmQlXEPy3EWCaYR1heGxfhANSFY9Wq2E=,iv:JpGEJowaCsQESE9h1o2oRfYG5hcFzRQpgwtreRywWtE=,tag:R5ViMki6FHW3i5xX3BeZzQ==,type:str]
+    # Image tag — bumped by hand once the source repo publishes a new image (see README).
+    tag: prod
+    # Allowed values: Always, IfNotPresent, Never
+    # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
+    pullPolicy: Always
+# Service: ClusterIP configuration.
+service:
+    # FastAPI/uvicorn listen port.
+    port: 8000
+# HPA: horizontal pod autoscaler.
+hpa:
+    # Enabled in prod to exercise autoscaling behavior.
+    enabled: true
+    # Minimum pod count.
+    minReplicas: 1
+    # Maximum pod count.
+    maxReplicas: 5
+    # Target average CPU utilization percentage for scaling.
+    targetCPUUtilization: 70
+# MongoUrl: in-cluster MongoDB, no authentication (see helm/apps/database).
+mongoUrl: mongodb://database:27017
+# Iam: matches the iam app's prod deployment, same namespace.
+iam:
+    apiHost: http://iam:8080
+    subpath: /iam
+# Broker: in-cluster Redis, no authentication (see helm/apps/broker).
+broker:
+    port: 6379
+    url: redis://broker:6379/0
+# Worker: matches the worker app's prod deployment, same namespace.
+worker:
+    url: http://worker:8000
+    timeout: 1200
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA3NmNwWFladUNweWkwZzYr
+            dlVBYjMyWlQrcmlOMitqeVN5TlR4Z055ZVVJCjl6UGkxSkkwMGJKYThiSnRUazdo
+            SlVMajhlUzg4WExNREs4M01lbnpsOGcKLS0tIE9takFKM1hpOU13Mnc3NXNGRlp1
+            VERWY3oxc1YxM1drVStCT2FEOW5PZmMKrSRLGsEYes4q+fVeK7eSOxEkbTLKGtLP
+            94oBWJyPzgFSSAP4kwFk4Q/1wmKyiwQriJJ8Dd1J7qPQIGr5wVwmaA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-25T19:36:25Z"
+    mac: ENC[AES256_GCM,data:EHL8vG5PRCszxdoMW+d5MAEyv+i1Jmd3Fn9ftm825NLZ3CNItPLYzZVczX/ZUJHIUhOI6TCsPx+Wnt9J/+gROhz1HxQ3diznUTyFnwIutIbyZKYB8mFfdrZLREdNat50vZCIlt+aS0e7v+lnxk+UuTl/KfMR9ZB+rVm155VVZao=,iv:ctcdK6ElQ5IIIpcYaUbGbiMzgGQs5+KPd2womsw34ac=,tag:F5wUwe8kIWRmGeeg8YTNtQ==,type:str]
+    version: 3.13.2

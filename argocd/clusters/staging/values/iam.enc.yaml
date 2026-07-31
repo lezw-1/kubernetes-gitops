@@ -11,7 +11,7 @@ global:
 gateway:
     hosts:
         # Default: empty disables hostname-based routing (route matches any host).
-        domain: ""
+        domain: ENC[AES256_GCM,data:SI9XQn9lQQ==,iv:idIYD1YIXLVPF/cz8dxAjcwbxOijqytHmXwwcnxZ718=,tag:sHfus9zFIaQCYgiNFgNxwA==,type:str]
 # Image: container image settings.
 image:
     # Upgrade intentionally by changing this value — third-party image, not built by this repo's CI.
@@ -31,6 +31,14 @@ tokenExpire: 3600
 # Debug: Keycloak log level.
 # Allowed values: DEBUG, INFO, WARN, ERROR
 debug: INFO
+# Resources: compute reserved for the Keycloak container.
+resources:
+    requests:
+        cpu: 500m
+        memory: 1Gi
+    limits:
+        cpu: 500m
+        memory: 1Gi
 # HPA: horizontal pod autoscaler.
 hpa:
     # Enabled in staging for load-based scaling.
@@ -82,6 +90,14 @@ secrets:
             directAccessGrantsEnabled: true
             roles:
                 - viewer
+        promises:
+            clientId: promises
+            enabled: true
+            publicClient: false
+            directAccessGrantsEnabled: false
+            roles:
+                - viewer
+                - admin
     # User definitions, keyed by a values-safe name.
     users:
         user1:
@@ -104,6 +120,10 @@ secrets:
             roles:
                 - client: chronsorting
                   role: viewer
+                - client: promises
+                  role: viewer
+                - client: promises
+                  role: admin
                 - client: frontend
                   role: viewer
         user2:
@@ -131,6 +151,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email)$
-    lastmodified: "2026-07-24T08:57:18Z"
-    mac: ENC[AES256_GCM,data:sEHTjfJ8ZFvGe4kw1ZuFX+LPD+nZvwsQQ7bsSZohoweHCjulmYSkqVujF3kd29xMi99p4gOFh0Gn9CVu80AT7zcXv+ICBB/Ii8QAOoFpQdUDGaTAcAIwKqAnJk/4GioE8WKYEZFs2kFvbrOXzhccNnQMHkNU1TWoCdLpdycy63c=,iv:l1fKjqsAGdhSBJblF8f2VM5iJnHa0UZ2MmDMcCObWuE=,tag:3THPx1aQ8TeO9k2bqebDCw==,type:str]
-    version: 3.13.2
+    lastmodified: "2026-07-31T11:03:43Z"
+    mac: ENC[AES256_GCM,data:fgIekCMtNMYOA1IhjwIBnVuu84bxv+w0WZjINPKSiTYlh3rwaL6GC9mIQkvij3vSiHto1RmdgguyVaF5hiTCA8rpSFBBwgnaJXDj33nR76xxbiUXtwX62liMxKU2HaNrsqOzUMmPILqhPbnUDuk8wYNCfwfXBT2QzbSDMO33HeA=,iv:r1ANRuWOWYXDoEhatGqBD3+CxOuaYntReppvMqPeSbE=,tag:EOhbUBZHgTdjmad1Viv8WQ==,type:str]
+    version: 3.13.3

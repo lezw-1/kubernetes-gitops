@@ -1,0 +1,33 @@
+# Static hostPath PersistentVolume, rendered only when no real StorageClass
+# is configured (values.storageClassName == ""). Pre-bound to the PVC below
+# via claimRef so nothing else can claim it.
+{{- if eq .Values.storageClassName "" }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  # PV name — unique per namespace, since hostPath is node-local.
+  name: {{ .Release.Namespace }}-assistant-workspace
+
+spec:
+  capacity:
+    # Must match (or exceed) the PVC's requested storage below.
+    storage: {{ .Values.storage }}
+
+  accessModes:
+    - ReadWriteOnce
+
+  # Retain: data survives PV/PVC deletion — must be cleaned up manually.
+  # Deliberately conservative here: this volume holds the linked Telegram
+  # channel's state, which is expensive to recreate (requires re-running the
+  # manual linking flow).
+  persistentVolumeReclaimPolicy: Retain
+
+  hostPath:
+    # Node-local path — only viable on a single-node cluster (e.g. local dev).
+    path: /data/{{ .Release.Namespace }}/assistant
+
+  claimRef:
+    # Pre-binds this PV to the PVC below, by name and namespace.
+    namespace: {{ .Release.Namespace }}
+    name: {{ .Release.Namespace }}-assistant-workspace
+{{- end }}

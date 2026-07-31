@@ -1,0 +1,66 @@
+# Default values — overridden per environment via argocd/clusters/<env>/values/llm.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name.
+  # Allowed values: dev, staging, prod
+  environment: dev
+
+# Replicas: pod count.
+# Default: 1 — self-hosted inference is a dev/local convenience. Set to 0
+# on staging/prod, where the worker calls the Anthropic API directly
+# instead (see helm/apps/worker's secret.anthropicApiKey) and no
+# self-hosted model is needed.
+replicas: 1
+
+# Image: Ollama server container image settings.
+image:
+  # Container image repository.
+  # Upgrade intentionally by changing the tag below — third-party image, not built by this repo's CI.
+  repository: ollama/ollama
+
+  # Container image tag.
+  tag: latest
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: IfNotPresent
+
+# Model: Ollama model name pulled by the init container on startup, e.g. "qwen2.5:7b".
+model: "qwen2.5:7b"
+
+# Service: ClusterIP configuration. Other apps connect via
+# http://llm:<port> — Ollama's native API port.
+service:
+  # Ollama listen port.
+  port: 11434
+
+# Storage: PVC request size, e.g. "20Gi", holding pulled model weights.
+storage: 20Gi
+
+# StorageClassName: name of the StorageClass backing the PVC.
+# Default: empty renders a guarded hostPath PersistentVolume
+# (templates/pv.yaml) instead of relying on dynamic provisioning — use
+# this until a real CSI StorageClass is available for this cluster.
+storageClassName: ""
+
+# Resources: compute reserved for the Ollama container.
+# Memory is not reduced below what the configured model needs to load —
+# qwen2.5:7b needs roughly this much just for weights + context.
+resources:
+  requests:
+    # Minimum CPU reserved for scheduling.
+    cpu: "1"
+
+    # Minimum memory reserved for scheduling.
+    memory: 6Gi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: "1"
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
+    memory: 6Gi
+
+# Debug: Ollama server log verbosity.
+# Allowed values: "0" (default logging), "1" (verbose/debug logging)
+debug: "0"

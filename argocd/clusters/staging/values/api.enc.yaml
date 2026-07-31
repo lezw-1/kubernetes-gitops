@@ -1,0 +1,77 @@
+# Platform API service overrides for staging, layered onto helm/apps/api/values.yaml
+# via the SECRETS_FILE env in the sops-helm plugin source (argocd/clusters/staging/api.yaml).
+#
+# repository below is SOPS-encrypted (real Cloudfleet registry host) — only
+# that leaf field; the rest of this file stays plaintext so it's readable in
+# Git diffs.
+# Global: shared across templates.
+global:
+    # Deployment environment name, used in hostnames and resource suffixes.
+    environment: staging
+# Gateway: HTTPRoute hostname configuration.
+gateway:
+    hosts:
+        # Default: empty disables hostname-based routing (route matches any host) —
+        # matches iam's pattern, since this is a subpath API, not the root app.
+        domain: ENC[AES256_GCM,data:+FRaglZCiQ==,iv:Fq8lqBYwSZHGsObJ4A8LAH2NwRRbNJosyRaczKEqJsc=,tag:pkx7CcvhGBziWLkn1tmdog==,type:str]
+# Image: container image settings.
+image:
+    # Cloudfleet private registry path. SOPS-encrypted — real registry
+    # host; decrypt/edit via `sops` rather than by hand.
+    repository: ENC[AES256_GCM,data:egerNkajVzVw/kBeAICeKpGcFcvjt2+JDReXYYphjdoyAjtKjsfA+/bwCoLFwy+85qhbbjNZETL/Ka1BXDaK9eDIh8trJCI=,iv:4AoD7YrHbX4+avpI+GwD6FD4TNca1WyNUBwQNNMC010=,tag:ZRpF6dYd/Fbl5TNJzIwmrA==,type:str]
+    # Image tag — bumped by hand once the source repo publishes a new image (see README).
+    tag: staging
+    # Allowed values: Always, IfNotPresent, Never
+    # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
+    pullPolicy: Always
+# Service: ClusterIP configuration.
+service:
+    # FastAPI/uvicorn listen port.
+    port: 8000
+# Resources: compute reserved for the API container.
+resources:
+    requests:
+        cpu: 50m
+        memory: 128Mi
+    limits:
+        cpu: 50m
+        memory: 128Mi
+# HPA: horizontal pod autoscaler.
+hpa:
+    # Enabled in staging to exercise autoscaling behavior.
+    enabled: true
+    # Minimum pod count.
+    minReplicas: 1
+    # Maximum pod count.
+    maxReplicas: 5
+    # Target average CPU utilization percentage for scaling.
+    targetCPUUtilization: 70
+# MongoUrl: in-cluster MongoDB, no authentication (see helm/apps/database).
+mongoUrl: mongodb://database:27017
+# Iam: matches the iam app's staging deployment, same namespace.
+iam:
+    apiHost: http://iam:8080
+    subpath: /iam
+# Broker: in-cluster Redis, no authentication (see helm/apps/broker).
+broker:
+    port: 6379
+    url: redis://broker:6379/0
+# Worker: matches the worker app's staging deployment, same namespace.
+worker:
+    url: http://worker:8000
+    timeout: 1200
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBmN2FjQ1E2UVYxajhvSjhY
+            aVl1RjJ1NzQ1NEZyR3ZCeVpMa05EK2l6cEM0CmdKZkZ3b28xOEkrdGsyeVdpR3pN
+            S0hac2hOemxFbnhVSW1tcEFyQWNJYXMKLS0tIE04bU5jVmo4RUZ0ZlR4V0p2OWRy
+            LzVQZDgwakhueWVUN3MyVHg0VktUNmMKRLpVouPoQv8dT9qZ+7d5pm2bVbqjsHbQ
+            q9wM1pPipGJm0qIR7PKJocQNOln/ZKaf0NneVm0un7G5Y+yUgStU5A==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-25T20:43:27Z"
+    mac: ENC[AES256_GCM,data:cnENas/9yIyqXWNANF8/YlnxcD7wUg+4+HxdgT5oycAYQnqA3YYhSb8f4wBi/ZCDRaQciAwc1AzhE29vzDxiCsuCgVc89B6tormqZMztKYXE56PxqNLP4esaWsqYwRcBYFbZ/0NU8WCvrwbevMahAsBBXD7M8zOpHrIbX4Ege6M=,iv:df5GUaHDKYQHaCSwLMICCC3oOI3taU8ZAywUdITWzzw=,tag:swBFQdvMpw0BHq8BQGk9Dw==,type:str]
+    version: 3.13.2

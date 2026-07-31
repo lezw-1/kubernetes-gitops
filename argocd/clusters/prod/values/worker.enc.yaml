@@ -1,0 +1,46 @@
+# Worker service overrides for prod, layered onto helm/apps/worker/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/prod/worker.yaml).
+#
+# secret.anthropicApiKey below is SOPS-encrypted — only that leaf field; the
+# rest of this file stays plaintext so it's readable in Git diffs.
+global:
+    environment: prod
+image:
+    # Cloudfleet private registry path. SOPS-encrypted — real registry
+    # host; decrypt/edit via `sops` rather than by hand.
+    repository: ENC[AES256_GCM,data:7Q32aktf7c+MREI55GQVAOFg+9WkYsy2NSShn3lqrjXKgEUDkELd1yl2FR3yvE/Fl/ariXEp9Hns2HMAf0es2yPOdAIiFxYzMKA=,iv:TqKkFkDBuKbCvjKDwy8N2o9utNKGygFVvjjHFrkzFG8=,tag:W+Bp6GrNKIPEVfgSS0AhHA==,type:str]
+    # Image tag — bumped by hand once the source repo publishes a new image (see README).
+    tag: prod
+    # Allowed values: Always, IfNotPresent, Never
+    # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
+    pullPolicy: Always
+database:
+    port: 27017
+mongoUrl: mongodb://database:27017
+broker:
+    port: 6379
+    url: redis://broker:6379/0
+service:
+    port: 8000
+pool: prefork
+secret:
+    anthropicApiKey: ""
+resources:
+    requests:
+        cpu: 250m
+        memory: 512Mi
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSArNFRDZkkzZkpjM0JDWklR
+            ZTB4aGhWMTdHdngrSjl5ZWkzYTRuR3NBYVE0Cnd2K3ZIancybk9jVitPb0VTQldX
+            S0t0TUhGZy9rZ1RLRVBWNUp6TVgwUVEKLS0tIFNVRUg0eVZtS0lXQmNFMU4rRG5Z
+            TmVYTWFsN2ZoTmpHK1ZLMGRyQTMvZlkKqzhNa2VaIHrPXEkKLbXxA+2QZVpOOlqG
+            epF8eWLe1ZQk6j+Q1KKe7rhWxwJz2ax/HR7PGNrY8WqJ5DCYR3yeqQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-25T20:09:32Z"
+    mac: ENC[AES256_GCM,data:LAg0Si2e3sdaO94/T4OdAi9ajulKKY72IpfDTG/LKtMtvKiHgwmvamtibhIkJE+ZiusZwWxd0Mj6Zbbu7DuYPWqcHiYRX26jmxcvwOi1DE59eI8YeHnO2E+T68C41D+YOzrNzcUAmvnrQQRbA1lz1UVqXJL8p7So31FSkp1gVVg=,iv:brnZJBsdcyfuABaSwZSNhbwQL0LQgoTjv6bL6tu6+sQ=,tag:hKTMbH/RTbKWK/tW7zpmng==,type:str]
+    version: 3.13.2

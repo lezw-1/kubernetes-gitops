@@ -19,9 +19,14 @@ Three independent clusters, each with its own Argo CD install:
 - **App-of-apps, staging (`argocd/clusters/staging/`)** — one file per Application for the staging cluster, plus `values/` for this cluster's Helm values overrides.
 - **App-of-apps, prod (`argocd/clusters/prod/`)** — one file per Application for the prod cluster, plus `values/` for this cluster's Helm values overrides.
 - **Bootstrap (`argocd/bootstrap/`)** — `root.yaml`, `install.yaml`: the one-time install manifests shared by all three clusters, applied with `__ENV__`/`__DIR__` substituted by `argocd/clusters/dev/bootstrap.sh` (dev) or `.github/workflows/argocd.yaml` (staging, prod).
+- **Broker (`helm/apps/broker`)** — self-hosted Redis 8, no authentication: Deployment, Service, PV/PVC. Backs the Celery job queue shared by `api` and `worker`.
+- **Database (`helm/apps/database`)** — self-hosted MongoDB 8, no authentication: Deployment, Service, PV/PVC, and a post-install/post-upgrade migration Job. Migration job source lives in `kubernetes-database-migrate`.
 - **Frontend (`helm/apps/frontend`)** — React dashboard Helm chart: Deployment, Service, HPA, HTTPRoute.
 - **IAM (`helm/apps/iam`)** — Keycloak-based authentication and token issuance: Deployment, Service, HPA, HTTPRoute, plus realm/client/user Secrets and a provisioning Job, gated by `secretsProvisioning.enabled` (on for dev, off for staging/prod). On dev, rendered via the `sops-helm` CMP so credentials stay SOPS-encrypted in Git.
+- **LLM (`helm/apps/llm`)** — self-hosted Ollama Helm chart: Deployment (init container pulls the configured model on startup), Service, PV/PVC. Enabled on dev and staging (`replicas: 1`); disabled on prod (`replicas: 0`), which calls the Anthropic API directly instead, same as `worker`.
 - **Networking platform (`helm/platform/networking`)** — shared namespace, cert-manager, Envoy Gateway controller/class, and the cluster Gateway (TLS Certificate/ClusterIssuer, health-check HTTPRoute).
+- **Platform API (`helm/apps/api`)** — FastAPI gateway Helm chart: Deployment, Service, HPA, HTTPRoute (routes `/api`, backed by MongoDB, `broker`, and the `iam`/`worker` services). Source lives in `kubernetes-api`.
+- **Worker (`helm/apps/worker`)** — LangGraph multi-agent Celery worker Helm chart: Deployment, Service, Secret (`ANTHROPIC_API_KEY`). Consumes jobs off the `broker` (Redis) queue dispatched by `api`. Source isn't split out of `kubernetes-ai-system` into its own repo yet, so `image.repository`/`tag` are empty on staging/prod until it is — deploy a real image there by hand until CI is wired up. Also note: the upstream worker image doesn't yet expose the HTTP endpoint `api`'s `WORKER_URL` calls for `/chronsorting` (Celery-only today, see `kubernetes-ai-system` BACKLOG.md) — that request will fail until upstream adds it.
 
 ## Prerequisites
 
@@ -63,7 +68,7 @@ Its own independent remote cluster and Argo CD install — no longer shared with
 
 Env variables can be found in: `argocd/clusters/staging/values/frontend.enc.yaml`, `argocd/clusters/staging/values/iam.enc.yaml`.
 
-Deployment is orchestrated by Argo CD syncing the `staging` branch — every Application on the staging cluster has `syncPolicy.automated` (prune + self-heal). The frontend image tag in `argocd/clusters/staging/values/frontend.enc.yaml` is bumped by hand today (no CI wires this up yet) once the app source repo publishes a new image.
+Deployment is orchestrated by Argo CD syncing the `staging` branch — every Application on the staging cluster has `syncPolicy.automated` (prune + self-heal). The frontend image tag in `argocd/clusters/staging/values/frontend.enc.yaml` is bumped automatically: once kubernetes-frontend's `build.yaml` pushes a new image, it fires a `repository_dispatch` that this repo's `.github/workflows/image-tag-bump.yaml` picks up, setting `image.tag` to the new commit SHA via `sops` and pushing — Argo CD's `syncPolicy.automated` then rolls it out on its own.
 
 Like dev, `secretsProvisioning.enabled` is `true`, so the `iam` chart creates `admin-credentials` itself (from `argocd/clusters/staging/values/iam.enc.yaml`'s `secrets.admin`) and a Job seeds the `ai-system` realm/clients/users on every install/upgrade — no manual Secret needed. `argocd/clusters/staging/values/iam.enc.yaml` is SOPS-encrypted the same way as `frontend.enc.yaml` below — only its `username`/`password`/`email` leaf fields.
 

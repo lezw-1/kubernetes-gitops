@@ -1,0 +1,83 @@
+# Bump deployed image tag
+#
+# Receives a repository_dispatch from an app's source repo (e.g.
+# kubernetes-frontend's build.yaml) once it has pushed a new image to the
+# Cloudfleet registry, sets that app's image.tag in the matching
+# argocd/clusters/<env>/values/<app>.enc.yaml via sops, and pushes. Argo CD's
+# existing syncPolicy.automated (prune + selfHeal) on that Application picks
+# up the change on its own — no manual sync, no in-cluster component.
+#
+# Expected client_payload:
+#   - app: chart/values name, e.g. "frontend" or "api"
+#   - env: "staging" or "prod" (dev is excluded — it deploys a locally built
+#     image, not anything from the registry)
+#   - sha: the immutable image tag to deploy (the full commit SHA build.yaml
+#     also tagged the image with — not the floating branch-name tag, which
+#     never changes and so would never produce a commit to sync)
+#
+# Required secrets (already present — see .github/workflows/argocd.yaml):
+#   - SOPS_AGE_KEY_STAGING: Age private key for staging's sops-age-key Secret
+#   - SOPS_AGE_KEY_PROD:    Age private key for prod's sops-age-key Secret
+
+name: Bump deployed image tag
+
+on:
+  repository_dispatch:
+    types: [image-published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: image-tag-bump-${{ github.event.client_payload.env }}
+
+jobs:
+  bump-tag:
+    runs-on: ubuntu-latest
+    if: github.event.client_payload.env == 'staging' || github.event.client_payload.env == 'prod'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.client_payload.env }}
+
+      - name: Install sops
+        run: |
+          curl -fsSL -o /usr/local/bin/sops https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64
+          chmod +x /usr/local/bin/sops
+
+      - name: Select age key for this environment
+        env:
+          ENV_NAME: ${{ github.event.client_payload.env }}
+          KEY_STAGING: ${{ secrets.SOPS_AGE_KEY_STAGING }}
+          KEY_PROD: ${{ secrets.SOPS_AGE_KEY_PROD }}
+        run: |
+          if [ "$ENV_NAME" = "staging" ]; then
+            echo "SOPS_AGE_KEY=$KEY_STAGING" >> "$GITHUB_ENV"
+          else
+            echo "SOPS_AGE_KEY=$KEY_PROD" >> "$GITHUB_ENV"
+          fi
+
+      - name: Bump image.tag
+        # sops --set decrypts, patches, and re-encrypts the whole file in
+        # place — required even though `tag` itself isn't in this env's
+        # encrypted_regex, since sops computes a MAC over the entire file
+        # and a hand-edited plaintext field would fail decryption on the
+        # next Argo CD sync.
+        env:
+          VALUES_FILE: argocd/clusters/${{ github.event.client_payload.env }}/values/${{ github.event.client_payload.app }}.enc.yaml
+          TAG: ${{ github.event.client_payload.sha }}
+        run: |
+          sops --set "[\"image\"][\"tag\"] \"$TAG\"" "$VALUES_FILE"
+
+      - name: Commit and push
+        env:
+          VALUES_FILE: argocd/clusters/${{ github.event.client_payload.env }}/values/${{ github.event.client_payload.app }}.enc.yaml
+          ENV_NAME: ${{ github.event.client_payload.env }}
+          APP: ${{ github.event.client_payload.app }}
+          TAG: ${{ github.event.client_payload.sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$VALUES_FILE"
+          git commit -m "chore($APP): bump $ENV_NAME image tag to $TAG"
+          git push origin "HEAD:$ENV_NAME"

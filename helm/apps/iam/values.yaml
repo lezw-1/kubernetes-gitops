@@ -55,6 +55,24 @@ tokenExpire: 3600
 # Allowed values: DEBUG, INFO, WARN, ERROR
 debug: "INFO"
 
+# Resources: compute reserved for the Keycloak container.
+# Memory floor is higher than other apps — Keycloak's JVM heap sizing is
+# relative to container memory, and going lower risks OOM during startup.
+resources:
+  requests:
+    # Minimum CPU reserved for scheduling.
+    cpu: 200m
+
+    # Minimum memory reserved for scheduling.
+    memory: 512Mi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: 200m
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
+    memory: 512Mi
+
 # HPA: horizontal pod autoscaler.
 hpa:
   # Default: disabled — set true to enable autoscaling.
@@ -142,6 +160,15 @@ secrets:
       roles:
         - viewer
 
+    promises:
+      clientId: promises
+      enabled: true
+      publicClient: false
+      directAccessGrantsEnabled: false
+      roles:
+        - viewer
+        - admin
+
   # User definitions, keyed by a values-safe name (see templates/users-*.yaml).
   users:
     user1:
@@ -174,6 +201,10 @@ secrets:
       roles:
         - client: chronsorting
           role: viewer
+        - client: promises
+          role: viewer
+        - client: promises
+          role: admin
         - client: frontend
           role: viewer
 

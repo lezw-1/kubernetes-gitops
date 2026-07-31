@@ -1,0 +1,69 @@
+# Default values — overridden per environment via
+# argocd/clusters/<env>/values/database.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name.
+  # Allowed values: dev, staging, prod
+  environment: dev
+
+# Image: MongoDB server container image settings.
+image:
+  # Container image repository.
+  # Upgrade intentionally by changing the tag below — third-party image, not built by this repo's CI.
+  repository: mongo
+
+  # Container image tag.
+  tag: "8"
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: IfNotPresent
+
+# Service: ClusterIP configuration. Other services connect via
+# mongodb://database:<port> — no authentication configured.
+service:
+  # MongoDB listen port.
+  port: 27017
+
+# Storage: PVC request size, e.g. "10Gi".
+storage: 10Gi
+
+# StorageClassName: name of the StorageClass backing the PVC.
+# Default: empty renders a guarded hostPath PersistentVolume
+# (templates/pv.yaml) instead of relying on dynamic provisioning — use
+# this until a real CSI StorageClass is available for this cluster.
+storageClassName: ""
+
+# Resources: compute reserved for the MongoDB container.
+# Memory is 512Mi, not lower — at 256Mi, WiredTiger's auto-sized cache alone
+# fills the whole limit, leaving no headroom for the mongosh process the
+# readiness probe execs every 10s; confirmed OOMKilling the container in
+# staging when tried at 256Mi.
+resources:
+  requests:
+    # Minimum CPU reserved for scheduling.
+    cpu: 250m
+
+    # Minimum memory reserved for scheduling.
+    memory: 512Mi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: 250m
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
+    memory: 512Mi
+
+# Migrate: the post-install/post-upgrade Job that applies pymongo schema
+# migrations (templates/migrate-job.yaml) to the agent/multiagent
+# databases. Source lives in kubernetes-database-migrate.
+migrate:
+  image:
+    # Container image repository for the migration job.
+    repository: database-migrate
+
+    # Container image tag.
+    tag: latest
+
+    # Allowed values: Always, IfNotPresent, Never
+    pullPolicy: IfNotPresent

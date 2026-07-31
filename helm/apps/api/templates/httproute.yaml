@@ -1,0 +1,49 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  # HTTPRoute resource name.
+  name: api
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  {{- if .Values.gateway.hosts.domain }}
+  # Only set when a domain is configured — otherwise the route matches any host.
+  hostnames:
+    - "{{ .Values.global.environment }}.{{ .Values.gateway.hosts.domain }}"
+  {{- end }}
+
+  parentRefs:
+    # Must match the Gateway name in platform/networking/gateway, or the route silently never attaches.
+    # Uses gateway.targetEnvironment when set, else falls back to this app's own environment.
+    - name: cluster-gateway-{{ .Values.gateway.targetEnvironment | default .Values.global.environment }}
+
+      # Gateway lives in the shared networking namespace.
+      namespace: networking
+      {{- if .Values.gateway.hosts.domain }}
+      # Attach to the HTTPS listener only when a domain is configured.
+      sectionName: https
+      {{- end }}
+
+  rules:
+    - matches:
+        # Match the /api prefix, stripped before forwarding.
+        - path:
+            type: PathPrefix
+            value: /api
+
+      filters:
+        # Strip the /api prefix — the app itself serves routes at /.
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+
+      backendRefs:
+        # Route to the api Service.
+        - name: api
+
+          # Backend port, sourced from values.service.port.
+          port: {{ .Values.service.port }}

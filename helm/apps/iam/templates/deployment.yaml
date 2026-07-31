@@ -38,15 +38,52 @@ spec:
 
           resources:
             requests:
-              # Minimum CPU reserved for scheduling.
-              cpu: 200m
+              # Minimum CPU reserved for scheduling, sourced from values.resources.
+              cpu: {{ .Values.resources.requests.cpu }}
 
-              # Minimum memory reserved for scheduling.
-              memory: 512Mi
+              # Minimum memory reserved for scheduling, sourced from values.resources.
+              memory: {{ .Values.resources.requests.memory }}
+
+            limits:
+              # CPU hard cap — matches requests (Guaranteed QoS).
+              cpu: {{ .Values.resources.limits.cpu }}
+
+              # Memory hard cap — matches requests (Guaranteed QoS).
+              memory: {{ .Values.resources.limits.memory }}
 
           ports:
             # Keycloak HTTP port.
             - containerPort: 8080
+
+          # Startup: covers Keycloak's slow first boot (measured ~224s at the
+          # 500m CPU limit above, 260s+ at 200m) — readiness/liveness below
+          # are suspended until this succeeds, so neither kills the container
+          # nor flips it ready mid-augmentation. 5s * 48 = 240s budget —
+          # shorter than templates/provision-job.yaml's 300s retry window, so
+          # the Job keeps polling through a container restart if boot ever
+          # exceeds this.
+          startupProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 48
+
+          # Readiness: excludes the pod from the Service until Keycloak is
+          # actually accepting connections — without this, traffic (including
+          # the iam-provision Job) hits the pod the instant the container
+          # starts, while the JVM is still augmenting/booting.
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 3
+
+          # Liveness: restarts the pod if Keycloak stops accepting
+          # connections after having started successfully.
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 10
 
           env:
             # Bootstrap admin username, from credentialsSecret (key: admin-username).

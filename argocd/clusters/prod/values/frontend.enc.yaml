@@ -9,7 +9,7 @@ gateway:
     hosts:
         # Default: empty disables hostname-based routing (route matches any host).
         # This field is SOPS-encrypted; decrypt/edit via `sops` rather than by hand.
-        domain: ""
+        domain: ENC[AES256_GCM,data:AywM0qQD1g==,iv:dPuf2OmDbBGP1KUTVopNeZmmLp6dCo1z/Z2vWFUdh2M=,tag:OnpFthtTI5ncynW+7rFdTw==,type:str]
 # Image: container image settings.
 image:
     # Cloudfleet private registry path. SOPS-encrypted — real registry
@@ -46,6 +46,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
     encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-24T11:29:48Z"
-    mac: ENC[AES256_GCM,data:9EX0LoaFkLJDxQAW/3YpQVMVfOHvWKJRETiUa26r6NoVlin9zSZOObi3eE3pr62xWtoEaNwshOmz7xYe1At9mqBU0jRAp6rl3P4ft7L01rMmlRc4evUmp03bA1Pz+LLcNhUcU68p1dSLlwA085bKrxm20OzaTz6zYN7X2n/GOrc=,iv:IYwOqMIETdl9TBElZ+FpmYBcBmhA5RWvyTqVGYYx3Jc=,tag:12+yrhk91CbvaRcAwrBikw==,type:str]
+    lastmodified: "2026-07-25T09:22:15Z"
+    mac: ENC[AES256_GCM,data:OF6demn5zYFfivC2OckdS4HHGTL4VkEhEzshlY5YIVpurobMc8Ixjm6tpwpKQvEoCE4he2Yc+QHhiAcrA0G2UQ38pcaF9mKQbHI8ZIYhOIkSm0Rpxh2UjYMn6WMXj7+lSn2W6ofp9f5YCTaNNeh78FB6G2FJSwPJaf6ZFX41hkU=,iv:bfw3B2yBwPz9FJoQI7vttBb9CPfC+HYkreLA0V8ua9w=,tag:SavhLkOYlI9eP6a9kep3jA==,type:str]
     version: 3.13.2

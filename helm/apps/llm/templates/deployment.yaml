@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Deployment resource name.
+  name: llm
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  # Pod count, sourced from values.replicas — 0 on staging/prod, where
+  # self-hosted inference is disabled in favor of the Anthropic API.
+  replicas: {{ .Values.replicas }}
+
+  # Recreate: avoids two Pods mounting the same ReadWriteOnce volume at once.
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      # Must match template.metadata.labels below.
+      app: llm
+
+  template:
+    metadata:
+      labels:
+        # Pod label, matched by the selector above and the Service.
+        app: llm
+
+      annotations:
+        # Prevents node-drain/consolidation from evicting this single-replica
+        # stateful Pod mid-pull; a no-op on clusters without Karpenter.
+        karpenter.sh/do-not-disrupt: "true"
+
+    spec:
+      initContainers:
+        # Starts Ollama long enough to pull the configured model, then exits.
+        - name: pull-model
+
+          # Image repository:tag, sourced from values.image.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          # Image pull policy, sourced from values.image.pullPolicy.
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          command:
+            - sh
+            - -c
+            - |
+              ollama serve &
+              until ollama list >/dev/null 2>&1; do sleep 1; done
+              ollama pull {{ .Values.model }}
+
+          env:
+            # Ollama's own bind address — matches the Service's container port.
+            - name: OLLAMA_HOST
+              value: "0.0.0.0:{{ .Values.service.port }}"
+
+            # Model weights directory, backed by the PVC below.
+            - name: OLLAMA_MODELS
+              value: /root/.ollama/models
+
+            # Ollama server log verbosity, sourced from values.debug.
+            - name: OLLAMA_DEBUG
+              value: {{ .Values.debug | quote }}
+
+          volumeMounts:
+            # Model weights directory, shared with the main container below.
+            - name: models
+              mountPath: /root/.ollama/models
+
+      containers:
+        # Ollama server container.
+        - name: llm
+
+          # Image repository:tag, sourced from values.image.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          # Image pull policy, sourced from values.image.pullPolicy.
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          ports:
+            # Container port Ollama listens on, sourced from values.service.port.
+            - containerPort: {{ .Values.service.port }}
+
+          env:
+            - name: OLLAMA_HOST
+              value: "0.0.0.0:{{ .Values.service.port }}"
+
+            - name: OLLAMA_MODELS
+              value: /root/.ollama/models
+
+            - name: OLLAMA_DEBUG
+              value: {{ .Values.debug | quote }}
+
+          volumeMounts:
+            - name: models
+              mountPath: /root/.ollama/models
+
+          resources:
+            requests:
+              # Minimum CPU reserved for scheduling.
+              cpu: {{ .Values.resources.requests.cpu }}
+
+              # Minimum memory reserved for scheduling.
+              memory: {{ .Values.resources.requests.memory }}
+
+            limits:
+              # CPU hard cap — matches requests (Guaranteed QoS).
+              cpu: {{ .Values.resources.limits.cpu }}
+
+              # Memory hard cap — matches requests (Guaranteed QoS).
+              memory: {{ .Values.resources.limits.memory }}
+
+          # Readiness probe: pod removed from the Service until Ollama responds.
+          readinessProbe:
+            exec:
+              command: ["ollama", "list"]
+            initialDelaySeconds: 60
+            periodSeconds: 60
+
+      volumes:
+        # Model weights volume, bound to the PVC created by templates/pvc.yaml.
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ .Release.Namespace }}-llm-models

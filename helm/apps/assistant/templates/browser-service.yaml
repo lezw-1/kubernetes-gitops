@@ -1,0 +1,28 @@
+{{- if .Values.browser.enabled }}
+# ClusterIP Service fronting the headless browser Deployment
+# (browser-deployment.yaml) — not exposed via Ingress/HTTPRoute, so this
+# namespace boundary is the browser service's only access control (see the
+# `browser:` comment in values.yaml).
+#
+# Disabled by default — see values.yaml browser.enabled.
+apiVersion: v1
+kind: Service
+metadata:
+  # Service name — resolvable as ws://assistant-browser:3000 from any pod
+  # in this namespace, referenced by config-patch.json's
+  # browser.profiles.assistant-browser.cdpUrl (templates/configmap.yaml).
+  name: assistant-browser
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  selector:
+    # Must match browser-deployment.yaml's pod labels.
+    app: assistant-browser
+
+  ports:
+    # CDP/WebSocket + REST API port, forwarded to the container's own 3000.
+    - port: 3000
+      targetPort: 3000
+{{- end }}

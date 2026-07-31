@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Deployment resource name.
+  name: database
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  # Single replica — no replica set configured.
+  replicas: 1
+
+  # Recreate: avoids two Pods mounting the same ReadWriteOnce volume at once.
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      # Must match template.metadata.labels below.
+      app: database
+
+  template:
+    metadata:
+      labels:
+        # Pod label, matched by the selector above and the Service.
+        app: database
+
+      annotations:
+        # Prevents node-drain/consolidation from evicting this single-replica
+        # stateful Pod mid-write; a no-op on clusters without Karpenter.
+        karpenter.sh/do-not-disrupt: "true"
+
+    spec:
+      containers:
+        # MongoDB server container.
+        - name: database
+
+          # Image repository:tag, sourced from values.image.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          # Image pull policy, sourced from values.image.pullPolicy.
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          ports:
+            # Container port MongoDB listens on.
+            - containerPort: 27017
+
+          volumeMounts:
+            # MongoDB's data directory, backed by the PVC below.
+            - name: data
+              mountPath: /data/db
+
+          resources:
+            requests:
+              # Minimum CPU reserved for scheduling.
+              cpu: {{ .Values.resources.requests.cpu }}
+
+              # Minimum memory reserved for scheduling.
+              memory: {{ .Values.resources.requests.memory }}
+
+            limits:
+              # CPU hard cap — matches requests (Guaranteed QoS).
+              cpu: {{ .Values.resources.limits.cpu }}
+
+              # Memory hard cap — matches requests (Guaranteed QoS).
+              memory: {{ .Values.resources.limits.memory }}
+
+          # Readiness probe: pod removed from the Service until Mongo responds.
+          # timeoutSeconds raised from the 1s default — mongosh's own Node.js
+          # startup can exceed 1s under the CPU limit above, causing spurious
+          # readiness failures even though Mongo itself is healthy.
+          readinessProbe:
+            exec:
+              command: ["mongosh", "--eval", "db.runCommand({ping:1})"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+
+      volumes:
+        # Data volume, bound to the PVC created by templates/pvc.yaml.
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Namespace }}-database-data

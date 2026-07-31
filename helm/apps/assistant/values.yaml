@@ -1,0 +1,176 @@
+# Default values — overridden per environment via argocd/clusters/<env>/values/assistant.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name.
+  # Allowed values: dev, staging, prod
+  environment: dev
+
+# Image: container image settings.
+image:
+  # Container image repository — official OpenClaw image, GHCR-hosted
+  # (Docker Hub mirror also published as openclaw/openclaw).
+  # Third-party image, not built by this repo's CI.
+  repository: ghcr.io/openclaw/openclaw
+
+  # Container image tag.
+  # Upgrade intentionally by changing this value — pinned to a specific
+  # release rather than "latest" because OpenClaw ships frequent breaking
+  # changes (plugin API, provider, and storage-schema migrations most
+  # months). Check https://github.com/openclaw/openclaw/releases before
+  # bumping.
+  tag: "2026.7.1"
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: IfNotPresent
+
+# Agent: the gateway's own baseline settings. Applied declaratively at pod
+# startup by the apply-config init container (templates/configmap.yaml +
+# `openclaw config patch`), so a full destroy+redeploy always converges back
+# to this state — no manual `openclaw config`/`openclaw models set` needed.
+agent:
+  # Default LLM used for agent turns, as "<provider>/<model>".
+  # Must have a matching secret configured (see secret.anthropicApiKey
+  # below for the anthropic/* models).
+  model: anthropic/claude-haiku-4-5
+
+# Browser: headless Chromium service (Browserless), giving OpenClaw's
+# bundled browser tool something to drive over CDP. Deployed as its own
+# Deployment + ClusterIP Service (templates/browser-deployment.yaml,
+# templates/browser-service.yaml) rather than installed into the assistant
+# image itself — Chromium's system-library dependencies can't be installed
+# at container runtime (an init container's `apt-get install` writes to its
+# own filesystem, invisible to the main container; see git history), and
+# this repo doesn't build a custom assistant image to bake it in at build
+# time. Only reachable inside this namespace — no Ingress/HTTPRoute — and
+# has no token auth of its own (a Kubernetes httpGet probe can't source a
+# header/query value from a Secret without baking the token into the
+# rendered manifest, which is worse); the ClusterIP-only network boundary
+# is the accepted tradeoff. Wired into the agent via config-patch.json's
+# `browser.profiles` (templates/configmap.yaml).
+browser:
+  # Whether the headless browser Deployment + Service are rendered at all.
+  # Default: false — deactivated in every cluster env (see
+  # templates/browser-deployment.yaml, templates/browser-service.yaml). Set
+  # to true via an env override to bring the browser tool back online.
+  enabled: false
+
+  image:
+    # Container image repository for the headless browser service.
+    repository: ghcr.io/browserless/chromium
+
+    # Container image tag.
+    # Upgrade intentionally by changing this value — check
+    # https://github.com/browserless/browserless/pkgs/container/chromium
+    # before bumping.
+    tag: "v2.55.1"
+
+    # Allowed values: Always, IfNotPresent, Never
+    pullPolicy: IfNotPresent
+
+  # Max concurrent browser sessions Browserless allows before queuing.
+  # Default: 5 — single agent, single Telegram user driving it, so this
+  # only needs to cover a couple of overlapping tool calls.
+  concurrent: 5
+
+  # Compute reserved for the headless browser container. Sized separately
+  # from `resources` below (main gateway) so bumping one doesn't silently
+  # resize the other — Chromium is far heavier than the gateway process.
+  # Starting point only; revisit with real usage data once the browser
+  # tool has run under load.
+  resources:
+    requests:
+      # Minimum CPU reserved for scheduling.
+      cpu: "1"
+
+      # Minimum memory reserved for scheduling.
+      memory: 1Gi
+
+    limits:
+      # CPU hard cap.
+      cpu: "2"
+
+      # Memory hard cap — Chromium is prone to OOM under memory pressure
+      # from multiple pages/tabs; kept above requests (Burstable QoS)
+      # rather than matching them (Guaranteed) so it isn't permanently
+      # reserving its ceiling.
+      memory: 2Gi
+
+# Telegram: bot identity. Linking needs no QR/SMS step — the bot token from
+# @BotFather is the only credential (stored in secret.telegramBotToken
+# below, threaded to the pod as TELEGRAM_BOT_TOKEN), so there's no
+# non-secret field to declare here. Linked automatically by the
+# link-telegram init container (templates/deployment.yaml) on every pod
+# start via `openclaw channels add --channel telegram`, reading the token
+# from the pod's own env — no manual `kubectl exec` step needed. The
+# @openclaw/telegram plugin ships stock in the image (confirmed via
+# `openclaw plugins list` — listed as "disabled" until a channel is added),
+# so no separate `plugins install` step is needed.
+
+# Storage: persistent workspace — holds the linked Telegram channel's state
+# plus conversation memory. Without this, every pod restart loses that state
+# and the channel must be re-registered by hand.
+storage: 1Gi
+
+# StorageClassName: PVC storage class.
+# Default: "" — matches helm/apps/llm's convention; templates/pv.yaml
+# provisions a static hostPath PV when empty (single-node clusters only).
+# Set to a real StorageClass name to dynamically provision instead.
+storageClassName: ""
+
+# Secret: sensitive values injected as the assistant-secrets Secret
+# (templates/secret.yaml). SOPS-encrypt on staging/prod and dev (see
+# argocd/clusters/*/values/).
+secret:
+  # Anthropic API key used as the agent's LLM backend.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  anthropicApiKey: ""
+
+  # Telegram bot token, issued by @BotFather. Threaded through to the
+  # container as TELEGRAM_BOT_TOKEN (templates/deployment.yaml) so the
+  # manual linking step (see the telegram comment above) can read it from
+  # the pod's own env instead of it being retyped/pasted by hand.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  telegramBotToken: ""
+
+  # GitHub PAT, used by the stock @openclaw/github-copilot-provider plugin
+  # (enabled by default) as its GITHUB_TOKEN credential — confirmed by
+  # inspecting /app/dist/extensions/github-copilot/index.js in a running
+  # pod, which reads GITHUB_TOKEN, GH_TOKEN, or COPILOT_GITHUB_TOKEN.
+  # Consumed automatically at startup like anthropicApiKey above — no
+  # channel-link step needed.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  githubToken: ""
+
+  # Freelancermap account email, used to log in on the assistant's behalf.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  freelancermapEmail: ""
+
+  # Freelancermap account password, paired with freelancermapEmail above.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  freelancermapPassword: ""
+
+# Resources: compute reserved for the assistant container.
+# Memory raised from an initial 256Mi after that limit OOMKilled the
+# gateway on startup during local testing (Rancher Desktop) — 1Gi is the
+# smallest value observed stable; revisit with real usage data once the
+# agent has run under load.
+resources:
+  requests:
+    # Minimum CPU reserved for scheduling.
+    cpu: "1"
+
+    # Minimum memory reserved for scheduling.
+    memory: 1Gi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: "1"
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
+    memory: 1Gi

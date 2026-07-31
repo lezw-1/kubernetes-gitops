@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # Deployment resource name.
+  name: api
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  # Single replica — no HA for this app; see hpa.yaml for scale-out.
+  replicas: 1
+
+  selector:
+    matchLabels:
+      # Must match template.metadata.labels below.
+      app: api
+
+  template:
+    metadata:
+      labels:
+        # Pod label, matched by the selector above and the Service.
+        app: api
+
+    spec:
+      initContainers:
+        # Blocks pod startup until Redis is reachable — the app connects to
+        # it at import time and crashes if it isn't up yet.
+        - name: wait-for-broker
+          image: busybox
+          command:
+            - sh
+            - -c
+            - until nc -z broker {{ .Values.broker.port }}; do sleep 2; done
+
+      containers:
+        # Platform API container.
+        - name: api
+
+          # Image repository:tag, sourced from values.image — CI updates the tag on each push.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          # Image pull policy, sourced from values.image.pullPolicy.
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          env:
+            # MongoDB connection string, sourced from values.mongoUrl.
+            - name: MONGO_URL
+              value: {{ .Values.mongoUrl | quote }}
+
+            # Keycloak API host, sourced from values.iam.apiHost.
+            - name: IAM_API_HOST
+              value: {{ .Values.iam.apiHost | quote }}
+
+            # Keycloak subpath, sourced from values.iam.subpath.
+            - name: IAM_SUBPATH
+              value: {{ .Values.iam.subpath | quote }}
+
+            # Redis connection string, sourced from values.broker.url.
+            - name: REDIS_URL
+              value: {{ .Values.broker.url | quote }}
+
+            # Worker service base URL, sourced from values.worker.url.
+            - name: WORKER_URL
+              value: {{ .Values.worker.url | quote }}
+
+            # Worker request timeout in seconds, sourced from values.worker.timeout.
+            - name: WORKER_TIMEOUT
+              value: {{ .Values.worker.timeout | quote }}
+
+          resources:
+            requests:
+              # Minimum CPU reserved for scheduling, sourced from values.resources.
+              cpu: {{ .Values.resources.requests.cpu }}
+
+              # Minimum memory reserved for scheduling, sourced from values.resources.
+              memory: {{ .Values.resources.requests.memory }}
+
+            limits:
+              # CPU hard cap — matches requests (Guaranteed QoS).
+              cpu: {{ .Values.resources.limits.cpu }}
+
+              # Memory hard cap — matches requests (Guaranteed QoS).
+              memory: {{ .Values.resources.limits.memory }}
+
+          ports:
+            # Container port the app listens on.
+            - containerPort: 8000
+
+          # Readiness probe: pod removed from the Service until this passes.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          # Liveness probe: container restarted if this keeps failing.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20

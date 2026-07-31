@@ -1,0 +1,104 @@
+# Default values — overridden per environment via argocd/clusters/<env>/values/worker.yaml.
+
+# Global: shared across templates.
+global:
+  # Deployment environment name.
+  # Allowed values: dev, staging, prod
+  environment: dev
+
+# Image: container image settings (CI updates tag on each push).
+image:
+  # Container image repository.
+  repository: ""
+
+  # Container image tag.
+  tag: ""
+
+  # Allowed values: Always, IfNotPresent, Never
+  pullPolicy: Always
+
+# Database: MongoDB connection settings this worker reads/writes.
+database:
+  # MongoDB service port (helm/apps/database), used by the wait-for-database
+  # init container to gate startup until MongoDB is reachable.
+  port: 27017
+
+# MongoUrl: full MongoDB connection string. Should match the api app's
+# values.mongoUrl — both read/write the same database.
+# Default: empty — MongoDB is not yet migrated into this repo. Point this at
+# an external or temporary MongoDB instance until it is. May carry
+# credentials — SOPS-encrypt on staging/prod (see argocd/clusters/*/values/).
+mongoUrl: ""
+
+# Broker: Redis connection settings this worker consumes tasks from.
+broker:
+  # Redis service port (helm/apps/broker), used by the wait-for-broker init
+  # container to gate startup until Redis is reachable.
+  port: 6379
+
+  # Full Redis connection string, sourced into REDIS_URL. Default assumes
+  # the broker app (helm/apps/broker) is deployed in this same namespace.
+  url: "redis://broker:6379/0"
+
+# Service: ClusterIP configuration. No container port is exposed by the
+# worker image today — it's a Celery consumer, not an HTTP server (see
+# BACKLOG.md). This Service exists so the api app's WORKER_URL resolves via
+# DNS once an HTTP endpoint is added upstream.
+service:
+  port: 8000
+
+# Pool: Celery worker pool implementation, passed as `--pool=<value>`.
+# Allowed values: prefork, threads, solo, eventlet, gevent
+# Default: prefork (Celery's default) — forking crashes on macOS, so local
+# dev overrides this to "threads".
+pool: "prefork"
+
+# Concurrency: number of Celery worker processes/threads, meant to be passed
+# as `--concurrency=<value>`. Currently inert — `main.py` doesn't read this
+# env var yet, so Celery still falls back to its own CPU-based default,
+# which scales with the CPU limit below rather than a fixed count. Wired up
+# ahead of that upstream change so the chart is ready once it ships.
+# Default: 2 — matches the process count observed stable under this chart's
+# default memory limit before CPU-based auto-scaling was in play.
+concurrency: 2
+
+# Secret: sensitive values injected as the worker-secrets Secret
+# (templates/secret.yaml). SOPS-encrypt on staging/prod and dev (see
+# argocd/clusters/*/values/).
+secret:
+  # Anthropic API key used by the LangGraph pipeline.
+  # Default: empty — never commit a real value here. Supply it via a
+  # SOPS-encrypted environment override at deploy time.
+  anthropicApiKey: ""
+
+# Chronsorting: text-chunking settings for the timeline-sorting pipeline.
+chronsorting:
+  # Chunk size (characters) passed to the text splitter.
+  chunkSize: "500"
+
+  # Overlap (characters) between consecutive chunks.
+  chunkOverlap: "150"
+
+  # Cosine-similarity threshold above which two chunks are treated as duplicates.
+  dedupSimilarityThreshold: "0.55"
+
+# Promises: settings for the promise-tracking pipeline.
+promises:
+  # Politician name the pipeline tracks.
+  politician: "Friedrich Merz"
+
+# Resources: compute reserved for the worker container.
+resources:
+  requests:
+    # Minimum CPU reserved for scheduling.
+    cpu: 100m
+
+    # Minimum memory reserved for scheduling.
+    memory: 256Mi
+
+  limits:
+    # CPU hard cap — matches requests (Guaranteed QoS).
+    cpu: 100m
+
+    # Memory hard cap — matches requests (Guaranteed QoS).
+    memory: 256Mi

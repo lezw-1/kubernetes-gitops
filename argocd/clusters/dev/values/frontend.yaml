@@ -29,6 +29,15 @@ service:
   # nginx listen port.
   port: 80
 
+# Resources: compute reserved for the frontend container.
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 25m
+    memory: 32Mi
+
 # HPA: horizontal pod autoscaler.
 hpa:
   # Enabled in dev to exercise autoscaling behavior.

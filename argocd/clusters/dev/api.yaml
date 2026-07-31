@@ -1,0 +1,63 @@
+# Platform API service — FastAPI gateway backed by MongoDB and Keycloak.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # Application resource name, shown in the Argo CD UI.
+  name: api
+
+  # Namespace the Application resource itself lives in.
+  namespace: argocd
+
+spec:
+  # Bound to AppProject "default" and its guardrails.
+  project: default
+
+  # Multi-source config: the api Helm chart plus a values-only Git source.
+  sources:
+    # Platform API Helm chart source.
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+      # Branch tracked for the chart source.
+      targetRevision: dev
+
+      # Path to the api Helm chart.
+      path: helm/apps/api
+
+      helm:
+        valueFiles:
+          # Local-cluster overrides, supplied by the $values Git source referenced below.
+          - $values/argocd/clusters/dev/values/api.yaml
+
+    # Git source providing only values files, referenced via the `values` alias.
+    - repoURL: https://github.com/lezw-1/kubernetes-gitops
+
+      # Branch tracked for values files.
+      targetRevision: dev
+
+      # Aliased so the chart source above can reference $values.
+      ref: values
+
+  destination:
+    # Target cluster API server — in-cluster.
+    server: https://kubernetes.default.svc
+
+    # Namespace the api app is deployed into.
+    namespace: ai-system-dev
+
+  # Fully automated GitOps sync — no manual apply needed.
+  syncPolicy:
+    automated:
+      # Remove resources no longer defined in Git.
+      prune: true
+
+      # Revert manual drift back to match Git.
+      selfHeal: true
+
+    syncOptions:
+      # Auto-create the destination namespace.
+      - CreateNamespace=true
+
+    managedNamespaceMetadata:
+      labels:
+        # Required for HTTPRoutes to attach to the shared gateway.
+        team: gateway-1

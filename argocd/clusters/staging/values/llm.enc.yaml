@@ -1,0 +1,41 @@
+# LLM service overrides for staging, layered onto helm/apps/llm/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/staging/llm.yaml).
+global:
+    environment: staging
+# Replicas: enabled — staging self-hosts Ollama, same as dev (prod still
+# calls the Anthropic API directly instead; see helm/apps/worker's
+# secret.anthropicApiKey).
+replicas: 1
+image:
+    # Public image — no registry secret needed.
+    repository: ENC[AES256_GCM,data:zIBWw65hStHuLtYopg==,iv:4uQBCLhSKFfPQNkGg+s0sOBoGj3kIh6VjEjgomiffU0=,tag:xAPIh68yvX6M32aORyHdUQ==,type:str]
+    tag: latest
+    pullPolicy: IfNotPresent
+model: qwen2.5:7b
+service:
+    port: 11434
+storage: 20Gi
+storageClassName: ""
+resources:
+    requests:
+        cpu: "1"
+        memory: 6Gi
+    limits:
+        cpu: "1"
+        memory: 6Gi
+debug: "0"
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAzVW5lSml5YzI0aC84TWpZ
+            ME1mUStSV05QMnN0V3FKQU16TGd2SzRIZlVRClE3TnVuTXU2RkVwTmhvUDNvN2l1
+            WGJab0tidHNvOUFWWnB3L2F4TFoxbVEKLS0tIGJxeTZla2FtNERIM3g4Q1VNdENE
+            aU1ZSGdob1grWjVvTlZ1aURsbUtFeTgKWvasoR1aZqcs64Z5NXEBjNStzadVJaOq
+            08PeMbTzBsIeJHOMDeGPepI4qXMwDQOINPYKlxOzcW5urnsLJnjHwA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-25T20:43:28Z"
+    mac: ENC[AES256_GCM,data:qakJRM3bVYKY/Yzw9Z7u4qHezHjK6Bie4viI0L2nXjsE5v/iEeEO89HZpe8jVkKQI4gVYRiqTO7VI3PSEtk1g/hWtjlAS+gSt5mAik64tozX5eKlFWeMWvAU4LgXbf8QI44A6HgjsHVAWHoRC9Y3z+YPc/Te2vAl6VMBCCwnyOY=,iv:hpB8uVzfAFqcnSzmGpo+0gNZjh8mF2+O2UyRXlmoAYw=,tag:VY2GSyzay2Yk+aKXuyTzcw==,type:str]
+    version: 3.13.2

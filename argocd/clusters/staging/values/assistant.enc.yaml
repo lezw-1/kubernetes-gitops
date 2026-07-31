@@ -1,0 +1,42 @@
+# Assistant service overrides for staging, layered onto helm/apps/assistant/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/staging/assistant.yaml).
+#
+# image.repository, secret.anthropicApiKey, secret.telegramBotToken, and
+# secret.githubToken below are SOPS-encrypted — only those leaf fields; the
+# rest of this file stays plaintext so it's readable in Git diffs.
+global:
+    environment: staging
+image:
+    repository: ENC[AES256_GCM,data:lZEXY5Uwb4PgaiHIzr7Dom3uP0Gt5+J+Rg==,iv:x0yxycT7iBnTUXtaQpzsks1GfRnHQfKH3ePceMuvXh8=,tag:x8680AeQncw/PAg5khgc1A==,type:str]
+    tag: 2026.7.1
+    pullPolicy: Always
+storage: 1Gi
+storageClassName: ""
+secret:
+    anthropicApiKey: ENC[AES256_GCM,data:oxjnev/T9imGSpSXSh5gohYz8qnYWLl/UtgdbK6N2AttJGV680h0EDJ6DJpgqnTJmNCFDbwsqIl4jtUBgyz7pJgVAWut3vTcPiLApvW5iDvvYab+NsLVPn1qn1NlzuntxEK7EXfateSQSrhy,iv:6ToOc5LnoQ/dOLNr5GnbvVCgSjI4/vxi43EP19dU8HQ=,tag:ikf5tiMIzTWOFxtWvquAVA==,type:str]
+    telegramBotToken: ENC[AES256_GCM,data:jJDNo16DXrBu5PvCuMHXYgFyRbTcpKYGYFFPwERp091hz6bvy8kx3e3cuYJ1OQ==,iv:n2nsxg1v42hNBkxSKucGGxpEAoRdU3aCVO3XKPt5u0w=,tag:GkZilGj1iPXITcpCPQoBtA==,type:str]
+    githubToken: ENC[AES256_GCM,data:pEraXzx0iZflLiRCwL75nSPqiHKikArXWSzYZgtTmM1GWiaC2qUafXrAXAbAoIu0BRJ11TBmMk6P9dUnfcoPf4rAPFyKrU/KJ6URiAaZxQ0op9FtYcCYJdOzCs0L,iv:jHaLXyIO6oRyDtfeJk1k3jfVkQ47vwMHItYoK85+ufA=,tag:imAErSJkMQfWJcNI7SLxvQ==,type:str]
+    freelancermapEmail: ENC[AES256_GCM,data:PI0b9BGZ9Emvops/jZ12rbw/Ar1ieJctLQ==,iv:cQd2mejdT+z22YWxswYN/K1bl93aXhGsU9+X+x0DiYU=,tag:aeoY3FLtIZRJy3H6CX0x6w==,type:str]
+    freelancermapPassword: ENC[AES256_GCM,data:vDpVAOb9ELvGyxvnj4RmV9Aa,iv:4GT6DEizjTStLwkRCxLkrQgteoG1xd6hmfg36QtyrW0=,tag:iZ5Fn+kKtstkhgAe+fnkFw==,type:str]
+resources:
+    requests:
+        cpu: "1"
+        memory: 1Gi
+    limits:
+        cpu: "1"
+        memory: 1Gi
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAzVnBkeStWQnhQZXZKRk83
+            N0N6K3lYQTEyR3QvZ0NuYk1id2Z4WkFlQVJZCmYzMjBNNDlnSVI0ZHhEajJLZWIr
+            d3RHaVVTdm1XcjhDTEJHcVg0YS82UGMKLS0tIE5VTElScVRNUVJFeWkrVHJBUkx6
+            RHJQU1J1R1RwRmRoSFpoV3hSMjdVUlkKNEa5sUEHVzXPD4wX084yC5EoLgjwKXWN
+            sRcWeDPzZTDc4x80yPIR5mMERDzEdnMXtMrxqVuEB1xcIg9NnF3sFA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken|githubToken|githubToken|freelancermapEmail|freelancermapPassword)$
+    lastmodified: "2026-07-30T06:54:07Z"
+    mac: ENC[AES256_GCM,data:A3jv+syZD6bUKrc3mRx9NsZQgSZpE6VqRg68QEi029DnWfLQsakyAjca8bHpsWWdtMgT2yI0ZzzIeZxiS4dlb/8QHiJF2j9Qtz64f3PT8eH3zVAjkXX+BSmfQOFBFdWAi+jWSrl3hy1akMDOXCv3Q/sjlyxVhs056oDaj1Y7RKA=,iv:eqHsUzfWMtYNH11wP8SMQ1mwiZU/PV0olCojGNxF1FY=,tag:rojM06W3beIMsfCRcsPTOA==,type:str]
+    version: 3.13.2

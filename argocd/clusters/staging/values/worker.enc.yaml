@@ -1,0 +1,50 @@
+# Worker service overrides for staging, layered onto helm/apps/worker/values.yaml
+# via the SECRETS_FILE env in the sops-helm CMP source (argocd/clusters/staging/worker.yaml).
+#
+# secret.anthropicApiKey below is SOPS-encrypted — only that leaf field; the
+# rest of this file stays plaintext so it's readable in Git diffs.
+global:
+    environment: staging
+image:
+    # Cloudfleet private registry path. SOPS-encrypted — real registry
+    # host; decrypt/edit via `sops` rather than by hand.
+    repository: ENC[AES256_GCM,data:cKhDYpjl6uz+JrRHsAKnR68eMkIe2RYhvHpS39cfzcMtd0nGLDgRFndS/jr+2qpWGt8qY0wwFAblLGiVnzonAobRKygFn6ZFd+0=,iv:lIZxlBU+TKnEbaAMmYnGXoxJqHhCceHORyoheETOAkM=,tag:amGN9CZDjXHcO/gAIx91eQ==,type:str]
+    # Image tag — bumped by hand once the source repo publishes a new image (see README).
+    tag: staging
+    # Allowed values: Always, IfNotPresent, Never
+    # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
+    pullPolicy: Always
+database:
+    port: 27017
+mongoUrl: mongodb://database:27017
+broker:
+    port: 6379
+    url: redis://broker:6379/0
+service:
+    port: 8000
+pool: prefork
+secret:
+    anthropicApiKey: ""
+resources:
+    requests:
+        cpu: 500m
+        memory: 1Gi
+    limits:
+        cpu: 500m
+        memory: 1Gi
+concurrency: 2
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB0Z20yajRoRnoyWWNOb3ha
+            L1R1S1hESGxzVy90b20xL3FGMjlyWVlGSmhNCmFXcE9majdXZFRiTnEyYm93UGRa
+            OFJSdW5wNFNFOVQzTVJxN2p4NXFBbWcKLS0tIFJKanpVUGdYU3RHWW5FUmVXZ1VD
+            bFZ6bzYvczB0VTFVcWFLT254cFRXaXMKdmSlgYoMirw+VLA2tMG6P7xzfJK0kUZx
+            xbdNXPiz2gi0KP3phEjRMo4M3HRPNYkyyW9yASdkwUbzp5GccA2hrg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
+    lastmodified: "2026-07-31T11:18:31Z"
+    mac: ENC[AES256_GCM,data:CLchDwqxc/dxut9MasR8bn3s968kVMpq/t+s3fa2uWivEeKQLSpr6LPa/Sx1s5ZOwArzq8hBGb3k9rGZFBHj/sl5zlke6rZWUWhdbwnjlv5OHAbmofSvIvSAgG+H59K2+HpoIc0G/RSVYeunMqZWjZ3mX3WFWJCAFkdPVdqj7jY=,iv:uiGs2uVcF41Q1sEiIQQTlG0cHJ58TbaX+eSTVBNUoZ4=,tag:hyhrFka0C5zMwyqHrOvIyA==,type:str]
+    version: 3.13.2

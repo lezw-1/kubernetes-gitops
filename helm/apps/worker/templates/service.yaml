@@ -1,0 +1,24 @@
+# No container port is exposed by the worker image today — it's a Celery
+# consumer, not an HTTP server (see BACKLOG.md). This Service exists so the
+# api app's WORKER_URL resolves via DNS once an HTTP endpoint is added
+# upstream; until then, requests to it will fail to connect.
+apiVersion: v1
+kind: Service
+metadata:
+  # Service resource name — the api app reaches it at http://worker:<port>.
+  name: worker
+
+  # Namespace set by the Argo CD Application's destination.
+  namespace: {{ .Release.Namespace }}
+
+spec:
+  selector:
+    # Routes traffic to pods with this label — must match the Deployment's pod labels.
+    app: worker
+
+  ports:
+    # Service port, sourced from values.service.port.
+    - port: {{ .Values.service.port }}
+
+      # Container port traffic is forwarded to.
+      targetPort: {{ .Values.service.port }}
