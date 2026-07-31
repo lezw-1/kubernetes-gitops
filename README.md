@@ -68,7 +68,7 @@ Its own independent remote cluster and Argo CD install — no longer shared with
 
 Env variables can be found in: `argocd/clusters/staging/values/frontend.enc.yaml`, `argocd/clusters/staging/values/iam.enc.yaml`.
 
-Deployment is orchestrated by Argo CD syncing the `staging` branch — every Application on the staging cluster has `syncPolicy.automated` (prune + self-heal). The frontend image tag in `argocd/clusters/staging/values/frontend.enc.yaml` is bumped by hand today (no CI wires this up yet) once the app source repo publishes a new image.
+Deployment is orchestrated by Argo CD syncing the `staging` branch — every Application on the staging cluster has `syncPolicy.automated` (prune + self-heal). The frontend image tag in `argocd/clusters/staging/values/frontend.enc.yaml` is bumped automatically: once kubernetes-frontend's `build.yaml` pushes a new image, it fires a `repository_dispatch` that this repo's `.github/workflows/image-tag-bump.yaml` picks up, setting `image.tag` to the new commit SHA via `sops` and pushing — Argo CD's `syncPolicy.automated` then rolls it out on its own.
 
 Like dev, `secretsProvisioning.enabled` is `true`, so the `iam` chart creates `admin-credentials` itself (from `argocd/clusters/staging/values/iam.enc.yaml`'s `secrets.admin`) and a Job seeds the `ai-system` realm/clients/users on every install/upgrade — no manual Secret needed. `argocd/clusters/staging/values/iam.enc.yaml` is SOPS-encrypted the same way as `frontend.enc.yaml` below — only its `username`/`password`/`email` leaf fields.
 
