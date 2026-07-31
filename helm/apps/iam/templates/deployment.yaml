@@ -55,6 +55,25 @@ spec:
             # Keycloak HTTP port.
             - containerPort: 8080
 
+          # Readiness: excludes the pod from the Service until Keycloak is
+          # actually accepting connections — without this, traffic (including
+          # the iam-provision Job) hits the pod the instant the container
+          # starts, while the JVM is still augmenting/booting.
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+
+          # Liveness: restarts the pod if Keycloak stops accepting
+          # connections after having started successfully.
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
           env:
             # Bootstrap admin username, from credentialsSecret (key: admin-username).
             - name: KC_BOOTSTRAP_ADMIN_USERNAME

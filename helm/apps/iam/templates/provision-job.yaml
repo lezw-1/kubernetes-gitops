@@ -110,20 +110,22 @@ spec:
                 "$KCADM" get users -r "$REALM" -q "username=$1" --fields id --format csv --noquotes
               }
 
-              # Retry login until Keycloak finishes starting — start-dev has no
-              # readiness probe wired up yet (helm/apps/iam/templates/deployment.yaml).
+              # Retry login until Keycloak finishes starting — start-dev's
+              # JVM augmentation can take a while under low CPU limits, even
+              # with the readiness probe gating Service traffic
+              # (helm/apps/iam/templates/deployment.yaml).
               LOGGED_IN=false
-              for i in $(seq 1 30); do
+              for i in $(seq 1 60); do
                 if "$KCADM" config credentials --server "$SERVER_URL" --realm master \
                     --user "$ADMIN_USERNAME" --password "$ADMIN_PASSWORD"; then
                   LOGGED_IN=true
                   break
                 fi
-                echo "Waiting for Keycloak at $SERVER_URL ($i/30)..."
+                echo "Waiting for Keycloak at $SERVER_URL ($i/60)..."
                 sleep 5
               done
               if [ "$LOGGED_IN" != true ]; then
-                echo "Keycloak did not become reachable at $SERVER_URL after 150s" >&2
+                echo "Keycloak did not become reachable at $SERVER_URL after 300s" >&2
                 exit 1
               fi
               echo "Logged in to $SERVER_URL as $ADMIN_USERNAME"

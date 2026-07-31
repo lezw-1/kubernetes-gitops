@@ -46,6 +46,11 @@
 
 - [ ] **Check if subpath for IAM is necessary** — `KC_HTTP_RELATIVE_PATH=/iam` is set in `helm/charts/iam/templates/deployment.yaml`; verify whether the gateway routes require this subpath or if it can be removed to simplify the setup
 
+- [x] **`iam` pod OOMKilled + provisioning Job failed on staging** — Keycloak's `start-dev` Quarkus augmentation is both CPU- and memory-hungry: under the old 200m CPU / 512Mi memory limits, the pod was OOMKilled mid-boot on one attempt and took ~268s to finish augmenting on the next; the `iam-provision` post-upgrade hook Job gave up after its 150s retry window (`BackoffLimitExceeded`) with the realm never seeded, so `/iam/realms/ai-system/...` 404'd. Also had no readiness probe, so the Service routed traffic (including the provisioning Job) to the pod before Keycloak was even listening on 8080. Fixed:
+  - `helm/apps/iam/templates/deployment.yaml` — added `readinessProbe`/`livenessProbe` (`tcpSocket:8080`)
+  - `helm/apps/iam/templates/provision-job.yaml` — retry window doubled 150s → 300s
+  - `argocd/clusters/staging/values/iam.enc.yaml` — CPU 200m→500m, memory 512Mi→1Gi (via `sops`)
+
 ## LLM
 
 - [ ] **`replicas: 0` still provisions a 20Gi PVC** on prod even though no pod runs — `helm/apps/llm/templates/pvc.yaml` (and the guarded `pv.yaml` on clusters without a real StorageClass) isn't gated on `replicas`; consider skipping the PV/PVC entirely when self-hosted inference is disabled, to avoid the idle storage cost.
