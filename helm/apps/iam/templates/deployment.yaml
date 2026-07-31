@@ -55,6 +55,17 @@ spec:
             # Keycloak HTTP port.
             - containerPort: 8080
 
+          # Startup: covers Keycloak's slow first boot (Quarkus augmentation
+          # observed taking 260s+ under constrained CPU) — readiness/liveness
+          # below are suspended until this succeeds, so neither kills the
+          # container nor flips it ready mid-augmentation. 5s * 60 = 300s
+          # budget, matching templates/provision-job.yaml's retry window.
+          startupProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 60
+
           # Readiness: excludes the pod from the Service until Keycloak is
           # actually accepting connections — without this, traffic (including
           # the iam-provision Job) hits the pod the instant the container
@@ -62,16 +73,14 @@ spec:
           readinessProbe:
             tcpSocket:
               port: 8080
-            initialDelaySeconds: 10
             periodSeconds: 5
-            failureThreshold: 30
+            failureThreshold: 3
 
           # Liveness: restarts the pod if Keycloak stops accepting
           # connections after having started successfully.
           livenessProbe:
             tcpSocket:
               port: 8080
-            initialDelaySeconds: 30
             periodSeconds: 10
 
           env:
