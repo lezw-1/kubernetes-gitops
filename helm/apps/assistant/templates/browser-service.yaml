@@ -1,7 +1,10 @@
+{{- if .Values.browser.enabled }}
 # ClusterIP Service fronting the headless browser Deployment
 # (browser-deployment.yaml) — not exposed via Ingress/HTTPRoute, so this
 # namespace boundary is the browser service's only access control (see the
 # `browser:` comment in values.yaml).
+#
+# Disabled by default — see values.yaml browser.enabled.
 apiVersion: v1
 kind: Service
 metadata:
@@ -22,3 +25,4 @@ spec:
     # CDP/WebSocket + REST API port, forwarded to the container's own 3000.
     - port: 3000
       targetPort: 3000
+{{- end }}

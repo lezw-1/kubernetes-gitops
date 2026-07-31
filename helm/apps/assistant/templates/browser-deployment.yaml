@@ -1,7 +1,10 @@
+{{- if .Values.browser.enabled }}
 # Headless Chromium service (Browserless) — gives OpenClaw's browser tool
 # something to drive over CDP. See the `browser:` comment in values.yaml
 # for why this runs as its own service instead of being installed into the
 # assistant image.
+#
+# Disabled by default — see values.yaml browser.enabled.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -98,3 +101,4 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 2Gi
+{{- end }}
