@@ -77,6 +77,22 @@ spec:
                   name: worker-secrets
                   key: ANTHROPIC_API_KEY
 
+            # Chunk size (characters) for the chronsorting pipeline's text splitter, sourced from values.chronsorting.chunkSize.
+            - name: CHUNK_SIZE
+              value: {{ .Values.chronsorting.chunkSize | quote }}
+
+            # Chunk overlap (characters) for the chronsorting pipeline's text splitter, sourced from values.chronsorting.chunkOverlap.
+            - name: CHUNK_OVERLAP
+              value: {{ .Values.chronsorting.chunkOverlap | quote }}
+
+            # Similarity threshold above which chronsorting entries are treated as duplicates, sourced from values.chronsorting.dedupSimilarityThreshold.
+            - name: DEDUP_SIMILARITY_THRESHOLD
+              value: {{ .Values.chronsorting.dedupSimilarityThreshold | quote }}
+
+            # Politician name the promises pipeline tracks, sourced from values.promises.politician.
+            - name: PROMISES_POLITICIAN
+              value: {{ .Values.promises.politician | quote }}
+
           resources:
             requests:
               # Minimum CPU reserved for scheduling.

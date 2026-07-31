@@ -71,6 +71,22 @@ secret:
   # SOPS-encrypted environment override at deploy time.
   anthropicApiKey: ""
 
+# Chronsorting: text-chunking settings for the timeline-sorting pipeline.
+chronsorting:
+  # Chunk size (characters) passed to the text splitter.
+  chunkSize: "500"
+
+  # Overlap (characters) between consecutive chunks.
+  chunkOverlap: "150"
+
+  # Cosine-similarity threshold above which two chunks are treated as duplicates.
+  dedupSimilarityThreshold: "0.55"
+
+# Promises: settings for the promise-tracking pipeline.
+promises:
+  # Politician name the pipeline tracks.
+  politician: "Friedrich Merz"
+
 # Resources: compute reserved for the worker container.
 resources:
   requests:

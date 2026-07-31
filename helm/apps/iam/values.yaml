@@ -61,14 +61,14 @@ debug: "INFO"
 resources:
   requests:
     # Minimum CPU reserved for scheduling.
-    cpu: 100m
+    cpu: 200m
 
     # Minimum memory reserved for scheduling.
     memory: 512Mi
 
   limits:
     # CPU hard cap — matches requests (Guaranteed QoS).
-    cpu: 100m
+    cpu: 200m
 
     # Memory hard cap — matches requests (Guaranteed QoS).
     memory: 512Mi
@@ -160,6 +160,15 @@ secrets:
       roles:
         - viewer
 
+    promises:
+      clientId: promises
+      enabled: true
+      publicClient: false
+      directAccessGrantsEnabled: false
+      roles:
+        - viewer
+        - admin
+
   # User definitions, keyed by a values-safe name (see templates/users-*.yaml).
   users:
     user1:
@@ -192,6 +201,10 @@ secrets:
       roles:
         - client: chronsorting
           role: viewer
+        - client: promises
+          role: viewer
+        - client: promises
+          role: admin
         - client: frontend
           role: viewer
 

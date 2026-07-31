@@ -171,6 +171,20 @@ spec:
               {{- end }}
               echo "Client {{ .Values.secrets.clients.frontend.clientId }} provisioned (id=$FRONTEND_ID)"
 
+              # Client: promises (values.secrets.clients.promises).
+              echo "Provisioning client: {{ .Values.secrets.clients.promises.clientId }}"
+              "$KCADM" create clients -r "$REALM" -s clientId={{ .Values.secrets.clients.promises.clientId | quote }} 2>/dev/null || true
+              PROMISES_ID=$(client_internal_id {{ .Values.secrets.clients.promises.clientId | quote }})
+              "$KCADM" update clients/"$PROMISES_ID" -r "$REALM" \
+                -s enabled={{ .Values.secrets.clients.promises.enabled }} \
+                -s publicClient={{ .Values.secrets.clients.promises.publicClient }} \
+                -s directAccessGrantsEnabled={{ .Values.secrets.clients.promises.directAccessGrantsEnabled }}
+              {{- range .Values.secrets.clients.promises.roles }}
+              echo "  role: {{ . }}"
+              "$KCADM" create clients/"$PROMISES_ID"/roles -r "$REALM" -s name={{ . | quote }} 2>/dev/null || true
+              {{- end }}
+              echo "Client {{ .Values.secrets.clients.promises.clientId }} provisioned (id=$PROMISES_ID)"
+
               # User: user1 (values.secrets.users.user1) — USER1_USERNAME/
               # USER1_PASSWORD come from the SOPS-encrypted env override above.
               echo "Provisioning user: $USER1_USERNAME"

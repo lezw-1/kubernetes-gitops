@@ -82,6 +82,14 @@ secrets:
             directAccessGrantsEnabled: true
             roles:
                 - viewer
+        promises:
+            clientId: promises
+            enabled: true
+            publicClient: false
+            directAccessGrantsEnabled: false
+            roles:
+                - viewer
+                - admin
     # User definitions, keyed by a values-safe name.
     users:
         user1:
@@ -104,6 +112,10 @@ secrets:
             roles:
                 - client: chronsorting
                   role: viewer
+                - client: promises
+                  role: viewer
+                - client: promises
+                  role: admin
                 - client: frontend
                   role: viewer
         user2:
@@ -131,6 +143,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1upcrchtv9xg5jgj09au80wk8p9h7rmxwm709lumq79mngrp6ss2sk8zkzh
     encrypted_regex: ^(username|password|domain|email)$
-    lastmodified: "2026-07-25T18:55:53Z"
-    mac: ENC[AES256_GCM,data:CQQyej3CARd2N3Td4uPQfGkWv7hLyECcxGxnEk03WPE75kOkBcUKrSYTvy6n57hYlH/rjoP5r1Z+qDIRjy43OL4rDPEte+0XwsCVhbpMdtNSkHdsIU1Og/MdNU/F5hO1F4XlVkuoIT1beLYhRQF3ehAIA4izRZcFwq/IFFLaXXw=,iv:NobJ2XI562jM6JGFa8einTbiBy/QYmYNo02JgOR5Ggc=,tag:cHHTfUiJUNsa8v5oXrVGpw==,type:str]
-    version: 3.13.2
+    lastmodified: "2026-07-31T10:45:31Z"
+    mac: ENC[AES256_GCM,data:ThEgQIPRZHJb/G6kQ7G776QyAdDe5ORH5tzF+Gdm1ZDr3d0qSqU5P9hATwNPxPmgf3lKGasqgH8ob3yR4tEUc+C2J3UJlq773VDyNoNg8oODtiOtF3JidAhQWLYc1ZbbYEB7fdf4jv+BP5TdEhXwCWQJBfmHwvvWPyeMxKfESkU=,iv:j110mANjcVTo2/0a7YTqwAceJHIrJKYB9Bq0pPgKSWQ=,tag:sMTtFkiFGkqw4j+vAWLpFg==,type:str]
+    version: 3.13.3

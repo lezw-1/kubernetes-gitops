@@ -34,10 +34,10 @@ debug: INFO
 # Resources: compute reserved for the Keycloak container.
 resources:
     requests:
-        cpu: 100m
+        cpu: 200m
         memory: 512Mi
     limits:
-        cpu: 100m
+        cpu: 200m
         memory: 512Mi
 # HPA: horizontal pod autoscaler.
 hpa:
@@ -90,6 +90,14 @@ secrets:
             directAccessGrantsEnabled: true
             roles:
                 - viewer
+        promises:
+            clientId: promises
+            enabled: true
+            publicClient: false
+            directAccessGrantsEnabled: false
+            roles:
+                - viewer
+                - admin
     # User definitions, keyed by a values-safe name.
     users:
         user1:
@@ -112,6 +120,10 @@ secrets:
             roles:
                 - client: chronsorting
                   role: viewer
+                - client: promises
+                  role: viewer
+                - client: promises
+                  role: admin
                 - client: frontend
                   role: viewer
         user2:
@@ -139,6 +151,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email)$
-    lastmodified: "2026-07-25T20:43:27Z"
-    mac: ENC[AES256_GCM,data:XizXQrYXhonJt773ZpUbAucYirfgDkX94wao5HdyBekivDTVR+wa0GHviW+HB9rnuY1Om/iDi4TDxAQxWwyifSqGztBLBDgb3OHMR9NDGtEgTsLpPus+MnPUvrIlMjpDOzZfd8L+wP8cLpZV9/eU3p/8aNPC9XWlYj/eGW5O0ok=,iv:/kDmm5WgamIfZluuuP0UYKKxHsrVivV5sAv9X5y1vhU=,tag:W2mCzB6tE0CbQvwu3afSEg==,type:str]
-    version: 3.13.2
+    lastmodified: "2026-07-31T10:45:31Z"
+    mac: ENC[AES256_GCM,data:BCGiNhR38ZhDi9GNS05WI/D+1TiPl8YG79oxnIkRc9ZBysawbal3YLXi0czUSCoABO9pfTI11yi8txqg+rwvplbaJXYcTP25yyg4wOC2Ex0IlwQ4SUPO0bKl8sHl6YI45jUmM9va5Qq2hPQAheSS22qileN6IKkOISc+bKzAaL0=,iv:j3D2wu1SAsXM7NYy34e+lV5h3dlKSbM7mr3MjrA7IzA=,tag:JHTB/uKKOfafiJR5ynUFIw==,type:str]
+    version: 3.13.3
