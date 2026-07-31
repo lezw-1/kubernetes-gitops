@@ -35,11 +35,11 @@ debug: INFO
 # Resources: compute reserved for the Keycloak container.
 resources:
     requests:
-        cpu: 200m
-        memory: 512Mi
+        cpu: 500m
+        memory: 1Gi
     limits:
-        cpu: 200m
-        memory: 512Mi
+        cpu: 500m
+        memory: 1Gi
 # HPA: horizontal pod autoscaler.
 hpa:
     # Default: disabled — Keycloak dev mode (in-memory H2) is single-instance only.
@@ -147,6 +147,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1tnz3fux4w76dzm6swlf09zflxsku0haf0hl6f4g4a89sxs9y0cxs30eq4u
     encrypted_regex: ^(username|password)$
-    lastmodified: "2026-07-31T10:45:04Z"
-    mac: ENC[AES256_GCM,data:5KN7V88joWnYkcR97EELXDr1NOrZ8V7HmMhL+1NZxmp/2TjALHlXMSp9vnmMCM5UWibXUXjwD0G78Ptqriip4QRaxTuG54AltZcHKtRzxgaKW1Zm/8uo9SH8YXnvNJAr9rubEXfnTbL9TZZ4qYGmHGo827g+vL3h2k5WRMuaKIE=,iv:tssdnXFYNrH7yTwVBCs7JRpa3carFam0q7A6S5dmwdM=,tag:09p5hMSISLKIqOvXxGDifw==,type:str]
+    lastmodified: "2026-07-31T19:28:34Z"
+    mac: ENC[AES256_GCM,data:rEwhxfpGpGOwrcxyvEVEioaEdYJ/rKnzQZxmxNXRaBwrZUW9PxTUTNq7cuwBY59IPyMtlkR/1GBxT6UVpB01PmBEhteMz8Dku3XN0sfarLM10stqPsKjF/svm42ZSxEgK5eolkuHjQAgmqlJauLTolAd3qQ0OopXJ7tQjSndEAI=,iv:ZaGDiyOVUozSLq5V9GuStot8957hsSi0qC1OJFrhV1w=,tag:ZuaJ2wXd1GsrZ/cmetbCOg==,type:str]
     version: 3.13.3
