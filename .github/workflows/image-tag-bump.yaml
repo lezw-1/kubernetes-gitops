@@ -1,13 +1,19 @@
 # Bump deployed image tag
 #
-# Receives a repository_dispatch from an app's source repo (e.g.
+# Triggered via workflow_dispatch from an app's source repo (e.g.
 # kubernetes-frontend's build.yaml) once it has pushed a new image to the
 # Cloudfleet registry, sets that app's image.tag in the matching
 # argocd/clusters/<env>/values/<app>.enc.yaml via sops, and pushes. Argo CD's
 # existing syncPolicy.automated (prune + selfHeal) on that Application picks
 # up the change on its own — no manual sync, no in-cluster component.
 #
-# Expected client_payload:
+# Dispatched with ref set to the target env branch (staging or prod), so the
+# workflow_dispatch API loads and runs the copy of this file that lives on
+# that branch. This matters because repository_dispatch — used previously —
+# is only ever matched against workflow files on the repo's default branch,
+# which broke this for whichever env branch wasn't the default.
+#
+# Expected inputs:
 #   - app: chart/values name, e.g. "frontend" or "api"
 #   - env: "staging" or "prod" (dev is excluded — it deploys a locally built
 #     image, not anything from the registry)
@@ -22,23 +28,32 @@
 name: Bump deployed image tag
 
 on:
-  repository_dispatch:
-    types: [image-published]
+  workflow_dispatch:
+    inputs:
+      app:
+        required: true
+        type: string
+      env:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: image-tag-bump-${{ github.event.client_payload.env }}
+  group: image-tag-bump-${{ github.event.inputs.env }}
 
 jobs:
   bump-tag:
     runs-on: ubuntu-latest
-    if: github.event.client_payload.env == 'staging' || github.event.client_payload.env == 'prod'
+    if: github.event.inputs.env == 'staging' || github.event.inputs.env == 'prod'
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.client_payload.env }}
+          ref: ${{ github.event.inputs.env }}
 
       - name: Install sops
         run: |
@@ -47,15 +62,23 @@ jobs:
 
       - name: Select age key for this environment
         env:
-          ENV_NAME: ${{ github.event.client_payload.env }}
+          ENV_NAME: ${{ github.event.inputs.env }}
           KEY_STAGING: ${{ secrets.SOPS_AGE_KEY_STAGING }}
           KEY_PROD: ${{ secrets.SOPS_AGE_KEY_PROD }}
+        # Age keys are multi-line (age-keygen emits comment lines plus the
+        # AGE-SECRET-KEY-1... line), so $GITHUB_ENV needs the heredoc form —
+        # a plain KEY=VALUE line breaks on the embedded newlines.
         run: |
           if [ "$ENV_NAME" = "staging" ]; then
-            echo "SOPS_AGE_KEY=$KEY_STAGING" >> "$GITHUB_ENV"
+            KEY="$KEY_STAGING"
           else
-            echo "SOPS_AGE_KEY=$KEY_PROD" >> "$GITHUB_ENV"
+            KEY="$KEY_PROD"
           fi
+          {
+            echo "SOPS_AGE_KEY<<EOF"
+            echo "$KEY"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
 
       - name: Bump image.tag
         # sops --set decrypts, patches, and re-encrypts the whole file in
@@ -64,17 +87,17 @@ jobs:
         # and a hand-edited plaintext field would fail decryption on the
         # next Argo CD sync.
         env:
-          VALUES_FILE: argocd/clusters/${{ github.event.client_payload.env }}/values/${{ github.event.client_payload.app }}.enc.yaml
-          TAG: ${{ github.event.client_payload.sha }}
+          VALUES_FILE: argocd/clusters/${{ github.event.inputs.env }}/values/${{ github.event.inputs.app }}.enc.yaml
+          TAG: ${{ github.event.inputs.sha }}
         run: |
           sops --set "[\"image\"][\"tag\"] \"$TAG\"" "$VALUES_FILE"
 
       - name: Commit and push
         env:
-          VALUES_FILE: argocd/clusters/${{ github.event.client_payload.env }}/values/${{ github.event.client_payload.app }}.enc.yaml
-          ENV_NAME: ${{ github.event.client_payload.env }}
-          APP: ${{ github.event.client_payload.app }}
-          TAG: ${{ github.event.client_payload.sha }}
+          VALUES_FILE: argocd/clusters/${{ github.event.inputs.env }}/values/${{ github.event.inputs.app }}.enc.yaml
+          ENV_NAME: ${{ github.event.inputs.env }}
+          APP: ${{ github.event.inputs.app }}
+          TAG: ${{ github.event.inputs.sha }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
