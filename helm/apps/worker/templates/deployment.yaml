@@ -77,6 +77,11 @@ spec:
                   name: worker-secrets
                   key: ANTHROPIC_API_KEY
 
+            # Ollama model name, sourced from values.model. No fallback in
+            # code — the LLM call fails outright if this isn't set.
+            - name: MODEL
+              value: {{ .Values.model | quote }}
+
             # Chunk size (characters) for the chronsorting pipeline's text splitter, sourced from values.chronsorting.chunkSize.
             - name: CHUNK_SIZE
               value: {{ .Values.chronsorting.chunkSize | quote }}

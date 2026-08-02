@@ -40,6 +40,12 @@ broker:
   # the broker app (helm/apps/broker) is deployed in this same namespace.
   url: "redis://broker:6379/0"
 
+# Model: Ollama model name the worker requests, sourced into MODEL. Must
+# match the model actually pulled by the llm app's init container (see
+# helm/apps/llm/values.yaml's own `model`) — this chart doesn't template a
+# fallback, so a mismatch here fails every LLM call outright.
+model: "qwen2.5:7b"
+
 # Service: ClusterIP configuration. No container port is exposed by the
 # worker image today — it's a Celery consumer, not an HTTP server (see
 # BACKLOG.md). This Service exists so the api app's WORKER_URL resolves via
