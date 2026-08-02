@@ -20,7 +20,7 @@ image:
     # host; decrypt/edit via `sops` rather than by hand.
     repository: ENC[AES256_GCM,data:egerNkajVzVw/kBeAICeKpGcFcvjt2+JDReXYYphjdoyAjtKjsfA+/bwCoLFwy+85qhbbjNZETL/Ka1BXDaK9eDIh8trJCI=,iv:4AoD7YrHbX4+avpI+GwD6FD4TNca1WyNUBwQNNMC010=,tag:ZRpF6dYd/Fbl5TNJzIwmrA==,type:str]
     # Image tag — bumped by hand once the source repo publishes a new image (see README).
-    tag: staging
+    tag: b62c4180c430391b057c12f2d5ec2d5bf7a7be6d
     # Allowed values: Always, IfNotPresent, Never
     # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
     pullPolicy: Always
@@ -61,8 +61,13 @@ worker:
     url: http://worker:8000
     timeout: 1200
 sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
     age:
-        - enc: |
+        - recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+          enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
             YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBmN2FjQ1E2UVYxajhvSjhY
             aVl1RjJ1NzQ1NEZyR3ZCeVpMa05EK2l6cEM0CmdKZkZ3b28xOEkrdGsyeVdpR3pN
@@ -70,8 +75,8 @@ sops:
             LzVQZDgwakhueWVUN3MyVHg0VktUNmMKRLpVouPoQv8dT9qZ+7d5pm2bVbqjsHbQ
             q9wM1pPipGJm0qIR7PKJocQNOln/ZKaf0NneVm0un7G5Y+yUgStU5A==
             -----END AGE ENCRYPTED FILE-----
-          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    lastmodified: "2026-08-02T07:36:47Z"
+    mac: ENC[AES256_GCM,data:sXW2GjvkHjDRTPqrxfkAQxcavOEMyEBm0Z6VimAYDRVSgQxwfeaLYmVk0XtTUarT63ZpgpckGWAUy+7SQCDrBWhbaB70U7m6IkJI2wLY0uikFO+bL0m4j7jS0NS2SnGz8f+3G1/sJe2GMaP+RW/kpdofB5YhpYAHXPZwuxtSxZY=,iv:nnek0vBq5FVCTUtaJBemFXfh7RLMu85QATzHq6exW7g=,tag:pd1S/9c7ChwUhY+hcJRrGg==,type:str]
+    pgp: []
     encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
-    lastmodified: "2026-07-25T20:43:27Z"
-    mac: ENC[AES256_GCM,data:cnENas/9yIyqXWNANF8/YlnxcD7wUg+4+HxdgT5oycAYQnqA3YYhSb8f4wBi/ZCDRaQciAwc1AzhE29vzDxiCsuCgVc89B6tormqZMztKYXE56PxqNLP4esaWsqYwRcBYFbZ/0NU8WCvrwbevMahAsBBXD7M8zOpHrIbX4Ege6M=,iv:df5GUaHDKYQHaCSwLMICCC3oOI3taU8ZAywUdITWzzw=,tag:swBFQdvMpw0BHq8BQGk9Dw==,type:str]
     version: 3.13.2
