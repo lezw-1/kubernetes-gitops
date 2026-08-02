@@ -20,6 +20,10 @@ mongoUrl: mongodb://database:27017
 broker:
     port: 6379
     url: redis://broker:6379/0
+# Model: pinned to match llm's model below in staging's llm.enc.yaml —
+# see helm/apps/worker/values.yaml's comment on this field for why a
+# mismatch here fails every LLM call.
+model: qwen2.5:7b
 service:
     port: 8000
 pool: prefork
@@ -45,6 +49,6 @@ sops:
             -----END AGE ENCRYPTED FILE-----
           recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
     encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
-    lastmodified: "2026-07-31T11:18:31Z"
-    mac: ENC[AES256_GCM,data:CLchDwqxc/dxut9MasR8bn3s968kVMpq/t+s3fa2uWivEeKQLSpr6LPa/Sx1s5ZOwArzq8hBGb3k9rGZFBHj/sl5zlke6rZWUWhdbwnjlv5OHAbmofSvIvSAgG+H59K2+HpoIc0G/RSVYeunMqZWjZ3mX3WFWJCAFkdPVdqj7jY=,iv:uiGs2uVcF41Q1sEiIQQTlG0cHJ58TbaX+eSTVBNUoZ4=,tag:hyhrFka0C5zMwyqHrOvIyA==,type:str]
-    version: 3.13.2
+    lastmodified: "2026-08-02T07:55:03Z"
+    mac: ENC[AES256_GCM,data:9Rbo+25lxYRd4n6QugJ7KLyCNFZxNA9fFmj2fTjJBYbhEXoomkAOQ4i3TrUjRdY+4McDKHKD1G800dcQhXg+ytaiACcpkct1FRvmU76vbV7VrMYUKfi9O2J/VtbwOxybi7O320G7u3FalItVzmB7FOMMvuBkSFbrsjjMl2MGIVk=,iv:1+DpMJeDQnGnyogWNzRCe9oJPOxgC4nRDYiIvZ4JmgE=,tag:ESQYue2TGUykkPixsy+K0A==,type:str]
+    version: 3.13.3
