@@ -98,21 +98,24 @@ secretsProvisioning:
   enabled: false
 
   # Compute reserved for the provision sidecar container (kcadm.sh
-  # reconciliation loop) — just CLI calls, needs very little.
+  # reconciliation loop) — just occasional CLI calls, needs very little.
+  # Kept low deliberately: the dev node runs single-node with tight CPU
+  # headroom, and a Deployment's rolling update briefly needs both the old
+  # and new Pod's requests to fit at once.
   resources:
     requests:
       # Minimum CPU reserved for scheduling.
-      cpu: 50m
+      cpu: 10m
 
       # Minimum memory reserved for scheduling.
-      memory: 64Mi
+      memory: 32Mi
 
     limits:
       # CPU hard cap — matches requests (Guaranteed QoS).
-      cpu: 50m
+      cpu: 10m
 
       # Memory hard cap — matches requests (Guaranteed QoS).
-      memory: 64Mi
+      memory: 32Mi
 
 # Secrets: realm, client, and user definitions materialized as Kubernetes
 # Secrets and provisioned into Keycloak by the provision sidecar in
