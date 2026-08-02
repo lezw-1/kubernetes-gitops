@@ -50,12 +50,20 @@ jobs:
           ENV_NAME: ${{ github.event.client_payload.env }}
           KEY_STAGING: ${{ secrets.SOPS_AGE_KEY_STAGING }}
           KEY_PROD: ${{ secrets.SOPS_AGE_KEY_PROD }}
+        # Age keys are multi-line (age-keygen emits comment lines plus the
+        # AGE-SECRET-KEY-1... line), so $GITHUB_ENV needs the heredoc form —
+        # a plain KEY=VALUE line breaks on the embedded newlines.
         run: |
           if [ "$ENV_NAME" = "staging" ]; then
-            echo "SOPS_AGE_KEY=$KEY_STAGING" >> "$GITHUB_ENV"
+            KEY="$KEY_STAGING"
           else
-            echo "SOPS_AGE_KEY=$KEY_PROD" >> "$GITHUB_ENV"
+            KEY="$KEY_PROD"
           fi
+          {
+            echo "SOPS_AGE_KEY<<EOF"
+            echo "$KEY"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
 
       - name: Bump image.tag
         # sops --set decrypts, patches, and re-encrypts the whole file in
