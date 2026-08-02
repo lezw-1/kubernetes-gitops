@@ -11,6 +11,14 @@ spec:
   # Single replica — no HA for this app; see hpa.yaml for scale-out.
   replicas: 1
 
+  # Recreate (not the default RollingUpdate): a restart already loses all
+  # Keycloak state (start-dev's in-memory H2 above), so there's no
+  # continuity to preserve by surging a second Pod — and surging would
+  # briefly need 2x this Pod's resources, which single-replica dev/staging
+  # nodes may not have free.
+  strategy:
+    type: Recreate
+
   selector:
     matchLabels:
       # Must match template.metadata.labels below.
