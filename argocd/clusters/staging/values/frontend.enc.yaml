@@ -19,7 +19,7 @@ image:
     # host; decrypt/edit via `sops` rather than by hand.
     repository: ENC[AES256_GCM,data:h/6pKXlDoj8SkdSwqAtrxZc76ATTtbCu2uCINz86uTrhBGL9aKf+92HakFIjxPKkq7sgDcDIEsR/u468MvbMucYZRPY1ATc3OMnDOQ==,iv:AagZD1dOWTGxcOqDlS2irXyJjooLVKxVRrtmnUZUxfo=,tag:iLIFux+u7btP8rBLpxy0Wg==,type:str]
     # Image tag — bumped by hand once the source repo publishes a new image (see README).
-    tag: staging
+    tag: f2c488494381967f21fba9208345aec6958f6a0d
     # Allowed values: Always, IfNotPresent, Never
     # Pulled from the private Cloudfleet registry — requires imagePullSecrets.
     pullPolicy: Always
@@ -46,8 +46,13 @@ hpa:
     # Target average CPU utilization percentage for scaling.
     targetCPUUtilization: 70
 sops:
+    kms: []
+    gcp_kms: []
+    azure_kv: []
+    hc_vault: []
     age:
-        - enc: |
+        - recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+          enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
             YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBBY2llam1SQStkVW9vTHQy
             YjYxeHl1Q1AvdmV5c01KeVBhdGFKL3FxL1dFCmVJTmxWSE5veXFzQmFzUVFhNjNl
@@ -55,8 +60,8 @@ sops:
             ZnR2K1plaElrNHJEdW1IMTBiUXVCdTgKpfapSl87fzjyM4O1/VmzmH+NPONpEmNS
             OZAxlQenw4qRnCBvx3EPAoco4Rzx9oWYTQ3l9/MpOhCQotPSd72hEg==
             -----END AGE ENCRYPTED FILE-----
-          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    lastmodified: "2026-08-02T07:07:31Z"
+    mac: ENC[AES256_GCM,data:NTvxzYahN4YnCVDfPw9S1kbskQms6VH33HYXKueb7VibjVRFUF9fIaIJ9Kj8u57uqZIAaTtc+FbjovUw5UCvzhcnzCXjGrB6MvMoHHH4SBDhxP9aCqfdE6DUNcV+VONBQGVuuO6KGnT1It5ZJUQ1lCX4RKZgk+SYYBpTBmBNw0Q=,iv:3n7pMNZK6NRs9gnMYWzzWuQsJUeA/1MOzwuL9ZcU6Zw=,tag:CRls5Jiq7y42+WNwcByXyQ==,type:str]
+    pgp: []
     encrypted_regex: ^(username|password|domain|email|repository)$
-    lastmodified: "2026-07-25T20:43:27Z"
-    mac: ENC[AES256_GCM,data:wFll/fIhAzJPSRZHSvycsHscyleG2cC4nodfX21O/ltlFagmg0xRk6GMiAiIcAsgqaJIK0c/STXsQ6I346AZhExL/neJ2AIj9nZQL+3DxFq+GqSAYVoWQStjabAtrogMovVsOkmSBovNv+HZzn/yNBXrUwQJqCqkCZhV76kktEU=,iv:llCVVoEVu1h+y2DYHyYSg3dD7hCuB1Rk1OeSP8EzXOc=,tag:DfMhB9Foe5XXJDfYUhKrhQ==,type:str]
     version: 3.13.2
