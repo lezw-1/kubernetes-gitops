@@ -89,16 +89,34 @@ hpa:
 
 # SecretsProvisioning: gates templates/admin-credentials.yaml,
 # templates/realms-*.yaml, templates/clients-*.yaml, templates/users-*.yaml,
-# and templates/provision-job.yaml — all sourced from values.secrets below.
+# and the provision sidecar in templates/deployment.yaml — all sourced from
+# values.secrets below.
 # Default: disabled, so staging/prod are unaffected until they opt in;
 # admin-credentials must then be created out-of-band there (see README).
 secretsProvisioning:
   # Enabled per environment via envs/<env>/iam.yaml — currently only dev.
   enabled: false
 
+  # Compute reserved for the provision sidecar container (kcadm.sh
+  # reconciliation loop) — just CLI calls, needs very little.
+  resources:
+    requests:
+      # Minimum CPU reserved for scheduling.
+      cpu: 50m
+
+      # Minimum memory reserved for scheduling.
+      memory: 64Mi
+
+    limits:
+      # CPU hard cap — matches requests (Guaranteed QoS).
+      cpu: 50m
+
+      # Memory hard cap — matches requests (Guaranteed QoS).
+      memory: 64Mi
+
 # Secrets: realm, client, and user definitions materialized as Kubernetes
-# Secrets and provisioned into Keycloak by templates/provision-job.yaml.
-# Only read when secretsProvisioning.enabled is true.
+# Secrets and provisioned into Keycloak by the provision sidecar in
+# templates/deployment.yaml. Only read when secretsProvisioning.enabled is true.
 # Override per environment via envs/<env>/iam.yaml and the matching
 # SOPS-encrypted values file (e.g. argocd/clusters/dev/values/iam-secrets.enc.yaml).
 secrets:

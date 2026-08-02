@@ -59,9 +59,9 @@ spec:
           # 500m CPU limit above, 260s+ at 200m) — readiness/liveness below
           # are suspended until this succeeds, so neither kills the container
           # nor flips it ready mid-augmentation. 5s * 48 = 240s budget —
-          # shorter than templates/provision-job.yaml's 300s retry window, so
-          # the Job keeps polling through a container restart if boot ever
-          # exceeds this.
+          # shorter than the provision sidecar's 300s retry window below, so
+          # the sidecar keeps polling through a container restart if boot
+          # ever exceeds this.
           startupProbe:
             tcpSocket:
               port: 8080
@@ -69,9 +69,11 @@ spec:
             failureThreshold: 48
 
           # Readiness: excludes the pod from the Service until Keycloak is
-          # actually accepting connections — without this, traffic (including
-          # the iam-provision Job) hits the pod the instant the container
-          # starts, while the JVM is still augmenting/booting.
+          # actually accepting connections — without this, other services'
+          # traffic hits the pod the instant the container starts, while the
+          # JVM is still augmenting/booting. The provision sidecar below
+          # talks to Keycloak over localhost, bypassing the Service, so it
+          # has its own retry loop instead of waiting on this probe.
           readinessProbe:
             tcpSocket:
               port: 8080
@@ -111,3 +113,235 @@ spec:
             # Log level, sourced from values.debug.
             - name: KC_LOG_LEVEL
               value: {{ .Values.debug | default "INFO" | quote }}
+
+        {{- if .Values.secretsProvisioning.enabled }}
+        # Provisioning sidecar: continuously seeds Keycloak with the realm,
+        # clients, and users defined under values.secrets.* (see values.yaml),
+        # using the kcadm.sh CLI that ships in the Keycloak image. Runs in the
+        # same Pod as the iam container (not a separate hook Job) so it
+        # reconciles on every Pod (re)start — not just Argo CD syncs — since
+        # start-dev's in-memory H2 store above is wiped on any restart.
+        - name: provision
+
+          # Same image as the iam container above — kcadm.sh must match the
+          # server's Keycloak version.
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+
+          # Image pull policy, sourced from values.image.pullPolicy.
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          resources:
+            requests:
+              # Minimum CPU reserved for scheduling, sourced from values.secretsProvisioning.resources.
+              cpu: {{ .Values.secretsProvisioning.resources.requests.cpu }}
+
+              # Minimum memory reserved for scheduling, sourced from values.secretsProvisioning.resources.
+              memory: {{ .Values.secretsProvisioning.resources.requests.memory }}
+
+            limits:
+              # CPU hard cap — matches requests (Guaranteed QoS).
+              cpu: {{ .Values.secretsProvisioning.resources.limits.cpu }}
+
+              # Memory hard cap — matches requests (Guaranteed QoS).
+              memory: {{ .Values.secretsProvisioning.resources.limits.memory }}
+
+          env:
+            # Admin login kcadm.sh authenticates with — same Secret the iam
+            # container bootstraps from above.
+            - name: ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: admin-credentials
+                  key: admin-username
+
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: admin-credentials
+                  key: admin-password
+
+            # user1 login credentials, applied via `kcadm set-password` below.
+            - name: USER1_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: users-user1
+                  key: username
+
+            - name: USER1_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: users-user1
+                  key: password
+
+            # user2 login credentials, applied via `kcadm set-password` below.
+            - name: USER2_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: users-user2
+                  key: username
+
+            - name: USER2_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: users-user2
+                  key: password
+
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -uo pipefail
+
+              KCADM=/opt/keycloak/bin/kcadm.sh
+              # localhost — sidecar shares the Pod's network namespace with
+              # the iam container, so no need to go through the Service.
+              SERVER_URL="http://localhost:{{ .Values.service.port }}{{ .Values.subpath }}"
+              REALM={{ .Values.secrets.realms.aiSystem.realm | quote }}
+
+              # Looks up a client's internal id by clientId — the role-management
+              # endpoints below take the internal id, not the clientId.
+              client_internal_id() {
+                "$KCADM" get clients -r "$REALM" -q "clientId=$1" --fields id --format csv --noquotes
+              }
+
+              # Looks up a user's internal id by username — `update users/...`
+              # below takes the internal id, not the username.
+              user_internal_id() {
+                "$KCADM" get users -r "$REALM" -q "username=$1" --fields id --format csv --noquotes
+              }
+
+              # Runs one full reconciliation pass. Isolated in a subshell with
+              # its own `set -e` so one failed step aborts just this pass —
+              # the outer loop below retries rather than crashing the sidecar.
+              provision() (
+                set -euo pipefail
+
+                # Retry login until Keycloak finishes starting — start-dev's
+                # JVM augmentation can take a while under low CPU limits, even
+                # with the readiness probe gating Service traffic.
+                LOGGED_IN=false
+                for i in $(seq 1 60); do
+                  if "$KCADM" config credentials --server "$SERVER_URL" --realm master \
+                      --user "$ADMIN_USERNAME" --password "$ADMIN_PASSWORD"; then
+                    LOGGED_IN=true
+                    break
+                  fi
+                  echo "Waiting for Keycloak at $SERVER_URL ($i/60)..."
+                  sleep 5
+                done
+                if [ "$LOGGED_IN" != true ]; then
+                  echo "Keycloak did not become reachable at $SERVER_URL after 300s" >&2
+                  exit 1
+                fi
+                echo "Logged in to $SERVER_URL as $ADMIN_USERNAME"
+
+                # Realm (values.secrets.realms.aiSystem) — create if missing, then
+                # enforce the desired state on every run (idempotent upsert).
+                echo "Provisioning realm: $REALM"
+                "$KCADM" create realms -s realm="$REALM" 2>/dev/null || true
+                "$KCADM" update realms/"$REALM" \
+                  -s enabled={{ .Values.secrets.realms.aiSystem.enabled }} \
+                  -s verifyEmail={{ .Values.secrets.realms.aiSystem.verifyEmail }}
+
+                # Required actions disabled at realm creation.
+                {{- range .Values.secrets.realms.aiSystem.requiredActionsToDisable }}
+                echo "  disabling required action: {{ . }}"
+                "$KCADM" update authentication/required-actions/{{ . }} -r "$REALM" -s enabled=false
+                {{- end }}
+                echo "Realm $REALM provisioned"
+
+                # Client: chronsorting (values.secrets.clients.chronsorting).
+                echo "Provisioning client: {{ .Values.secrets.clients.chronsorting.clientId }}"
+                "$KCADM" create clients -r "$REALM" -s clientId={{ .Values.secrets.clients.chronsorting.clientId | quote }} 2>/dev/null || true
+                CHRONSORTING_ID=$(client_internal_id {{ .Values.secrets.clients.chronsorting.clientId | quote }})
+                "$KCADM" update clients/"$CHRONSORTING_ID" -r "$REALM" \
+                  -s enabled={{ .Values.secrets.clients.chronsorting.enabled }} \
+                  -s publicClient={{ .Values.secrets.clients.chronsorting.publicClient }} \
+                  -s directAccessGrantsEnabled={{ .Values.secrets.clients.chronsorting.directAccessGrantsEnabled }}
+                {{- range .Values.secrets.clients.chronsorting.roles }}
+                echo "  role: {{ . }}"
+                "$KCADM" create clients/"$CHRONSORTING_ID"/roles -r "$REALM" -s name={{ . | quote }} 2>/dev/null || true
+                {{- end }}
+                echo "Client {{ .Values.secrets.clients.chronsorting.clientId }} provisioned (id=$CHRONSORTING_ID)"
+
+                # Client: frontend (values.secrets.clients.frontend).
+                echo "Provisioning client: {{ .Values.secrets.clients.frontend.clientId }}"
+                "$KCADM" create clients -r "$REALM" -s clientId={{ .Values.secrets.clients.frontend.clientId | quote }} 2>/dev/null || true
+                FRONTEND_ID=$(client_internal_id {{ .Values.secrets.clients.frontend.clientId | quote }})
+                "$KCADM" update clients/"$FRONTEND_ID" -r "$REALM" \
+                  -s enabled={{ .Values.secrets.clients.frontend.enabled }} \
+                  -s publicClient={{ .Values.secrets.clients.frontend.publicClient }} \
+                  -s directAccessGrantsEnabled={{ .Values.secrets.clients.frontend.directAccessGrantsEnabled }}
+                {{- range .Values.secrets.clients.frontend.roles }}
+                echo "  role: {{ . }}"
+                "$KCADM" create clients/"$FRONTEND_ID"/roles -r "$REALM" -s name={{ . | quote }} 2>/dev/null || true
+                {{- end }}
+                echo "Client {{ .Values.secrets.clients.frontend.clientId }} provisioned (id=$FRONTEND_ID)"
+
+                # Client: promises (values.secrets.clients.promises).
+                echo "Provisioning client: {{ .Values.secrets.clients.promises.clientId }}"
+                "$KCADM" create clients -r "$REALM" -s clientId={{ .Values.secrets.clients.promises.clientId | quote }} 2>/dev/null || true
+                PROMISES_ID=$(client_internal_id {{ .Values.secrets.clients.promises.clientId | quote }})
+                "$KCADM" update clients/"$PROMISES_ID" -r "$REALM" \
+                  -s enabled={{ .Values.secrets.clients.promises.enabled }} \
+                  -s publicClient={{ .Values.secrets.clients.promises.publicClient }} \
+                  -s directAccessGrantsEnabled={{ .Values.secrets.clients.promises.directAccessGrantsEnabled }}
+                {{- range .Values.secrets.clients.promises.roles }}
+                echo "  role: {{ . }}"
+                "$KCADM" create clients/"$PROMISES_ID"/roles -r "$REALM" -s name={{ . | quote }} 2>/dev/null || true
+                {{- end }}
+                echo "Client {{ .Values.secrets.clients.promises.clientId }} provisioned (id=$PROMISES_ID)"
+
+                # User: user1 (values.secrets.users.user1) — USER1_USERNAME/
+                # USER1_PASSWORD come from the SOPS-encrypted env override above.
+                echo "Provisioning user: $USER1_USERNAME"
+                "$KCADM" create users -r "$REALM" -s username="$USER1_USERNAME" 2>/dev/null || true
+                USER1_ID=$(user_internal_id "$USER1_USERNAME")
+                "$KCADM" update users/"$USER1_ID" -r "$REALM" \
+                  -s email={{ .Values.secrets.users.user1.email | quote }} \
+                  -s firstName={{ .Values.secrets.users.user1.firstName | quote }} \
+                  -s lastName={{ .Values.secrets.users.user1.lastName | quote }} \
+                  -s enabled={{ .Values.secrets.users.user1.enabled }} \
+                  -s emailVerified={{ .Values.secrets.users.user1.emailVerified }}
+                "$KCADM" set-password -r "$REALM" --username "$USER1_USERNAME" --new-password "$USER1_PASSWORD"
+                {{- range .Values.secrets.users.user1.roles }}
+                echo "  role: {{ .client }}/{{ .role }}"
+                "$KCADM" add-roles -r "$REALM" --uusername "$USER1_USERNAME" --cclientid {{ .client | quote }} --rolename {{ .role | quote }} 2>/dev/null || true
+                {{- end }}
+                echo "User $USER1_USERNAME provisioned (id=$USER1_ID)"
+
+                # User: user2 (values.secrets.users.user2).
+                echo "Provisioning user: $USER2_USERNAME"
+                "$KCADM" create users -r "$REALM" -s username="$USER2_USERNAME" 2>/dev/null || true
+                USER2_ID=$(user_internal_id "$USER2_USERNAME")
+                "$KCADM" update users/"$USER2_ID" -r "$REALM" \
+                  -s email={{ .Values.secrets.users.user2.email | quote }} \
+                  -s firstName={{ .Values.secrets.users.user2.firstName | quote }} \
+                  -s lastName={{ .Values.secrets.users.user2.lastName | quote }} \
+                  -s enabled={{ .Values.secrets.users.user2.enabled }} \
+                  -s emailVerified={{ .Values.secrets.users.user2.emailVerified }}
+                "$KCADM" set-password -r "$REALM" --username "$USER2_USERNAME" --new-password "$USER2_PASSWORD"
+                {{- range .Values.secrets.users.user2.roles }}
+                echo "  role: {{ .client }}/{{ .role }}"
+                "$KCADM" add-roles -r "$REALM" --uusername "$USER2_USERNAME" --cclientid {{ .client | quote }} --rolename {{ .role | quote }} 2>/dev/null || true
+                {{- end }}
+                echo "User $USER2_USERNAME provisioned (id=$USER2_ID)"
+
+                echo "Provisioning complete"
+              )
+
+              # Reconcile forever: every successful pass re-asserts the
+              # desired state (catches manual drift too), every failed pass
+              # backs off and retries — so a restart of just the iam
+              # container (no Pod-level recreation) still gets reprovisioned
+              # once this loop's next pass finds Keycloak reachable again.
+              while true; do
+                if provision; then
+                  echo "Reconciling again in 5m"
+                  sleep 300
+                else
+                  echo "Provisioning pass failed, retrying in 30s" >&2
+                  sleep 30
+                fi
+              done
+        {{- end }}
