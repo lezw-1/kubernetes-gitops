@@ -133,30 +133,35 @@ jobs:
           cloudfleet clusters kubeconfig ${{ secrets.CF_CLUSTER_ID_STAGING }}
 
       - name: Delete every staging resource
+        # argocd is deleted first, ahead of the other namespaces, so this
+        # doesn't depend on Argo CD's own controller staying up long enough
+        # to process every Application (including PreDelete/PostDelete
+        # hooks) — trading graceful hook execution for a deletion that can't
+        # get stuck waiting on a controller that's being torn down in the
+        # same operation.
+        #
         # Namespace deletion natively cascades to everything inside it
         # (Deployments, Secrets, Argo CD's own install, its Application/
         # AppProject CRs) — no dependency on Argo CD's own cascade/finalizer
         # mechanism, which none of these Applications opt into. ClusterIssuer
         # and GatewayClass are cluster-scoped (outside any namespace), so
-        # they're deleted explicitly. --ignore-not-found makes this safe to
-        # rerun and safe on a cluster that was never installed.
+        # they're deleted explicitly, after the namespace loop — Envoy
+        # Gateway holds gateway-exists-finalizer.gateway.networking.k8s.io on
+        # GatewayClass eg for as long as any Gateway still references it, and
+        # that Gateway only goes away once the networking namespace is
+        # deleted. --ignore-not-found makes this safe to rerun and safe on a
+        # cluster that was never installed.
         #
         # Namespaces are deleted one at a time with --timeout, since a
         # namespace can hang in Terminating forever if a resource inside it
         # (e.g. an Application/AppProject CR) has a finalizer that only Argo
-        # CD's own controller can clear — and that controller's pod is being
-        # deleted in this same operation. On timeout, the namespace's status
-        # conditions name exactly what's still blocking it.
+        # CD's own controller can clear — and that controller's pod may
+        # already be gone by the time this runs. On timeout, the namespace's
+        # status conditions name exactly what's still blocking it.
         run: |
           # Echoes each command (with expanded args) before running it, for
           # debugging which exact kubectl call is hanging on a stuck run.
           set -x
-
-          echo "Deleting ClusterIssuers selfsigned-staging, letsencrypt-staging..."
-          kubectl delete clusterissuer selfsigned-staging letsencrypt-staging --ignore-not-found
-
-          echo "Deleting GatewayClass eg..."
-          kubectl delete gatewayclass eg --ignore-not-found
 
           # cert-manager's admission webhooks gate writes to its own CRs,
           # including the finalizer removal below. If cert-manager's pod is
@@ -180,7 +185,7 @@ jobs:
           kubectl delete challenges.acme.cert-manager.io,orders.acme.cert-manager.io \
             --all -n networking --ignore-not-found --timeout=60s
 
-          for ns in ai-system-staging networking argocd; do
+          for ns in argocd ai-system-staging networking; do
             echo "Deleting namespace $ns..."
             if ! kubectl delete namespace "$ns" --ignore-not-found --timeout=180s; then
               echo "::error::Namespace $ns did not terminate within 180s — status conditions:"
@@ -190,6 +195,16 @@ jobs:
             fi
             echo "Namespace $ns deleted."
           done
+
+          # Deleted last: GatewayClass eg only clears its
+          # gateway-exists-finalizer once the networking namespace's Gateway
+          # (deleted above) is gone, so this would hang indefinitely if run
+          # any earlier. --timeout is a safety net against reconcile lag.
+          echo "Deleting ClusterIssuers selfsigned-staging, letsencrypt-staging..."
+          kubectl delete clusterissuer selfsigned-staging letsencrypt-staging --ignore-not-found --timeout=60s
+
+          echo "Deleting GatewayClass eg..."
+          kubectl delete gatewayclass eg --ignore-not-found --timeout=60s
 
   install-argocd-prod:
     runs-on: ubuntu-latest
