@@ -213,6 +213,23 @@ jobs:
             -l 'app.kubernetes.io/instance in (argocd,networking-certs-manager,networking-gateway-controller)' \
             --ignore-not-found --timeout=60s
 
+          # The 4 static hostPath PVs (Retain policy — survive their PVC's
+          # deletion above) are cluster-scoped, so the namespace loop never
+          # touches them. Left behind, they'd sit "Released" with a stale
+          # claimRef pointing at the just-deleted PVC's UID, and the next
+          # install's fresh PVC (new UID) could never rebind to them —
+          # leaving broker/database/llm/assistant pods stuck Pending until
+          # someone manually clears claimRef. Deleting them here keeps
+          # teardown+reinstall idempotent; this data is ephemeral per
+          # staging cycle anyway.
+          echo "Deleting static PersistentVolumes..."
+          kubectl delete pv \
+            ai-system-staging-broker-data \
+            ai-system-staging-database-data \
+            ai-system-staging-llm-models \
+            assistant-staging-assistant-workspace \
+            --ignore-not-found --timeout=60s
+
   install-argocd-prod:
     runs-on: ubuntu-latest
 
@@ -379,4 +396,25 @@ jobs:
           kubectl delete gatewayclass eg --ignore-not-found --timeout=60s
           kubectl delete clusterrole,clusterrolebinding \
             -l 'app.kubernetes.io/instance in (argocd,networking-certs-manager,networking-gateway-controller)' \
+            --ignore-not-found --timeout=60s
+
+          # The 3 static hostPath PVs (Retain policy — survive their PVC's
+          # deletion above) are cluster-scoped, so the namespace loop never
+          # touches them. Left behind, they'd sit "Released" with a stale
+          # claimRef pointing at the just-deleted PVC's UID, and the next
+          # install's fresh PVC (new UID) could never rebind to them —
+          # leaving broker/database/llm pods stuck Pending until someone
+          # manually clears claimRef. Deleting the PV object doesn't touch
+          # the underlying hostPath directory on the node (Retain policy
+          # only governs automatic reclamation, not manual delete), and the
+          # namespace deletion above already dropped the PVCs pointing at
+          # that same data — so this doesn't destroy anything the teardown
+          # wasn't already destroying. No assistant PV here — that app
+          # isn't deployed to prod (argocd/clusters/prod/ has no
+          # assistant.yaml).
+          echo "Deleting static PersistentVolumes..."
+          kubectl delete pv \
+            ai-system-prod-broker-data \
+            ai-system-prod-database-data \
+            ai-system-prod-llm-models \
             --ignore-not-found --timeout=60s
