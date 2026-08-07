@@ -209,13 +209,20 @@ spec:
             # Overwrites (not appends) on every container start so restarts
             # don't pile up duplicate lines on the PVC. Plaintext secrets at
             # rest on the volume — accepted tradeoff for having them
-            # available as a file in the workspace.
+            # available as a file in the workspace. mkdir -p first — nothing
+            # else in this chart creates the workspace/ subdirectory (only
+            # its .openclaw parent is chowned by fix-workspace-permissions
+            # above), so on a fresh PVC this write used to fail with "No
+            # such file or directory", and a failed postStart hook kills the
+            # container immediately (FailedPostStartHook), crash-looping it
+            # forever.
             postStart:
               exec:
                 command:
                   - sh
                   - -c
                   - |
+                    mkdir -p /home/node/.openclaw/workspace
                     cat > /home/node/.openclaw/workspace/.env <<EOF
                     GITHUB_TOKEN=$GITHUB_TOKEN
                     FREELANCERMAP_EMAIL=$FREELANCERMAP_EMAIL

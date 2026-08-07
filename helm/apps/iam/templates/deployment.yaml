@@ -58,7 +58,9 @@ spec:
           # Startup: covers Keycloak's slow first boot (measured ~224s at the
           # 500m CPU limit above, 260s+ at 200m) — readiness/liveness below
           # are suspended until this succeeds, so neither kills the container
-          # nor flips it ready mid-augmentation. 5s * 48 = 240s budget —
+          # nor flips it ready mid-augmentation. 5s * 56 = 280s budget —
+          # raised from 240s after staging observed boot exceed that under
+          # node CPU contention (many pods starting concurrently). Still
           # shorter than templates/provision-job.yaml's 300s retry window, so
           # the Job keeps polling through a container restart if boot ever
           # exceeds this.
@@ -66,7 +68,7 @@ spec:
             tcpSocket:
               port: 8080
             periodSeconds: 5
-            failureThreshold: 48
+            failureThreshold: 56
 
           # Readiness: excludes the pod from the Service until Keycloak is
           # actually accepting connections — without this, traffic (including
