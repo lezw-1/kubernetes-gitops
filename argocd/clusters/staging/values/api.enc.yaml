@@ -13,12 +13,12 @@ gateway:
     hosts:
         # Default: empty disables hostname-based routing (route matches any host) —
         # matches iam's pattern, since this is a subpath API, not the root app.
-        domain: ENC[AES256_GCM,data:+FRaglZCiQ==,iv:Fq8lqBYwSZHGsObJ4A8LAH2NwRRbNJosyRaczKEqJsc=,tag:pkx7CcvhGBziWLkn1tmdog==,type:str]
+        domain: ENC[AES256_GCM,data:kMhCZuniLw==,iv:dAlhCBZY+M7TxQVHS07YTodk8eEQxbIut6pMbssIy1s=,tag:6/sGTdfC6UAbbfeKzLEYrw==,type:str]
 # Image: container image settings.
 image:
     # Cloudfleet private registry path. SOPS-encrypted — real registry
     # host; decrypt/edit via `sops` rather than by hand.
-    repository: ENC[AES256_GCM,data:egerNkajVzVw/kBeAICeKpGcFcvjt2+JDReXYYphjdoyAjtKjsfA+/bwCoLFwy+85qhbbjNZETL/Ka1BXDaK9eDIh8trJCI=,iv:4AoD7YrHbX4+avpI+GwD6FD4TNca1WyNUBwQNNMC010=,tag:ZRpF6dYd/Fbl5TNJzIwmrA==,type:str]
+    repository: ENC[AES256_GCM,data:Hm5xjlDCuTYWqnFMVgQZjfy9lpZWNKPXruFErsoEg5TintepQNMNCwFxjYGwESfutBF8yYdowj9EIvY0UcyLwrI7ywriyjU=,iv:4Ak5chlt9E9eEv5dDt7Y0qn67qw4tUjvMYBUJJFPQko=,tag:4ZXYLYQpMBm629FEeGtzzw==,type:str]
     # Image tag — bumped by hand once the source repo publishes a new image (see README).
     tag: b62c4180c430391b057c12f2d5ec2d5bf7a7be6d
     # Allowed values: Always, IfNotPresent, Never
@@ -38,12 +38,15 @@ resources:
         memory: 128Mi
 # HPA: horizontal pod autoscaler.
 hpa:
-    # Enabled in staging to exercise autoscaling behavior.
+    # Enabled but pinned to a single replica — max was 5, but that let CPU
+    # spikes scale it up then immediately back down within the same minute,
+    # spinning up short-lived extra pods for no benefit on this low-traffic
+    # staging deployment. Matches iam's pattern (also pinned to 1/1).
     enabled: true
     # Minimum pod count.
     minReplicas: 1
     # Maximum pod count.
-    maxReplicas: 5
+    maxReplicas: 1
     # Target average CPU utilization percentage for scaling.
     targetCPUUtilization: 70
 # MongoUrl: in-cluster MongoDB, no authentication (see helm/apps/database).
@@ -61,22 +64,17 @@ worker:
     url: http://worker:8000
     timeout: 1200
 sops:
-    kms: []
-    gcp_kms: []
-    azure_kv: []
-    hc_vault: []
     age:
-        - recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
-          enc: |
+        - enc: |
             -----BEGIN AGE ENCRYPTED FILE-----
-            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBmN2FjQ1E2UVYxajhvSjhY
-            aVl1RjJ1NzQ1NEZyR3ZCeVpMa05EK2l6cEM0CmdKZkZ3b28xOEkrdGsyeVdpR3pN
-            S0hac2hOemxFbnhVSW1tcEFyQWNJYXMKLS0tIE04bU5jVmo4RUZ0ZlR4V0p2OWRy
-            LzVQZDgwakhueWVUN3MyVHg0VktUNmMKRLpVouPoQv8dT9qZ+7d5pm2bVbqjsHbQ
-            q9wM1pPipGJm0qIR7PKJocQNOln/ZKaf0NneVm0un7G5Y+yUgStU5A==
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB6cDNFRGsxMG5xcUYveVRI
+            cFh3VEREYXgxaDRlZTUzQno5QXkwdWJ6ZUJVCnBZckltZWc0Y3ZKUXZhdCtuUk1R
+            Z3dWa2xVL0ZURVJXanZLczFIejFUbHMKLS0tIGxLWWxGQ2RYc0xHRUVkVjdTUUtp
+            L0hyeHAzTXREcnovYXZQR0k0RE45SVEKUAv7VbNG74gkSRQvgNvUKIZMtU0Jo6em
+            BlT8tXPFbtUOPy4nuNW/EsaUwV31BlpBikEyIvhzuUmfk92cTtIyxg==
             -----END AGE ENCRYPTED FILE-----
-    lastmodified: "2026-08-02T07:36:47Z"
-    mac: ENC[AES256_GCM,data:sXW2GjvkHjDRTPqrxfkAQxcavOEMyEBm0Z6VimAYDRVSgQxwfeaLYmVk0XtTUarT63ZpgpckGWAUy+7SQCDrBWhbaB70U7m6IkJI2wLY0uikFO+bL0m4j7jS0NS2SnGz8f+3G1/sJe2GMaP+RW/kpdofB5YhpYAHXPZwuxtSxZY=,iv:nnek0vBq5FVCTUtaJBemFXfh7RLMu85QATzHq6exW7g=,tag:pd1S/9c7ChwUhY+hcJRrGg==,type:str]
-    pgp: []
-    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey)$
-    version: 3.13.2
+          recipient: age1c27zqzrlh2xaksq8u2y3smfxmptr5rzj7j8gnfccq44x2kza6g8szmmyfl
+    encrypted_regex: ^(username|password|domain|email|repository|anthropicApiKey|telegramBotToken|githubToken|freelancermapEmail|freelancermapPassword)$
+    lastmodified: "2026-08-07T08:19:51Z"
+    mac: ENC[AES256_GCM,data:AsDTd4bgDlZ8wN1PjRqpzPReDVGg4sQvIGt53UJtt4pIkLbP/N9ymAUm5ZYEnu1qMjQhHSDKnf7rEbBclbVwUunzvjG7IXVG1xJLDklbienPMJDS8HgSNdzyzun+RpG3r2X0by8hhiC5Bsdv5b1cP+cBtLOzod2YuX1pPtD0I54=,iv:OEyolf5Cz1BOTNIIkrKolJFalH4Po/cT/cu/dcm84/E=,tag:FD3pvFDFNQ1ZNKw9e7CdFQ==,type:str]
+    version: 3.13.3
