@@ -189,6 +189,31 @@ jobs:
           kubectl delete challenges.acme.cert-manager.io,orders.acme.cert-manager.io \
             --all -n networking --ignore-not-found --timeout=60s
 
+          # cert-manager's vendored chart (helm/platform/networking/certs-manager,
+          # upstream jetstack/cert-manager 1.16.2) ships a startupapicheck Helm
+          # hook Job plus its own ServiceAccount/Role/RoleBinding. Argo CD
+          # tags Helm-hook resources with argocd.argoproj.io/hook-finalizer so
+          # it can redo "before-hook-creation" cleanup on the next sync — but
+          # only Argo CD's own controller ever clears that finalizer, and the
+          # argocd namespace is deleted below in the same job. If that
+          # controller is already gone by the time these resources are
+          # deleted, the finalizer never clears and networking hangs in
+          # Terminating forever (confirmed: a real teardown run timed out
+          # with exactly "argocd.argoproj.io/hook-finalizer in 3 resource
+          # instances" — 1 role, 1 rolebinding, 1 serviceaccount). Strip the
+          # finalizer directly instead of depending on controller lifetime —
+          # jq ships preinstalled on the ubuntu-latest runner image.
+          echo "Clearing stray Argo CD hook-finalizers..."
+          for ns in ai-system-staging assistant-staging networking; do
+            for kind in job serviceaccount role rolebinding; do
+              for name in $(kubectl get "$kind" -n "$ns" -o json 2>/dev/null \
+                  | jq -r '.items[] | select(.metadata.finalizers != null) | select(.metadata.finalizers[] == "argocd.argoproj.io/hook-finalizer") | .metadata.name'); do
+                echo "Removing hook-finalizer from $kind/$name in $ns..."
+                kubectl patch "$kind" "$name" -n "$ns" --type=merge -p '{"metadata":{"finalizers":null}}'
+              done
+            done
+          done
+
           echo "Deleting namespaces..."
           for ns in argocd ai-system-staging assistant-staging networking; do
             echo "Deleting namespace $ns..."
@@ -376,6 +401,31 @@ jobs:
           echo "Deleting cert-manager ACME Challenge/Order resources..."
           kubectl delete challenges.acme.cert-manager.io,orders.acme.cert-manager.io \
             --all -n networking --ignore-not-found --timeout=60s
+
+          # cert-manager's vendored chart (helm/platform/networking/certs-manager,
+          # upstream jetstack/cert-manager 1.16.2) ships a startupapicheck Helm
+          # hook Job plus its own ServiceAccount/Role/RoleBinding. Argo CD
+          # tags Helm-hook resources with argocd.argoproj.io/hook-finalizer so
+          # it can redo "before-hook-creation" cleanup on the next sync — but
+          # only Argo CD's own controller ever clears that finalizer, and the
+          # argocd namespace is deleted below in the same job. If that
+          # controller is already gone by the time these resources are
+          # deleted, the finalizer never clears and networking hangs in
+          # Terminating forever (confirmed on staging: a real teardown run
+          # timed out with exactly "argocd.argoproj.io/hook-finalizer in 3
+          # resource instances" — 1 role, 1 rolebinding, 1 serviceaccount).
+          # Strip the finalizer directly instead of depending on controller
+          # lifetime — jq ships preinstalled on the ubuntu-latest runner image.
+          echo "Clearing stray Argo CD hook-finalizers..."
+          for ns in ai-system-prod networking; do
+            for kind in job serviceaccount role rolebinding; do
+              for name in $(kubectl get "$kind" -n "$ns" -o json 2>/dev/null \
+                  | jq -r '.items[] | select(.metadata.finalizers != null) | select(.metadata.finalizers[] == "argocd.argoproj.io/hook-finalizer") | .metadata.name'); do
+                echo "Removing hook-finalizer from $kind/$name in $ns..."
+                kubectl patch "$kind" "$name" -n "$ns" --type=merge -p '{"metadata":{"finalizers":null}}'
+              done
+            done
+          done
 
           echo "Deleting namespaces..."
           for ns in argocd ai-system-prod networking; do
